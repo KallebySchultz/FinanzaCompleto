@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primaryDarkBlue"
+    android:fitsSystemWindows="false">
+
+    <!-- Container branco para o conteúdo -->
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/white">
+
+        <!-- Dashboard superior azul (opcional, pode customizar para cada tela) -->
+        <LinearLayout
+            android:id="@+id/dashboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/primaryDarkBlue"
+            android:paddingTop="32dp"
+            android:paddingBottom="16dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp">
+
+            <TextView
+                android:id="@+id/tvTituloHeader"
+                android:text="Categorias"
+                android:textSize="20sp"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Aqui vai o conteúdo específico da tela -->
+        <FrameLayout
+            android:id="@+id/content_frame"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+    <!-- Bottom Navigation igual ao Main -->
+    <LinearLayout
+        android:id="@+id/bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="111dp"
+        android:layout_gravity="bottom"
+        android:background="@color/primaryDarkBlue"
+        android:elevation="8dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="32dp">
+
+        <ImageView
+            android:id="@+id/nav_home"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Home"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_home"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_movements"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Movimentações"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrows"
+            android:tint="@color/white" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:visibility="invisible" />
+
+        <ImageView
+            android:id="@+id/nav_accounts"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Contas"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_bank"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_menu"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Menu"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_menu"
+            android:tint="@color/white" />
+    </LinearLayout>
+
+    <!-- Botão circular centralizado sobreposto -->
+    <ImageButton
+        android:id="@+id/nav_add"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="56dp"
+        android:background="@drawable/circle_blue"
+        android:clickable="true"
+        android:contentDescription="Adicionar"
+        android:elevation="12dp"
+        android:focusable="true"
+        android:padding="40dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_add"
+        android:tint="@color/white"
+        app:layout_anchor="@+id/bottom_nav"
+        app:layout_anchorGravity="top|center" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

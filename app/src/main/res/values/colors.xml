@@ -1,0 +1,8 @@
+<resources>
+    <color name="primaryDarkBlue">#1B2A57</color>
+    <color name="accentBlue">#4A7CF5</color>
+    <color name="positiveGreen">#21C87A</color>
+    <color name="negativeRed">#E53935</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gray">#F5F5F5</color>
+</resources>

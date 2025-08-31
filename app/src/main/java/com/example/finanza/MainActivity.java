@@ -1,0 +1,376 @@
+package com.example.finanza;
+
+import android.app.DatePickerDialog;
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.text.InputType;
+import android.view.View;
+import android.widget.DatePicker;
+import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.ImageButton;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.Button;
+
+import com.google.android.material.textfield.TextInputEditText;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
+
+import com.example.finanza.db.AppDatabase;
+import com.example.finanza.model.Lancamento;
+import com.example.finanza.model.Usuario;
+import com.example.finanza.model.Conta;
+import com.example.finanza.model.Categoria;
+import com.example.finanza.ui.MenuActivity;
+
+import java.util.Calendar;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    private boolean saldoVisivel = true;
+    private AppDatabase db;
+    private int usuarioIdAtual;
+    private int contaPadraoId;
+    private int categoriaReceitaId;
+    private int categoriaDespesaId;
+
+    // Para painel customizado
+    private Conta contaSelecionada;
+    private Categoria categoriaSelecionada;
+    private long dataSelecionada = System.currentTimeMillis();
+    private boolean isReceitaPanel = true; // true: receita, false: despesa
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        getWindow().setStatusBarColor(getResources().getColor(R.color.primaryDarkBlue));
+        getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
+        getWindow().getDecorView().setSystemUiVisibility(0);
+
+        db = Room.databaseBuilder(getApplicationContext(),
+                        AppDatabase.class, "finanza-db")
+                .allowMainThreadQueries()
+                .build();
+
+        // Busca ou cria usuário padrão
+        Usuario usuario;
+        List<Usuario> usuarios = db.usuarioDao().listarTodos();
+        if (usuarios.size() == 0) {
+            usuario = new Usuario();
+            usuario.nome = "Usuário";
+            usuario.email = "exemplo@email.com";
+            int id = (int) db.usuarioDao().inserir(usuario);
+            usuario.id = id;
+        } else {
+            usuario = usuarios.get(0);
+        }
+        usuarioIdAtual = usuario.id;
+
+        // Busca ou cria conta padrão
+        Conta contaPadrao;
+        List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
+        if (contas.size() == 0) {
+            contaPadrao = new Conta();
+            contaPadrao.nome = "Conta Padrão";
+            contaPadrao.saldoInicial = 0.0;
+            contaPadrao.usuarioId = usuarioIdAtual;
+            int id = (int) db.contaDao().inserir(contaPadrao);
+            contaPadrao.id = id;
+        } else {
+            contaPadrao = contas.get(0);
+        }
+        contaPadraoId = contaPadrao.id;
+        contaSelecionada = contaPadrao;
+
+        // Busca ou cria categoria Receita
+        Categoria catReceita = null;
+        List<Categoria> receitasCats = db.categoriaDao().listarPorTipo("receita");
+        for (Categoria cat : receitasCats) {
+            if ("Receita".equals(cat.nome)) {
+                catReceita = cat;
+                break;
+            }
+        }
+        if (catReceita == null) {
+            catReceita = new Categoria();
+            catReceita.nome = "Receita";
+            catReceita.corHex = "#22BB33";
+            catReceita.tipo = "receita";
+            int id = (int) db.categoriaDao().inserir(catReceita);
+            catReceita.id = id;
+        }
+        categoriaReceitaId = catReceita.id;
+
+        // Busca ou cria categoria Despesa
+        Categoria catDespesa = null;
+        List<Categoria> despesaCats = db.categoriaDao().listarPorTipo("despesa");
+        for (Categoria cat : despesaCats) {
+            if ("Despesa".equals(cat.nome)) {
+                catDespesa = cat;
+                break;
+            }
+        }
+        if (catDespesa == null) {
+            catDespesa = new Categoria();
+            catDespesa.nome = "Despesa";
+            catDespesa.corHex = "#FF2222";
+            catDespesa.tipo = "despesa";
+            int id = (int) db.categoriaDao().inserir(catDespesa);
+            catDespesa.id = id;
+        }
+        categoriaDespesaId = catDespesa.id;
+
+        final TextView tvSaldo = findViewById(R.id.tvSaldo);
+        final TextView tvReceita = findViewById(R.id.tvReceita);
+        final TextView tvDespesa = findViewById(R.id.tvDespesa);
+        final ImageView imgEye = findViewById(R.id.imgEye);
+
+        atualizarValores(tvSaldo, tvReceita, tvDespesa);
+
+        imgEye.setOnClickListener(v -> {
+            saldoVisivel = !saldoVisivel;
+            if (saldoVisivel) {
+                double saldo = consultarSaldo();
+                tvSaldo.setText(String.format("R$ %.2f", saldo));
+                imgEye.setImageResource(R.drawable.ic_eye_open);
+            } else {
+                tvSaldo.setText("****");
+                imgEye.setImageResource(R.drawable.ic_eye_closed);
+            }
+        });
+
+        final ImageView navHome = findViewById(R.id.nav_home);
+        final ImageView navMenu = findViewById(R.id.nav_menu);
+
+        navHome.setOnClickListener(v -> {
+            navHome.setColorFilter(getResources().getColor(R.color.accentBlue));
+            navMenu.setColorFilter(getResources().getColor(R.color.white));
+        });
+
+        navMenu.setOnClickListener(v -> {
+            navHome.setColorFilter(getResources().getColor(R.color.white));
+            navMenu.setColorFilter(getResources().getColor(R.color.accentBlue));
+            Intent intent = new Intent(this, MenuActivity.class);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+            finish();
+        });
+
+        final ImageView navAccounts = findViewById(R.id.nav_accounts);
+        if (navAccounts != null) {
+            navAccounts.setOnClickListener(v -> {
+                navHome.setColorFilter(getResources().getColor(R.color.white));
+                navMenu.setColorFilter(getResources().getColor(R.color.white));
+                navAccounts.setColorFilter(getResources().getColor(R.color.accentBlue));
+                Intent intent = new Intent(this, AccountsActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish(); // remova se quiser voltar para a MainActivity ao pressionar "back"
+            });
+        }
+        final ImageView navMovements = findViewById(R.id.nav_movements);
+        if (navMovements != null) {
+            navMovements.setOnClickListener(v -> {
+                navHome.setColorFilter(getResources().getColor(R.color.white));
+                navMenu.setColorFilter(getResources().getColor(R.color.white));
+                navMovements.setColorFilter(getResources().getColor(R.color.accentBlue));
+            });
+        }
+
+        final ImageButton navAdd = findViewById(R.id.nav_add);
+        final FrameLayout addPanel = findViewById(R.id.add_panel);
+        final LinearLayout btnReceita = findViewById(R.id.btnReceita);
+        final LinearLayout btnDespesa = findViewById(R.id.btnDespesa);
+
+        // Painel customizado
+        final FrameLayout addTransactionPanel = findViewById(R.id.add_transaction_panel);
+        final ImageButton btnClosePanel = findViewById(R.id.btn_close_panel);
+        final Button btnSalvarLancamento = findViewById(R.id.btn_salvar_lancamento);
+
+        final TextInputEditText inputNome = findViewById(R.id.input_nome);
+        final TextInputEditText inputConta = findViewById(R.id.input_conta);
+        final TextInputEditText inputData = findViewById(R.id.input_data);
+        final TextInputEditText inputCategoria = findViewById(R.id.input_categoria);
+        final TextInputEditText inputValor = findViewById(R.id.input_valor);
+
+        navAdd.setOnClickListener(v -> {
+            if (addPanel.getVisibility() == View.GONE && addTransactionPanel.getVisibility() == View.GONE) {
+                addPanel.setVisibility(View.VISIBLE);
+                navAdd.setImageResource(R.drawable.ic_close);
+            } else {
+                addPanel.setVisibility(View.GONE);
+                addTransactionPanel.setVisibility(View.GONE);
+                navAdd.setImageResource(R.drawable.ic_add);
+            }
+        });
+
+        addPanel.setOnClickListener(v -> {
+            addPanel.setVisibility(View.GONE);
+            navAdd.setImageResource(R.drawable.ic_add);
+        });
+
+        btnReceita.setOnClickListener(v -> {
+            addPanel.setVisibility(View.GONE);
+            addTransactionPanel.setVisibility(View.VISIBLE);
+            navAdd.setImageResource(R.drawable.ic_close);
+            isReceitaPanel = true;
+            inicializarCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor, true);
+        });
+
+        btnDespesa.setOnClickListener(v -> {
+            addPanel.setVisibility(View.GONE);
+            addTransactionPanel.setVisibility(View.VISIBLE);
+            navAdd.setImageResource(R.drawable.ic_close);
+            isReceitaPanel = false;
+            inicializarCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor, false);
+        });
+
+        btnClosePanel.setOnClickListener(v -> {
+            addTransactionPanel.setVisibility(View.GONE);
+            navAdd.setImageResource(R.drawable.ic_add);
+        });
+
+        // Campo Conta (dialogo de seleção)
+        inputConta.setOnClickListener(v -> {
+            List<Conta> contasList = db.contaDao().listarPorUsuario(usuarioIdAtual);
+            String[] contasArray = new String[contasList.size()];
+            for (int i = 0; i < contasList.size(); i++) {
+                contasArray[i] = contasList.get(i).nome;
+            }
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Selecionar conta");
+            builder.setItems(contasArray, (dialog, which) -> {
+                contaSelecionada = contasList.get(which);
+                inputConta.setText(contaSelecionada.nome);
+            });
+            builder.show();
+        });
+
+        // Campo Data (DatePicker)
+        inputData.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(dataSelecionada);
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                    (view, year, month, dayOfMonth) -> {
+                        Calendar chosen = Calendar.getInstance();
+                        chosen.set(year, month, dayOfMonth);
+                        dataSelecionada = chosen.getTimeInMillis();
+                        inputData.setText(String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year));
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH));
+            datePickerDialog.show();
+        });
+
+        // Campo Categoria (dialogo de seleção)
+        inputCategoria.setOnClickListener(v -> {
+            String tipo = isReceitaPanel ? "receita" : "despesa";
+            List<Categoria> categoriasList = db.categoriaDao().listarPorTipo(tipo);
+            String[] categoriasArray = new String[categoriasList.size()];
+            for (int i = 0; i < categoriasList.size(); i++) {
+                categoriasArray[i] = categoriasList.get(i).nome;
+            }
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Selecionar categoria");
+            builder.setItems(categoriasArray, (dialog, which) -> {
+                categoriaSelecionada = categoriasList.get(which);
+                inputCategoria.setText(categoriaSelecionada.nome);
+            });
+            builder.show();
+        });
+
+        btnSalvarLancamento.setOnClickListener(v -> {
+            String nome = inputNome.getText() != null ? inputNome.getText().toString() : "";
+            String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".") : "";
+            if (contaSelecionada != null && categoriaSelecionada != null && !valorStr.isEmpty()) {
+                try {
+                    double valor = Double.parseDouble(valorStr);
+                    Lancamento lancamento = new Lancamento();
+                    lancamento.valor = valor;
+                    lancamento.data = dataSelecionada;
+                    lancamento.descricao = nome.isEmpty() ? "Reajuste de saldo" : nome;
+                    lancamento.contaId = contaSelecionada.id;
+                    lancamento.categoriaId = categoriaSelecionada.id;
+                    lancamento.usuarioId = usuarioIdAtual;
+                    lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
+                    db.lancamentoDao().inserir(lancamento);
+                    atualizarValores(tvSaldo, tvReceita, tvDespesa);
+                    if (!saldoVisivel) tvSaldo.setText("****");
+                    addTransactionPanel.setVisibility(View.GONE);
+                    navAdd.setImageResource(R.drawable.ic_add);
+                    limparCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor);
+                } catch (NumberFormatException e) {
+                    inputValor.setError("Valor inválido!");
+                }
+            } else {
+                if (contaSelecionada == null) inputConta.setError("Selecione a conta");
+                if (categoriaSelecionada == null) inputCategoria.setError("Selecione a categoria");
+                if (valorStr.isEmpty()) inputValor.setError("Digite o valor");
+            }
+        });
+    }
+
+    private void inicializarCamposPainel(TextInputEditText inputNome,
+                                         TextInputEditText inputConta,
+                                         TextInputEditText inputData,
+                                         TextInputEditText inputCategoria,
+                                         TextInputEditText inputValor,
+                                         boolean isReceita) {
+        inputNome.setText("");
+        inputConta.setText(contaSelecionada != null ? contaSelecionada.nome : "");
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(dataSelecionada);
+        inputData.setText(String.format("%02d/%02d/%04d", calendar.get(Calendar.DAY_OF_MONTH),
+                calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR)));
+        inputCategoria.setText(categoriaSelecionada != null ? categoriaSelecionada.nome : "");
+        inputValor.setText("");
+    }
+
+    private void limparCamposPainel(TextInputEditText inputNome,
+                                    TextInputEditText inputConta,
+                                    TextInputEditText inputData,
+                                    TextInputEditText inputCategoria,
+                                    TextInputEditText inputValor) {
+        inputNome.setText("");
+        inputConta.setText("");
+        inputData.setText("");
+        inputCategoria.setText("");
+        inputValor.setText("");
+        categoriaSelecionada = null;
+        dataSelecionada = System.currentTimeMillis();
+    }
+
+    private void atualizarValores(TextView tvSaldo, TextView tvReceita, TextView tvDespesa) {
+        double receitas = consultarReceitas();
+        double despesas = consultarDespesas();
+        double saldo = receitas - despesas;
+        if (saldoVisivel) {
+            tvSaldo.setText(String.format("R$ %.2f", saldo));
+        } else {
+            tvSaldo.setText("****");
+        }
+        tvReceita.setText(String.format("R$ %.2f", receitas));
+        tvDespesa.setText(String.format("R$ %.2f", despesas));
+    }
+
+    private double consultarReceitas() {
+        Double valor = db.lancamentoDao().somaPorTipo("receita", usuarioIdAtual);
+        return valor != null ? valor : 0.0;
+    }
+
+    private double consultarDespesas() {
+        Double valor = db.lancamentoDao().somaPorTipo("despesa", usuarioIdAtual);
+        return valor != null ? valor : 0.0;
+    }
+
+    private double consultarSaldo() {
+        return consultarReceitas() - consultarDespesas();
+    }
+}

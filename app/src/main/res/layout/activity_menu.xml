@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primaryDarkBlue"
+    android:fitsSystemWindows="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:background="@color/primaryDarkBlue">
+
+        <!-- Logo centralizada com círculo branco, MAIOR -->
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:layout_gravity="center_horizontal">
+
+            <View
+                android:layout_width="104dp"
+                android:layout_height="104dp"
+                android:background="@drawable/circle_white"/>
+
+            <ImageView
+                android:id="@+id/menu_logo"
+                android:layout_width="82dp"
+                android:layout_height="82dp"
+                android:layout_gravity="center"
+                android:src="@drawable/logo"/>
+        </FrameLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="82dp" />
+
+        <!-- Menu centralizado, com opção Gráficos, textos MAIORES -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp">
+
+            <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
+
+            <TextView
+                android:id="@+id/btnPerfil"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:text="Perfil"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
+
+            <TextView
+                android:id="@+id/btnCategorias"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:text="Categorias"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
+
+            <TextView
+                android:id="@+id/btnExportar"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:text="exportar relatório"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
+
+            <TextView
+                android:id="@+id/btnGraficos"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:text="Gráficos"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
+        </LinearLayout>
+
+        <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+    </LinearLayout>
+
+    <!-- Bottom Navigation igual ao main -->
+    <LinearLayout
+        android:id="@+id/bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="111dp"
+        android:layout_gravity="bottom"
+        android:background="@color/primaryDarkBlue"
+        android:elevation="8dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="32dp">
+
+        <ImageView
+            android:id="@+id/nav_home"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Home"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_home"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_movements"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Movimentações"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrows"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_accounts"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Contas"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_bank"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_menu"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Menu"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_menu"
+            android:tint="@color/accentBlue" />
+    </LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

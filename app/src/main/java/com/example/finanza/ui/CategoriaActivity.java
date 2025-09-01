@@ -167,7 +167,7 @@ public class CategoriaActivity extends AppCompatActivity {
             item.setOrientation(LinearLayout.HORIZONTAL);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setPadding(12, 16, 12, 16);
-            item.setBackground(getResources().getDrawable(R.drawable.bg_account_icon_circle_green));
+            item.setBackground(getResources().getDrawable(R.drawable.bg_transaction_item));
 
             // Icon with color based on type
             ImageView icon = new ImageView(this);
@@ -304,7 +304,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-                0, 48);
+                0, 56);
         btnSalvarParams.weight = 1;
         btnSalvarParams.rightMargin = 8;
         btnSalvar.setLayoutParams(btnSalvarParams);
@@ -315,7 +315,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-                0, 48);
+                0, 56);
         btnCancelarParams.weight = 1;
         btnCancelarParams.leftMargin = 8;
         btnCancelar.setLayoutParams(btnCancelarParams);
@@ -437,7 +437,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-                0, 48);
+                0, 56);
         btnSalvarParams.weight = 1;
         btnSalvarParams.rightMargin = 8;
         btnSalvar.setLayoutParams(btnSalvarParams);
@@ -448,7 +448,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-                0, 48);
+                0, 56);
         btnCancelarParams.weight = 1;
         btnCancelarParams.leftMargin = 8;
         btnCancelar.setLayoutParams(btnCancelarParams);

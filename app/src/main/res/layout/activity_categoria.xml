@@ -57,7 +57,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:hint="Filtrar categorias..."
-                    android:textColor="@color/accentBlue"
+                    android:textColor="@color/white"
                     android:textColorHint="@color/gray"
                     android:background="@drawable/edittext_bg"
                     android:padding="12dp"
@@ -66,9 +66,10 @@
                 <Button
                     android:id="@+id/btnLimparFiltro"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="56dp"
                     android:text="Limpar"
                     android:textColor="@color/white"
+                    android:textSize="14sp"
                     android:background="@drawable/button_gray"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -96,9 +97,10 @@
                 <Button
                     android:id="@+id/btnAdicionarCategoria"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="56dp"
                     android:text="Adicionar"
                     android:textColor="@color/white"
+                    android:textSize="14sp"
                     android:background="@drawable/button_blue"
                     android:textSize="12sp" />
             </LinearLayout>

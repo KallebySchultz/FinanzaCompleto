@@ -205,6 +205,7 @@ public class AccountsActivity extends AppCompatActivity {
             defaultAccountIcon.setImageResource(R.drawable.ic_bank);
         }
 
+        int accountIndex = 0;
         for (Conta conta : contas) {
             if (contaPadrao != null && conta.id == contaPadrao.id) continue;
 
@@ -214,15 +215,25 @@ public class AccountsActivity extends AppCompatActivity {
             item.setPadding(12, 16, 12, 16);
             
             // Create styled background similar to default account
-            item.setBackground(getResources().getDrawable(R.drawable.bg_account_icon_circle_green));
+            item.setBackground(getResources().getDrawable(R.drawable.bg_transaction_item));
 
             ImageView icon = new ImageView(this);
             LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(40, 40);
             iconParams.setMargins(0, 0, 10, 0);
             icon.setLayoutParams(iconParams);
             icon.setImageResource(R.drawable.ic_bank);
-            icon.setBackground(getResources().getDrawable(R.drawable.bg_account_icon_circle_purple));
+            
+            // Cycle through different colors for account icons
+            int[] iconColors = {
+                R.drawable.bg_account_icon_circle_purple,
+                R.drawable.bg_account_icon_circle_green,
+                R.drawable.bg_account_icon_circle_orange,
+                R.drawable.bg_account_icon_circle_blue,
+                R.drawable.bg_account_icon_circle_pink
+            };
+            icon.setBackground(getResources().getDrawable(iconColors[accountIndex % iconColors.length]));
             icon.setPadding(6, 6, 6, 6);
+            accountIndex++;
 
             LinearLayout infoBox = new LinearLayout(this);
             infoBox.setOrientation(LinearLayout.VERTICAL);
@@ -344,7 +355,7 @@ public class AccountsActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-            0, 48);
+            0, 56);
         btnSalvarParams.weight = 1;
         btnSalvarParams.rightMargin = 8;
         btnSalvar.setLayoutParams(btnSalvarParams);
@@ -355,7 +366,7 @@ public class AccountsActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-            0, 48);
+            0, 56);
         btnCancelarParams.weight = 1;
         btnCancelarParams.leftMargin = 8;
         btnCancelar.setLayoutParams(btnCancelarParams);

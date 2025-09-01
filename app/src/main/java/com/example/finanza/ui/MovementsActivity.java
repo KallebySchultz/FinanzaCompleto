@@ -12,7 +12,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Button;
 import android.widget.Toast;
-
+import android.widget.EditText;
 import com.example.finanza.R;
 import com.google.android.material.textfield.TextInputEditText;
 

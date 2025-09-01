@@ -224,7 +224,7 @@
             android:focusable="true"
             android:padding="4dp"
             android:src="@drawable/ic_home"
-            android:tint="@color/white" />
+            app:tint="@color/white" />
 
         <ImageView
             android:id="@+id/nav_movements"
@@ -236,7 +236,7 @@
             android:focusable="true"
             android:padding="4dp"
             android:src="@drawable/ic_arrows"
-            android:tint="@color/white" />
+            app:tint="@color/white" />
 
         <ImageView
             android:id="@+id/nav_accounts"
@@ -248,7 +248,7 @@
             android:focusable="true"
             android:padding="4dp"
             android:src="@drawable/ic_bank"
-            android:tint="@color/white" />
+            app:tint="@color/white" />
 
         <ImageView
             android:id="@+id/nav_menu"
@@ -260,6 +260,6 @@
             android:focusable="true"
             android:padding="4dp"
             android:src="@drawable/ic_menu"
-            android:tint="@color/accentBlue" />
+            app:tint="@color/accentBlue" />
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

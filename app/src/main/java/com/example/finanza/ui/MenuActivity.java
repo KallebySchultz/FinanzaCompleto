@@ -22,7 +22,7 @@ import com.example.finanza.model.Conta;
 import com.example.finanza.ui.MovementsActivity;
 import com.example.finanza.ui.CategoriaActivity;
 import com.example.finanza.ui.ReportsActivity;
-
+import java.util.List;
 public class MenuActivity extends AppCompatActivity {
     private FrameLayout categoriasPanel;
     private EditText inputNomeCategoria;

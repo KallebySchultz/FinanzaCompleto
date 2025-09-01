@@ -194,10 +194,16 @@ public class MainActivity extends AppCompatActivity {
             saldoVisivel = !saldoVisivel;
             if (saldoVisivel) {
                 double saldo = consultarSaldo();
+                double receitas = consultarReceitas();
+                double despesas = consultarDespesas();
                 tvSaldo.setText(String.format("R$ %.2f", saldo));
+                tvReceita.setText(String.format("R$ %.2f", receitas));
+                tvDespesa.setText(String.format("R$ %.2f", despesas));
                 imgEye.setImageResource(R.drawable.ic_eye_open);
             } else {
                 tvSaldo.setText("****");
+                tvReceita.setText("****");
+                tvDespesa.setText("****");
                 imgEye.setImageResource(R.drawable.ic_eye_closed);
             }
         });
@@ -396,7 +402,6 @@ public class MainActivity extends AppCompatActivity {
                     
                     db.lancamentoDao().inserir(lancamento);
                     atualizarValores(tvSaldo, tvReceita, tvDespesa);
-                    if (!saldoVisivel) tvSaldo.setText("****");
                     addTransactionPanel.setVisibility(View.GONE);
                     navAdd.setImageResource(R.drawable.ic_add);
                     limparCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor);
@@ -444,11 +449,13 @@ public class MainActivity extends AppCompatActivity {
         double saldo = receitas - despesas;
         if (saldoVisivel) {
             tvSaldo.setText(String.format("R$ %.2f", saldo));
+            tvReceita.setText(String.format("R$ %.2f", receitas));
+            tvDespesa.setText(String.format("R$ %.2f", despesas));
         } else {
             tvSaldo.setText("****");
+            tvReceita.setText("****");
+            tvDespesa.setText("****");
         }
-        tvReceita.setText(String.format("R$ %.2f", receitas));
-        tvDespesa.setText(String.format("R$ %.2f", despesas));
     }
 
     private double consultarReceitas() {

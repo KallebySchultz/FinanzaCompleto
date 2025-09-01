@@ -180,10 +180,11 @@
             <Button
                 android:id="@+id/btn_salvar_categoria"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:text="Cadastrar"
                 android:textColor="@color/white"
                 android:textStyle="bold"
+                android:textSize="16sp"
                 android:background="@drawable/button_blue"
                 android:layout_marginBottom="12dp"
                 android:elevation="2dp"/>
@@ -192,10 +193,11 @@
             <Button
                 android:id="@+id/btn_voltar_painel"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:text="Voltar"
                 android:textColor="@color/primaryDarkBlue"
                 android:textStyle="bold"
+                android:textSize="16sp"
                 android:background="@drawable/button_gray"
                 android:elevation="1dp"/>
         </LinearLayout>

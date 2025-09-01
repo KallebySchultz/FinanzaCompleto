@@ -424,7 +424,12 @@ public class MovementsActivity extends AppCompatActivity {
 
                 LinearLayout transItem = new LinearLayout(this);
                 transItem.setOrientation(LinearLayout.HORIZONTAL);
-                transItem.setPadding(0, 6, 0, 6);
+                transItem.setPadding(12, 16, 12, 16);
+                transItem.setBackground(getResources().getDrawable(R.drawable.bg_transaction_item));
+                LinearLayout.LayoutParams transItemParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                transItemParams.bottomMargin = 8;
+                transItem.setLayoutParams(transItemParams);
 
                 // Obtém nome da categoria
                 Categoria categoria = db.categoriaDao().buscarPorId(lanc.categoriaId);
@@ -433,13 +438,16 @@ public class MovementsActivity extends AppCompatActivity {
                 TextView nome = new TextView(this);
                 nome.setText(lanc.descricao + " • " + categoriaNome);
                 nome.setTextColor(getResources().getColor(R.color.white));
-                nome.setTextSize(15);
+                nome.setTextSize(17);
+                nome.setLayoutParams(new LinearLayout.LayoutParams(0, 
+                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
                 TextView valor = new TextView(this);
                 valor.setText(String.format("R$ %.2f", lanc.valor));
                 valor.setTextColor(getResources().getColor(
                         lanc.tipo.equals("receita") ? R.color.positiveGreen : R.color.negativeRed));
-                valor.setTextSize(15);
+                valor.setTextSize(17);
+                valor.setTypeface(null, android.graphics.Typeface.BOLD);
                 valor.setPadding(20, 0, 0, 0);
 
                 transItem.addView(nome);
@@ -563,7 +571,7 @@ public class MovementsActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-                0, 48);
+                0, 56);
         btnSalvarParams.weight = 1;
         btnSalvarParams.rightMargin = 8;
         btnSalvar.setLayoutParams(btnSalvarParams);
@@ -574,7 +582,7 @@ public class MovementsActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-                0, 48);
+                0, 56);
         btnCancelarParams.weight = 1;
         btnCancelarParams.leftMargin = 8;
         btnCancelar.setLayoutParams(btnCancelarParams);

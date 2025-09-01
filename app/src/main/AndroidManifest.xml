@@ -23,8 +23,9 @@
 
         <!-- Adicione suas Activities abaixo -->
         <activity android:name=".ui.MenuActivity" />
-        <activity android:name=".AccountsActivity" />
+        <activity android:name=".ui.AccountsActivity" />
         <activity android:name=".ui.MovementsActivity" />
+        <activity android:name=".ui.CategoriaActivity" />
 
     </application>
 </manifest>

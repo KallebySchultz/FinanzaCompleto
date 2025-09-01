@@ -11,6 +11,7 @@ import android.widget.ImageButton;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.example.finanza.R;
 import com.google.android.material.textfield.TextInputEditText;
@@ -23,7 +24,7 @@ import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Usuario;
 import com.example.finanza.model.Conta;
 import com.example.finanza.model.Categoria;
-import com.example.finanza.AccountsActivity;
+import com.example.finanza.ui.AccountsActivity;
 import com.example.finanza.MainActivity;
 import com.example.finanza.ui.MenuActivity;
 
@@ -278,15 +279,45 @@ public class MovementsActivity extends AppCompatActivity {
         });
 
         btnSalvarLancamento.setOnClickListener(v -> {
-            String nome = inputNome.getText() != null ? inputNome.getText().toString() : "";
-            String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".") : "";
-            if (contaSelecionada != null && categoriaSelecionada != null && !valorStr.isEmpty()) {
+            String nome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
+            String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".").trim() : "";
+            
+            // Clear previous errors
+            inputNome.setError(null);
+            inputConta.setError(null);
+            inputData.setError(null);
+            inputCategoria.setError(null);
+            inputValor.setError(null);
+            
+            boolean hasError = false;
+            
+            if (contaSelecionada == null) {
+                inputConta.setError("Selecione a conta");
+                hasError = true;
+            }
+            if (categoriaSelecionada == null) {
+                inputCategoria.setError("Selecione a categoria");
+                hasError = true;
+            }
+            if (valorStr.isEmpty()) {
+                inputValor.setError("Digite o valor");
+                hasError = true;
+            }
+            
+            if (!hasError) {
                 try {
                     double valor = Double.parseDouble(valorStr);
+                    
+                    // Validate positive value
+                    if (valor <= 0) {
+                        inputValor.setError("O valor deve ser maior que zero");
+                        return;
+                    }
+                    
                     Lancamento lancamento = new Lancamento();
                     lancamento.valor = valor;
                     lancamento.data = dataSelecionada;
-                    lancamento.descricao = nome.isEmpty() ? "Reajuste de saldo" : nome;
+                    lancamento.descricao = nome.isEmpty() ? (isReceitaPanel ? "Receita" : "Despesa") : nome;
                     lancamento.contaId = contaSelecionada.id;
                     lancamento.categoriaId = categoriaSelecionada.id;
                     lancamento.usuarioId = usuarioIdAtual;
@@ -296,13 +327,10 @@ public class MovementsActivity extends AppCompatActivity {
                     addTransactionPanel.setVisibility(View.GONE);
                     navAdd.setImageResource(R.drawable.ic_add);
                     limparCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor);
+                    Toast.makeText(this, "Transação salva!", Toast.LENGTH_SHORT).show();
                 } catch (NumberFormatException e) {
-                    inputValor.setError("Valor inválido!");
+                    inputValor.setError("Valor inválido! Use apenas números e ponto para decimais.");
                 }
-            } else {
-                if (contaSelecionada == null) inputConta.setError("Selecione a conta");
-                if (categoriaSelecionada == null) inputCategoria.setError("Selecione a categoria");
-                if (valorStr.isEmpty()) inputValor.setError("Digite o valor");
             }
         });
 
@@ -409,6 +437,17 @@ public class MovementsActivity extends AppCompatActivity {
 
                 transItem.addView(nome);
                 transItem.addView(valor);
+
+                // Add click listener for edit functionality
+                final Lancamento finalLanc = lanc;
+                transItem.setOnClickListener(v -> editarLancamento(finalLanc));
+                
+                // Add long click listener for delete functionality
+                transItem.setOnLongClickListener(v -> {
+                    confirmarExclusaoLancamento(finalLanc);
+                    return true;
+                });
+
                 transactionsList.addView(transItem);
 
                 // Soma saldo
@@ -418,5 +457,70 @@ public class MovementsActivity extends AppCompatActivity {
 
         // Mostra saldo final do mês
         saldoMes.setText(String.format("R$ %.2f", saldoFinal));
+    }
+
+    private void editarLancamento(Lancamento lancamento) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Editar Transação");
+
+        // Create custom layout for edit dialog
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 10);
+
+        final EditText inputDescricao = new EditText(this);
+        inputDescricao.setHint("Descrição");
+        inputDescricao.setText(lancamento.descricao);
+        layout.addView(inputDescricao);
+
+        final EditText inputValor = new EditText(this);
+        inputValor.setHint("Valor");
+        inputValor.setText(String.valueOf(lancamento.valor));
+        layout.addView(inputValor);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Salvar", (dialog, which) -> {
+            String novaDescricao = inputDescricao.getText().toString().trim();
+            String novoValorStr = inputValor.getText().toString().trim();
+            
+            if (!novaDescricao.isEmpty() && !novoValorStr.isEmpty()) {
+                try {
+                    double novoValor = Double.parseDouble(novoValorStr.replace(",", "."));
+                    if (novoValor <= 0) {
+                        Toast.makeText(this, "O valor deve ser maior que zero", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    lancamento.descricao = novaDescricao;
+                    lancamento.valor = novoValor;
+                    db.lancamentoDao().atualizar(lancamento);
+                    updateMovements();
+                    Toast.makeText(this, "Transação atualizada!", Toast.LENGTH_SHORT).show();
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Valor inválido", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(this, "Preencha todos os campos", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
+    }
+
+    private void confirmarExclusaoLancamento(Lancamento lancamento) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Excluir Transação");
+        builder.setMessage("Deseja excluir a transação '" + lancamento.descricao + 
+                          "' no valor de R$ " + String.format("%.2f", lancamento.valor) + "?");
+        
+        builder.setPositiveButton("Sim, excluir", (dialog, which) -> {
+            db.lancamentoDao().deletar(lancamento);
+            updateMovements();
+            Toast.makeText(this, "Transação excluída!", Toast.LENGTH_SHORT).show();
+        });
+        
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
     }
 }

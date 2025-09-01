@@ -134,15 +134,16 @@
             android:layout_gravity="center"
             android:elevation="8dp">
 
+            <!-- Formulário de cadastro de conta com melhor estilo -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Cadastrar Conta"
-                android:textSize="22sp"
+                android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="@color/primaryDarkBlue"
                 android:layout_gravity="center"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="20dp"/>
 
             <EditText
                 android:id="@+id/input_nome_conta"
@@ -150,9 +151,10 @@
                 android:layout_height="wrap_content"
                 android:hint="Nome da conta"
                 android:textColor="@color/primaryDarkBlue"
-                android:textColorHint="@color/primaryDarkBlue"
+                android:textColorHint="@color/textSecondary"
+                android:textSize="16sp"
                 android:background="@drawable/edittext_bg"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="20dp"
                 android:inputType="textPersonName"/>
 
             <EditText
@@ -161,32 +163,35 @@
                 android:layout_height="wrap_content"
                 android:hint="Saldo inicial"
                 android:textColor="@color/primaryDarkBlue"
-                android:textColorHint="@color/primaryDarkBlue"
+                android:textColorHint="@color/textSecondary"
+                android:textSize="16sp"
                 android:background="@drawable/edittext_bg"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="20dp"
                 android:inputType="numberDecimal"/>
 
             <Button
                 android:id="@+id/btn_salvar_conta"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="56dp"
                 android:text="Cadastrar"
                 android:textColor="@color/white"
                 android:textStyle="bold"
+                android:textSize="18sp"
+                android:textAllCaps="false"
                 android:background="@drawable/button_blue"
-                android:layout_marginBottom="12dp"
-                android:elevation="2dp"/>
+                android:layout_marginBottom="16dp"
+                android:elevation="4dp"/>
         </LinearLayout>
     </FrameLayout>
 
-    <!-- Bottom Navigation fixo -->
+    <!-- Bottom Navigation fixo com estilo consistente -->
     <LinearLayout
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="111dp"
         android:layout_gravity="bottom"
         android:background="@color/primaryDarkBlue"
-        android:elevation="8dp"
+        android:elevation="12dp"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingLeft="0dp"
@@ -203,9 +208,10 @@
             android:clickable="true"
             android:contentDescription="Home"
             android:focusable="true"
-            android:padding="4dp"
+            android:padding="8dp"
             android:src="@drawable/ic_home"
-            android:tint="@color/white" />
+            android:tint="@color/white"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
 
         <ImageView
             android:id="@+id/nav_movements"
@@ -215,9 +221,10 @@
             android:clickable="true"
             android:contentDescription="Movimentações"
             android:focusable="true"
-            android:padding="4dp"
+            android:padding="8dp"
             android:src="@drawable/ic_arrows"
-            android:tint="@color/white" />
+            android:tint="@color/white"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
 
         <View
             android:layout_width="0dp"
@@ -233,9 +240,10 @@
             android:clickable="true"
             android:contentDescription="Contas"
             android:focusable="true"
-            android:padding="4dp"
+            android:padding="8dp"
             android:src="@drawable/ic_bank"
-            android:tint="@color/accentBlue" />
+            android:tint="@color/accentBlue"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
 
         <ImageView
             android:id="@+id/nav_menu"
@@ -245,9 +253,10 @@
             android:clickable="true"
             android:contentDescription="Menu"
             android:focusable="true"
-            android:padding="4dp"
+            android:padding="8dp"
             android:src="@drawable/ic_menu"
-            android:tint="@color/white" />
+            android:tint="@color/white"
+            android:background="?android:attr/selectableItemBackgroundBorderless" />
     </LinearLayout>
 
     <!-- Botão central de adicionar -->

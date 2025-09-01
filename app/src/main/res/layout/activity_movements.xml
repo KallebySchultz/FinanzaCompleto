@@ -5,20 +5,188 @@
     android:layout_height="match_parent"
     android:background="@color/primaryDarkBlue">
 
-    <!-- Card superior com título da tela e navegação -->
-    <LinearLayout
-        android:id="@+id/movements_card"
+    <ScrollView
+        android:id="@+id/accounts_scroll"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:orientation="vertical"
-        android:background="@drawable/bg_accounts_card"
-        android:padding="20dp"
-        android:gravity="center_horizontal">
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:paddingBottom="120dp">
 
-        <!-- ... seu conteúdo superior ... -->
-        <!-- (mantenha igual ao seu layout atual) -->
-    </LinearLayout>
+        <LinearLayout
+            android:id="@+id/accounts_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:background="@drawable/bg_accounts_card"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Mês e navegação -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical|center_horizontal"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/btn_prev_month"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="Anterior"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_arrow_left"
+                    android:tint="@color/white" />
+
+                <TextView
+                    android:id="@+id/txt_month"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="16dp"
+                    android:paddingRight="16dp"
+                    android:text="AGOSTO"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/btn_next_month"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:contentDescription="Próximo"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_arrow_right"
+                    android:tint="@color/white" />
+            </LinearLayout>
+
+            <!-- Conta padrão em destaque -->
+            <LinearLayout
+                android:id="@+id/default_account_box"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="12dp"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/default_account_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_bank"
+                    android:background="@drawable/bg_account_icon_circle_purple"
+                    android:padding="6dp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingLeft="10dp">
+
+                    <TextView
+                        android:id="@+id/default_account_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Conta Padrão"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/default_account_saldo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$1000,00"
+                        android:textColor="@color/positiveGreen"
+                        android:textSize="18sp"
+                        android:textStyle="bold"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Saldo atual -->
+            <TextView
+                android:id="@+id/txt_saldo_atual_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:text="SALDO ATUAL"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txt_saldo_atual"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="R$1836,72"
+                android:textColor="@color/positiveGreen"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Linha divisória -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/white" />
+
+            <!-- Dia da semana (muda ao trocar mês/dia) -->
+            <TextView
+                android:id="@+id/txt_dia"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_marginBottom="12dp"
+                android:text="TERÇA, 31"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Lista de contas dinâmica -->
+            <LinearLayout
+                android:id="@+id/accounts_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+
+            <!-- Lista de transações do mês/dia -->
+            <LinearLayout
+                android:id="@+id/transactions_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Botão central de adicionar, sobreposto à barra de navegação -->
+    <ImageButton
+        android:id="@+id/nav_add"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="60dp"
+        android:background="@drawable/circle_blue"
+        android:clickable="true"
+        android:contentDescription="Adicionar"
+        android:elevation="16dp"
+        android:focusable="true"
+        android:scaleType="center"
+        android:src="@drawable/ic_add"
+        android:tint="@color/white" />
+
+    <!-- Retângulo azul para recorte visual abaixo do botão -->
+    <View
+        android:id="@+id/nav_add_bg"
+        android:layout_width="72dp"
+        android:layout_height="36dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:background="@color/primaryDarkBlue"
+        android:layout_marginBottom="36dp" />
 
     <!-- Bottom Navigation fixo -->
     <LinearLayout
@@ -27,37 +195,36 @@
         android:layout_height="72dp"
         android:layout_gravity="bottom"
         android:background="@color/primaryDarkBlue"
+        android:elevation="8dp"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingLeft="0dp"
         android:paddingRight="0dp"
-        android:paddingBottom="0dp"
-        android:elevation="8dp">
+        android:paddingBottom="0dp">
 
         <ImageView
             android:id="@+id/nav_home"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_home"
-            android:tint="@color/white"
+            android:clickable="true"
             android:contentDescription="Home"
             android:focusable="true"
             android:padding="4dp"
-            android:clickable="true" />
+            android:src="@drawable/ic_home"
+            android:tint="@color/white" />
 
-        <!-- Espaço para centralizar o "+" -->
         <ImageView
             android:id="@+id/nav_movements"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_arrows"
-            android:tint="@color/white"
+            android:clickable="true"
             android:contentDescription="Movimentações"
             android:focusable="true"
             android:padding="4dp"
-            android:clickable="true" />
+            android:src="@drawable/ic_arrows"
+            android:tint="@color/accentBlue" />
 
         <View
             android:layout_width="0dp"
@@ -70,39 +237,23 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_bank"
-            android:tint="@color/white"
+            android:clickable="true"
             android:contentDescription="Contas"
             android:focusable="true"
-            android:padding="4dp"
-            android:clickable="true" />
+            android:src="@drawable/ic_bank"
+            android:tint="@color/white"
+            android:padding="4dp"/>
 
         <ImageView
             android:id="@+id/nav_menu"
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:src="@drawable/ic_menu"
-            android:tint="@color/white"
+            android:clickable="true"
             android:contentDescription="Menu"
             android:focusable="true"
-            android:padding="4dp"
-            android:clickable="true" />
+            android:src="@drawable/ic_menu"
+            android:tint="@color/white"
+            android:padding="4dp"/>
     </LinearLayout>
-
-    <!-- Botão central de adicionar, SOBREPOSTO à barra -->
-    <ImageButton
-        android:id="@+id/nav_add"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:background="@drawable/circle_blue"
-        android:src="@drawable/ic_add"
-        android:tint="@color/white"
-        android:elevation="16dp"
-        android:contentDescription="Adicionar Movimento"
-        android:clickable="true"
-        android:focusable="true"
-        android:layout_marginBottom="36dp" />
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

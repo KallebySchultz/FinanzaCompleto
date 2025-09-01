@@ -27,83 +27,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical|center_horizontal"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/btn_prev_month"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="Anterior"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_arrow_left"
-                    android:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/txt_month"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="16dp"
-                    android:paddingRight="16dp"
-                    android:text="AGOSTO"
-                    android:textColor="@color/white"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/btn_next_month"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="Próximo"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_arrow_right"
-                    android:tint="@color/white" />
-            </LinearLayout>
+                android:orientation="horizontal"/>
 
             <!-- Conta padrão em destaque -->
-            <LinearLayout
-                android:id="@+id/default_account_box"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:id="@+id/default_account_icon"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/ic_bank"
-                    android:background="@drawable/bg_account_icon_circle_purple"
-                    android:padding="6dp" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingLeft="10dp">
-
-                    <TextView
-                        android:id="@+id/default_account_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Conta Padrão"
-                        android:textColor="@color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold"/>
-
-                    <TextView
-                        android:id="@+id/default_account_saldo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="R$1000,00"
-                        android:textColor="@color/positiveGreen"
-                        android:textSize="18sp"
-                        android:textStyle="bold"/>
-                </LinearLayout>
-            </LinearLayout>
 
             <!-- Saldo atual -->
+
             <TextView
                 android:id="@+id/txt_saldo_atual_label"
                 android:layout_width="wrap_content"
@@ -134,16 +63,48 @@
                 android:background="@color/white" />
 
             <!-- Dia da semana (muda ao trocar mês/dia) -->
-            <TextView
-                android:id="@+id/txt_dia"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/default_account_box"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="start"
-                android:layout_marginBottom="12dp"
-                android:text="TERÇA, 31"
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="12dp">
+
+                <ImageView
+                    android:id="@+id/default_account_icon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_account_icon_circle_purple"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_bank" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingLeft="10dp">
+
+                    <TextView
+                        android:id="@+id/default_account_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Conta Padrão"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/default_account_saldo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="R$1000,00"
+                        android:textColor="@color/positiveGreen"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
 
             <!-- Lista de contas dinâmica -->
             <LinearLayout
@@ -153,12 +114,6 @@
                 android:orientation="vertical"/>
 
             <!-- Lista de transações do mês/dia -->
-            <LinearLayout
-                android:id="@+id/transactions_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="16dp"/>
 
         </LinearLayout>
     </ScrollView>
@@ -241,7 +196,7 @@
             android:contentDescription="Contas"
             android:focusable="true"
             android:src="@drawable/ic_bank"
-            android:tint="@color/white"
+            android:tint="@color/accentBlue"
             android:padding="4dp"/>
 
         <ImageView

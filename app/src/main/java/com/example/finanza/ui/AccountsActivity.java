@@ -209,11 +209,17 @@ public class AccountsActivity extends AppCompatActivity {
             LinearLayout item = new LinearLayout(this);
             item.setOrientation(LinearLayout.HORIZONTAL);
             item.setGravity(Gravity.CENTER_VERTICAL);
-            item.setPadding(0, 16, 0, 16);
+            item.setPadding(12, 16, 12, 16);
+            
+            // Create styled background similar to default account
+            item.setBackground(getResources().getDrawable(R.drawable.bg_account_icon_circle_green));
 
             ImageView icon = new ImageView(this);
-            icon.setLayoutParams(new LinearLayout.LayoutParams(40, 40));
+            LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(40, 40);
+            iconParams.setMargins(0, 0, 10, 0);
+            icon.setLayoutParams(iconParams);
             icon.setImageResource(R.drawable.ic_bank);
+            icon.setBackground(getResources().getDrawable(R.drawable.bg_account_icon_circle_purple));
             icon.setPadding(6, 6, 6, 6);
 
             LinearLayout infoBox = new LinearLayout(this);
@@ -274,24 +280,95 @@ public class AccountsActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Conta");
 
-        // Create custom layout for edit dialog
+        // Create a styled layout that matches the transaction launch panel
+        FrameLayout frameLayout = new FrameLayout(this);
+        
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 10);
+        layout.setPadding(32, 32, 32, 32);
+        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        
+        // Title
+        TextView title = new TextView(this);
+        title.setText("Editar Conta");
+        title.setTextSize(22);
+        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(android.view.Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = 16;
+        title.setLayoutParams(titleParams);
+        layout.addView(title);
 
+        // Input fields with proper styling
         final EditText inputNome = new EditText(this);
         inputNome.setHint("Nome da conta");
         inputNome.setText(conta.nome);
+        inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        inputNome.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
+        LinearLayout.LayoutParams inputParams1 = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        inputParams1.bottomMargin = 16;
+        inputNome.setLayoutParams(inputParams1);
         layout.addView(inputNome);
 
         final EditText inputSaldo = new EditText(this);
         inputSaldo.setHint("Saldo inicial");
         inputSaldo.setText(String.valueOf(conta.saldoInicial));
+        inputSaldo.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        inputSaldo.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputSaldo.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
+        inputSaldo.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        LinearLayout.LayoutParams inputParams2 = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        inputParams2.bottomMargin = 16;
+        inputSaldo.setLayoutParams(inputParams2);
         layout.addView(inputSaldo);
 
-        builder.setView(layout);
+        // Styled buttons
+        LinearLayout buttonLayout = new LinearLayout(this);
+        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        buttonLayout.setGravity(android.view.Gravity.CENTER);
+        LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        buttonLayoutParams.topMargin = 16;
+        buttonLayout.setLayoutParams(buttonLayoutParams);
 
-        builder.setPositiveButton("Salvar", (dialog, which) -> {
+        Button btnSalvar = new Button(this);
+        btnSalvar.setText("Salvar");
+        btnSalvar.setTextColor(getResources().getColor(R.color.white));
+        btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
+        LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
+            0, 48);
+        btnSalvarParams.weight = 1;
+        btnSalvarParams.rightMargin = 8;
+        btnSalvar.setLayoutParams(btnSalvarParams);
+
+        Button btnCancelar = new Button(this);
+        btnCancelar.setText("Cancelar");
+        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
+            0, 48);
+        btnCancelarParams.weight = 1;
+        btnCancelarParams.leftMargin = 8;
+        btnCancelar.setLayoutParams(btnCancelarParams);
+
+        buttonLayout.addView(btnSalvar);
+        buttonLayout.addView(btnCancelar);
+        layout.addView(buttonLayout);
+
+        frameLayout.addView(layout);
+        builder.setView(frameLayout);
+
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        btnSalvar.setOnClickListener(v -> {
             String novoNome = inputNome.getText().toString().trim();
             String novoSaldoStr = inputSaldo.getText().toString().trim();
             
@@ -307,12 +384,16 @@ public class AccountsActivity extends AppCompatActivity {
                 }
                 db.contaDao().atualizar(conta);
                 updateAccounts();
+                dialog.dismiss();
                 Toast.makeText(this, "Conta atualizada!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Preencha o nome da conta", Toast.LENGTH_SHORT).show();
             }
         });
 
-        builder.setNegativeButton("Cancelar", null);
-        builder.show();
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
     }
 
     private void confirmarExclusaoConta(Conta conta) {

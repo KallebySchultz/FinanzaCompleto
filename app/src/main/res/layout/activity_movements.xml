@@ -69,41 +69,37 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:gravity="center"
             android:paddingTop="16dp"
             android:paddingBottom="8dp">
 
             <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_bank"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_money"
                 android:tint="@color/white"
-                android:layout_marginRight="10dp" />
+                android:layout_marginBottom="8dp" />
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/saldo_mes_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:text="Saldo do mês"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:gravity="center"/>
 
-                <TextView
-                    android:id="@+id/saldo_mes_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Saldo do mês"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
-
-                <TextView
-                    android:id="@+id/saldo_mes"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="R$ 0,00"
-                    android:textColor="@color/positiveGreen"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
-            </LinearLayout>
+            <TextView
+                android:id="@+id/saldo_mes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="R$ 0,00"
+                android:textColor="@color/positiveGreen"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:gravity="center"/>
         </LinearLayout>
     </LinearLayout>
 

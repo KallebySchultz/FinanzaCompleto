@@ -1,34 +1,179 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:background="@color/primaryDarkBlue"
+    android:fitsSystemWindows="true">
 
-    <ListView
-        android:id="@+id/listCategorias"
+    <ScrollView
+        android:id="@+id/categorias_scroll"
         android:layout_width="match_parent"
-        android:layout_height="505dp"
-        android:layout_weight="1"
-        android:baselineAligned="false" />
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:paddingBottom="120dp">
 
+        <LinearLayout
+            android:id="@+id/categorias_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:background="@drawable/bg_accounts_card"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Título -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:text="CATEGORIAS"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Linha divisória -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
+                android:background="@color/white" />
+
+            <!-- Filtro -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="16dp">
+                
+                <EditText
+                    android:id="@+id/etFiltroCategoria"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Filtrar categorias..."
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:background="@drawable/edittext_bg"
+                    android:padding="12dp"
+                    android:layout_marginEnd="8dp" />
+                
+                <Button
+                    android:id="@+id/btnLimparFiltro"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Limpar"
+                    android:textColor="@color/white"
+                    android:background="@drawable/button_gray"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Adicionar nova categoria -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="16dp">
+
+                <EditText
+                    android:id="@+id/etNovaCategoria"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Nova categoria"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:background="@drawable/edittext_bg"
+                    android:padding="12dp"
+                    android:layout_marginEnd="8dp" />
+
+                <Button
+                    android:id="@+id/btnAdicionarCategoria"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Adicionar"
+                    android:textColor="@color/white"
+                    android:background="@drawable/button_blue"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Lista de categorias dinâmica -->
+            <LinearLayout
+                android:id="@+id/categorias_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"/>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Navigation fixo -->
     <LinearLayout
+        android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="111dp"
+        android:layout_gravity="bottom"
+        android:background="@color/primaryDarkBlue"
+        android:elevation="8dp"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="32dp"
+        app:layout_anchor="@+id/categorias_scroll"
+        app:layout_anchorGravity="bottom|center">
 
-        <EditText
-            android:id="@+id/etNovaCategoria"
+        <ImageView
+            android:id="@+id/nav_home"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_weight="1"
-            android:hint="Nova categoria" />
+            android:clickable="true"
+            android:contentDescription="Home"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_home"
+            android:tint="@color/white" />
 
-        <Button
-            android:id="@+id/btnAdicionarCategoria"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Adicionar" />
+        <ImageView
+            android:id="@+id/nav_movements"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Movimentações"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrows"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_accounts"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Contas"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_bank"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_menu"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Menu"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_menu"
+            android:tint="@color/accentBlue" />
     </LinearLayout>
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

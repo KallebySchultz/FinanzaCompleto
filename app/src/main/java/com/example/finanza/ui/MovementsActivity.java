@@ -431,7 +431,7 @@ public class MovementsActivity extends AppCompatActivity {
                 String categoriaNome = categoria != null ? categoria.nome : "";
 
                 TextView nome = new TextView(this);
-                nome.setText(lanc.descricao + " • " + categoriaNome + " • " + (lanc.tipo.equals("receita") ? "Receita" : "Despesa"));
+                nome.setText(lanc.descricao + " • " + categoriaNome);
                 nome.setTextColor(getResources().getColor(R.color.white));
                 nome.setTextSize(15);
 
@@ -465,47 +465,139 @@ public class MovementsActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Transação");
 
+        // Create a styled layout that matches the transaction launch panel
+        FrameLayout frameLayout = new FrameLayout(this);
+        
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 10);
+        layout.setPadding(32, 32, 32, 32);
+        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        
+        // Title
+        TextView title = new TextView(this);
+        title.setText("Editar Transação");
+        title.setTextSize(22);
+        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(android.view.Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = 16;
+        title.setLayoutParams(titleParams);
+        layout.addView(title);
 
-        final EditText inputDescricao = new EditText(this);
+        // Input fields with proper styling
+        final TextInputEditText inputDescricao = new TextInputEditText(this);
         inputDescricao.setHint("Descrição");
         inputDescricao.setText(lancamento.descricao);
+        inputDescricao.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        inputDescricao.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputDescricao.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
+        LinearLayout.LayoutParams inputParams1 = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        inputParams1.bottomMargin = 16;
+        inputDescricao.setLayoutParams(inputParams1);
         layout.addView(inputDescricao);
 
-        final EditText inputValor = new EditText(this);
+        final TextInputEditText inputValor = new TextInputEditText(this);
         inputValor.setHint("Valor");
         inputValor.setText(String.valueOf(lancamento.valor));
+        inputValor.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        inputValor.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputValor.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
+        inputValor.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        LinearLayout.LayoutParams inputParams2 = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        inputParams2.bottomMargin = 16;
+        inputValor.setLayoutParams(inputParams2);
         layout.addView(inputValor);
 
-        // Categoria editável via Spinner
-        final Spinner inputCategoria = new Spinner(this);
+        // Categoria selection with styled appearance
+        final TextInputEditText inputCategoria = new TextInputEditText(this);
+        inputCategoria.setHint("Categoria");
+        inputCategoria.setFocusable(false);
+        inputCategoria.setClickable(true);
+        inputCategoria.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        inputCategoria.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputCategoria.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
+        LinearLayout.LayoutParams inputParams3 = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        inputParams3.bottomMargin = 16;
+        inputCategoria.setLayoutParams(inputParams3);
+        
+        // Load and set current category
         List<Categoria> categorias = db.categoriaDao().listarPorTipo(lancamento.tipo);
-        String[] nomesCategorias = new String[categorias.size()];
-        int categoriaSelecionadaIndex = 0;
-        for (int i = 0; i < categorias.size(); i++) {
-            nomesCategorias[i] = categorias.get(i).nome;
-            if (categorias.get(i).id == lancamento.categoriaId) {
-                categoriaSelecionadaIndex = i;
+        Categoria categoriaSelecionada = null;
+        for (Categoria cat : categorias) {
+            if (cat.id == lancamento.categoriaId) {
+                categoriaSelecionada = cat;
+                inputCategoria.setText(cat.nome);
+                break;
             }
         }
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, nomesCategorias);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        inputCategoria.setAdapter(adapter);
-        inputCategoria.setSelection(categoriaSelecionadaIndex);
+        final Categoria[] categoriaFinal = {categoriaSelecionada};
+        
+        inputCategoria.setOnClickListener(v -> {
+            String[] nomesCategorias = new String[categorias.size()];
+            for (int i = 0; i < categorias.size(); i++) {
+                nomesCategorias[i] = categorias.get(i).nome;
+            }
+            AlertDialog.Builder catBuilder = new AlertDialog.Builder(this);
+            catBuilder.setTitle("Selecionar categoria");
+            catBuilder.setItems(nomesCategorias, (dialog, which) -> {
+                categoriaFinal[0] = categorias.get(which);
+                inputCategoria.setText(categoriaFinal[0].nome);
+            });
+            catBuilder.show();
+        });
         layout.addView(inputCategoria);
 
-        builder.setView(layout);
+        // Styled buttons
+        LinearLayout buttonLayout = new LinearLayout(this);
+        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        buttonLayout.setGravity(android.view.Gravity.CENTER);
+        LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        buttonLayoutParams.topMargin = 16;
+        buttonLayout.setLayoutParams(buttonLayoutParams);
 
-        builder.setPositiveButton("Salvar", (dialog, which) -> {
+        Button btnSalvar = new Button(this);
+        btnSalvar.setText("Salvar");
+        btnSalvar.setTextColor(getResources().getColor(R.color.white));
+        btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
+        LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
+            0, 48);
+        btnSalvarParams.weight = 1;
+        btnSalvarParams.rightMargin = 8;
+        btnSalvar.setLayoutParams(btnSalvarParams);
+
+        Button btnCancelar = new Button(this);
+        btnCancelar.setText("Cancelar");
+        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
+            0, 48);
+        btnCancelarParams.weight = 1;
+        btnCancelarParams.leftMargin = 8;
+        btnCancelar.setLayoutParams(btnCancelarParams);
+
+        buttonLayout.addView(btnSalvar);
+        buttonLayout.addView(btnCancelar);
+        layout.addView(buttonLayout);
+
+        frameLayout.addView(layout);
+        builder.setView(frameLayout);
+
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        btnSalvar.setOnClickListener(v -> {
             String novaDescricao = inputDescricao.getText().toString().trim();
             String novoValorStr = inputValor.getText().toString().trim();
 
-            int selectedIndex = inputCategoria.getSelectedItemPosition();
-            Categoria categoriaSelecionada = categorias.get(selectedIndex);
-
-            if (!novaDescricao.isEmpty() && !novoValorStr.isEmpty()) {
+            if (!novaDescricao.isEmpty() && !novoValorStr.isEmpty() && categoriaFinal[0] != null) {
                 try {
                     double novoValor = Double.parseDouble(novoValorStr.replace(",", "."));
                     if (novoValor <= 0) {
@@ -514,9 +606,10 @@ public class MovementsActivity extends AppCompatActivity {
                     }
                     lancamento.descricao = novaDescricao;
                     lancamento.valor = novoValor;
-                    lancamento.categoriaId = categoriaSelecionada.id;
+                    lancamento.categoriaId = categoriaFinal[0].id;
                     db.lancamentoDao().atualizar(lancamento);
                     updateMovements();
+                    dialog.dismiss();
                     Toast.makeText(this, "Transação atualizada!", Toast.LENGTH_SHORT).show();
                 } catch (NumberFormatException e) {
                     Toast.makeText(this, "Valor inválido", Toast.LENGTH_SHORT).show();
@@ -526,8 +619,9 @@ public class MovementsActivity extends AppCompatActivity {
             }
         });
 
-        builder.setNegativeButton("Cancelar", null);
-        builder.show();
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
     }
 
     private void confirmarExclusaoLancamento(Lancamento lancamento) {

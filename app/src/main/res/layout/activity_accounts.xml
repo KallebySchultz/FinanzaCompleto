@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/primaryDarkBlue">
+    android:background="@color/primaryDarkBlue"
+    android:fitsSystemWindows="true">
 
     <ScrollView
         android:id="@+id/accounts_scroll"
@@ -29,10 +30,7 @@
                 android:gravity="center_vertical|center_horizontal"
                 android:orientation="horizontal"/>
 
-            <!-- Conta padrão em destaque -->
-
             <!-- Saldo atual -->
-
             <TextView
                 android:id="@+id/txt_saldo_atual_label"
                 android:layout_width="wrap_content"
@@ -62,7 +60,7 @@
                 android:layout_marginBottom="12dp"
                 android:background="@color/white" />
 
-            <!-- Dia da semana (muda ao trocar mês/dia) -->
+            <!-- Conta padrão em destaque -->
             <LinearLayout
                 android:id="@+id/default_account_box"
                 android:layout_width="match_parent"
@@ -112,42 +110,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"/>
-
-            <!-- Lista de transações do mês/dia -->
-
         </LinearLayout>
     </ScrollView>
 
-    <!-- Botão central de adicionar, sobreposto à barra de navegação -->
-    <ImageButton
-        android:id="@+id/nav_add"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="60dp"
-        android:background="@drawable/circle_blue"
-        android:clickable="true"
-        android:contentDescription="Adicionar"
-        android:elevation="16dp"
-        android:focusable="true"
-        android:scaleType="center"
-        android:src="@drawable/ic_add"
-        android:tint="@color/white" />
+    <!-- Bottom Navigation fixo (EXATAMENTE igual ao main) -->
 
-    <!-- Retângulo azul para recorte visual abaixo do botão -->
-    <View
-        android:id="@+id/nav_add_bg"
-        android:layout_width="72dp"
-        android:layout_height="36dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:background="@color/primaryDarkBlue"
-        android:layout_marginBottom="36dp" />
-
-    <!-- Bottom Navigation fixo -->
+    <!-- Botão central de adicionar (EXATAMENTE igual ao main) -->
     <LinearLayout
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="109dp"
         android:layout_gravity="bottom"
         android:background="@color/primaryDarkBlue"
         android:elevation="8dp"
@@ -155,7 +127,9 @@
         android:orientation="horizontal"
         android:paddingLeft="0dp"
         android:paddingRight="0dp"
-        android:paddingBottom="0dp">
+        android:paddingBottom="32dp"
+        app:layout_anchor="@+id/accounts_scroll"
+        app:layout_anchorGravity="bottom|center">
 
         <ImageView
             android:id="@+id/nav_home"
@@ -195,9 +169,9 @@
             android:clickable="true"
             android:contentDescription="Contas"
             android:focusable="true"
+            android:padding="4dp"
             android:src="@drawable/ic_bank"
-            android:tint="@color/accentBlue"
-            android:padding="4dp"/>
+            android:tint="@color/accentBlue" />
 
         <ImageView
             android:id="@+id/nav_menu"
@@ -207,8 +181,26 @@
             android:clickable="true"
             android:contentDescription="Menu"
             android:focusable="true"
+            android:padding="4dp"
             android:src="@drawable/ic_menu"
-            android:tint="@color/white"
-            android:padding="4dp"/>
+            android:tint="@color/white" />
     </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/nav_add"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="56dp"
+        android:background="@drawable/circle_blue"
+        android:clickable="true"
+        android:contentDescription="Adicionar"
+        android:elevation="12dp"
+        android:focusable="true"
+        android:padding="40dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_add"
+        android:tint="@color/white"
+        app:layout_anchor="@+id/bottom_nav"
+        app:layout_anchorGravity="top|center" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -2,41 +2,35 @@ package com.example.finanza;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
+import android.view.Gravity;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.ImageView;
-import android.widget.ImageButton;
+import android.widget.Toast;
+import android.app.AlertDialog;
+import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Conta;
-import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Usuario;
 import com.example.finanza.ui.MenuActivity;
 import com.example.finanza.ui.MovementsActivity;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class AccountsActivity extends AppCompatActivity {
 
     private AppDatabase db;
     private int usuarioIdAtual;
 
-    // Controle de mês/ano/dia
-    private int currentMonth;
-    private int currentYear;
-    private int currentDay;
-
     // Views
-    private TextView txtMonth, txtDia, txtSaldo, defaultAccountName, defaultAccountSaldo;
-    private ImageView btnPrevMonth, btnNextMonth, defaultAccountIcon;
-    private LinearLayout accountsList, transactionsList, defaultAccountBox;
+    private TextView txtSaldoAtual;
+    private TextView defaultAccountName, defaultAccountSaldo;
+    private ImageView defaultAccountIcon;
+    private LinearLayout accountsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,158 +50,139 @@ public class AccountsActivity extends AppCompatActivity {
         List<Usuario> usuarios = db.usuarioDao().listarTodos();
         usuarioIdAtual = usuarios.size() > 0 ? usuarios.get(0).id : 0;
 
-        // Controle do mês/ano/dia atual
-        Calendar calendar = Calendar.getInstance();
-        currentMonth = calendar.get(Calendar.MONTH);
-        currentYear = calendar.get(Calendar.YEAR);
-        currentDay = calendar.get(Calendar.DAY_OF_MONTH);
-
         // Referências dos elementos
-        txtMonth = findViewById(R.id.txt_month);
-        txtDia = findViewById(R.id.txt_dia);
-        txtSaldo = findViewById(R.id.txt_saldo_atual);
-
-        btnPrevMonth = findViewById(R.id.btn_prev_month);
-        btnNextMonth = findViewById(R.id.btn_next_month);
-
-        accountsList = findViewById(R.id.accounts_list);
-        transactionsList = findViewById(R.id.transactions_list);
-
-        defaultAccountBox = findViewById(R.id.default_account_box);
-        defaultAccountIcon = findViewById(R.id.default_account_icon);
+        txtSaldoAtual = findViewById(R.id.txt_saldo_atual);
         defaultAccountName = findViewById(R.id.default_account_name);
         defaultAccountSaldo = findViewById(R.id.default_account_saldo);
+        defaultAccountIcon = findViewById(R.id.default_account_icon);
+        accountsList = findViewById(R.id.accounts_list);
 
-        // Atualiza mês, dia, contas e lançamentos
-        updateMonthAndDay();
-        updateAccounts();
-        updateLancamentos();
+        // Botão adicionar conta
+        ImageButton navAdd = findViewById(R.id.nav_add);
+        navAdd.setOnClickListener(v -> {
+            // Diálogo para nome da nova conta
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Nova Conta");
+            builder.setMessage("Digite o nome da conta:");
 
-        // Botões navegação de mês
-        btnPrevMonth.setOnClickListener(v -> {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            currentDay = 1; // volta para o primeiro dia do mês
-            updateMonthAndDay();
-            updateAccounts();
-            updateLancamentos();
+            final EditText input = new EditText(this);
+            input.setHint("Nome da conta");
+            builder.setView(input);
+
+            builder.setPositiveButton("Criar", (dialog, which) -> {
+                String nomeConta = input.getText().toString().trim();
+                if (!nomeConta.isEmpty()) {
+                    Conta novaConta = new Conta();
+                    novaConta.nome = nomeConta;
+                    novaConta.saldoInicial = 0.0;
+                    novaConta.usuarioId = usuarioIdAtual;
+                    db.contaDao().inserir(novaConta);
+                    updateAccounts(); // Atualiza a lista
+                    Toast.makeText(this, "Conta criada!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Digite um nome válido!", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+            builder.show();
         });
 
-        btnNextMonth.setOnClickListener(v -> {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            }
-            currentDay = 1; // vai para o primeiro dia do mês
-            updateMonthAndDay();
-            updateAccounts();
-            updateLancamentos();
-        });
+        // Bottom Navigation
+        final ImageView navHome = findViewById(R.id.nav_home);
+        final ImageView navMenu = findViewById(R.id.nav_menu);
+        final ImageView navAccounts = findViewById(R.id.nav_accounts);
+        final ImageView navMovements = findViewById(R.id.nav_movements);
 
-        // Navegação dos dias tocando no txtDia (opcional: pode fazer um picker ou botões)
-        txtDia.setOnClickListener(v -> {
-            // Avança um dia
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.YEAR, currentYear);
-            cal.set(Calendar.MONTH, currentMonth);
-            cal.set(Calendar.DAY_OF_MONTH, currentDay);
-            cal.add(Calendar.DAY_OF_MONTH, 1);
-            currentDay = cal.get(Calendar.DAY_OF_MONTH);
-            currentMonth = cal.get(Calendar.MONTH);
-            currentYear = cal.get(Calendar.YEAR);
-            updateMonthAndDay();
-            updateLancamentos();
-        });
-        txtDia.setOnLongClickListener(v -> {
-            // Volta um dia
-            Calendar cal = Calendar.getInstance();
-            cal.set(Calendar.YEAR, currentYear);
-            cal.set(Calendar.MONTH, currentMonth);
-            cal.set(Calendar.DAY_OF_MONTH, currentDay);
-            cal.add(Calendar.DAY_OF_MONTH, -1);
-            currentDay = cal.get(Calendar.DAY_OF_MONTH);
-            currentMonth = cal.get(Calendar.MONTH);
-            currentYear = cal.get(Calendar.YEAR);
-            updateMonthAndDay();
-            updateLancamentos();
-            return true;
-        });
-
-        // Bottom navigation
-        findViewById(R.id.nav_home).setOnClickListener(v -> {
+        navHome.setOnClickListener(v -> {
+            navHome.setColorFilter(getResources().getColor(R.color.accentBlue));
+            navMenu.setColorFilter(getResources().getColor(R.color.white));
+            navAccounts.setColorFilter(getResources().getColor(R.color.white));
+            navMovements.setColorFilter(getResources().getColor(R.color.white));
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
             overridePendingTransition(0, 0);
             finish();
         });
-        findViewById(R.id.nav_movements).setOnClickListener(v -> {
-            Intent intent = new Intent(this, MovementsActivity.class);
-            startActivity(intent);
-            overridePendingTransition(0, 0);
-            finish();
-        });
-        findViewById(R.id.nav_accounts).setOnClickListener(v -> {
-            // já está na tela de contas
-        });
-        findViewById(R.id.nav_menu).setOnClickListener(v -> {
+
+        navMenu.setOnClickListener(v -> {
+            navHome.setColorFilter(getResources().getColor(R.color.white));
+            navMenu.setColorFilter(getResources().getColor(R.color.accentBlue));
+            navAccounts.setColorFilter(getResources().getColor(R.color.white));
+            navMovements.setColorFilter(getResources().getColor(R.color.white));
             Intent intent = new Intent(this, MenuActivity.class);
             startActivity(intent);
             overridePendingTransition(0, 0);
             finish();
         });
 
-        // Botão adicionar
-        ImageButton navAdd = findViewById(R.id.nav_add);
-        navAdd.setOnClickListener(v -> {
-            // Implemente ação ao clicar em adicionar (ex: abrir tela de adicionar lançamento)
+        navAccounts.setOnClickListener(v -> {
+            navHome.setColorFilter(getResources().getColor(R.color.white));
+            navMenu.setColorFilter(getResources().getColor(R.color.white));
+            navAccounts.setColorFilter(getResources().getColor(R.color.accentBlue));
+            navMovements.setColorFilter(getResources().getColor(R.color.white));
+            // Já está na tela de contas!
         });
-    }
 
-    private void updateMonthAndDay() {
-        String[] meses = {"JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
-                "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"};
-        String[] diasSemana = {"DOMINGO", "SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO"};
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.YEAR, currentYear);
-        calendar.set(Calendar.MONTH, currentMonth);
-        calendar.set(Calendar.DAY_OF_MONTH, currentDay);
+        navMovements.setOnClickListener(v -> {
+            navHome.setColorFilter(getResources().getColor(R.color.white));
+            navMenu.setColorFilter(getResources().getColor(R.color.white));
+            navAccounts.setColorFilter(getResources().getColor(R.color.white));
+            navMovements.setColorFilter(getResources().getColor(R.color.accentBlue));
+            Intent intent = new Intent(this, MovementsActivity.class);
+            startActivity(intent);
+            overridePendingTransition(0, 0);
+            finish();
+        });
 
-        txtMonth.setText(meses[currentMonth]);
-        int diaSemana = calendar.get(Calendar.DAY_OF_WEEK);
-        txtDia.setText(diasSemana[diaSemana - 1] + ", " + currentDay);
+        // Inicial: destaca Accounts
+        navAccounts.setColorFilter(getResources().getColor(R.color.accentBlue));
+        navHome.setColorFilter(getResources().getColor(R.color.white));
+        navMenu.setColorFilter(getResources().getColor(R.color.white));
+        navMovements.setColorFilter(getResources().getColor(R.color.white));
+
+        updateAccounts();
     }
 
     private void updateAccounts() {
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
 
         accountsList.removeAllViews();
-        double saldoTotal = 0.0;
 
-        // Conta padrão: primeira da lista
-        if (contas.size() > 0) {
-            Conta contaDefault = contas.get(0);
-            defaultAccountName.setText(contaDefault.nome);
-            defaultAccountSaldo.setText(String.format("R$%.2f", contaDefault.saldoInicial));
-            defaultAccountIcon.setImageResource(R.drawable.ic_bank);
-        } else {
-            defaultAccountName.setText("Nenhuma conta");
-            defaultAccountSaldo.setText("R$0.00");
+        // Saldo total (todas as contas)
+        double saldoTotal = consultarSaldoGeral();
+
+        // Conta padrão
+        Conta contaPadrao = null;
+        for (Conta c : contas) {
+            if ("Conta Padrão".equals(c.nome)) {
+                contaPadrao = c;
+                break;
+            }
+        }
+
+        // Atualiza SALDO ATUAL (topo)
+        txtSaldoAtual.setText(String.format("R$ %.2f", saldoTotal));
+
+        // Conta padrão mostra saldo calculado
+        if (contaPadrao != null) {
+            defaultAccountName.setText(contaPadrao.nome);
+            defaultAccountSaldo.setText(String.format("R$ %.2f", consultarSaldoConta(contaPadrao)));
             defaultAccountIcon.setImageResource(R.drawable.ic_bank);
         }
 
+        // Lista as contas individualmente (saldo atualizado), exceto "Conta Padrão"
         for (Conta conta : contas) {
+            if (contaPadrao != null && conta.id == contaPadrao.id) continue;
+
             LinearLayout item = new LinearLayout(this);
             item.setOrientation(LinearLayout.HORIZONTAL);
-            item.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            item.setGravity(Gravity.CENTER_VERTICAL);
             item.setPadding(0, 16, 0, 16);
 
             ImageView icon = new ImageView(this);
             icon.setLayoutParams(new LinearLayout.LayoutParams(40, 40));
-            icon.setImageResource(R.drawable.ic_bank); // ou personalize por tipo de conta
+            icon.setImageResource(R.drawable.ic_bank);
             icon.setPadding(6, 6, 6, 6);
 
             LinearLayout infoBox = new LinearLayout(this);
@@ -221,7 +196,8 @@ public class AccountsActivity extends AppCompatActivity {
             name.setTypeface(null, android.graphics.Typeface.BOLD);
 
             TextView saldo = new TextView(this);
-            saldo.setText(String.format("R$%.2f", conta.saldoInicial));
+            double saldoConta = consultarSaldoConta(conta);
+            saldo.setText(String.format("R$ %.2f", saldoConta));
             saldo.setTextColor(getResources().getColor(R.color.positiveGreen));
             saldo.setTextSize(18);
             saldo.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -233,66 +209,25 @@ public class AccountsActivity extends AppCompatActivity {
             item.addView(infoBox);
 
             accountsList.addView(item);
-
-            saldoTotal += conta.saldoInicial;
         }
-
-        txtSaldo.setText(String.format("R$%.2f", saldoTotal));
     }
 
-    private void updateLancamentos() {
-        transactionsList.removeAllViews();
+    // Saldo real de cada conta (saldoInicial + receitas - despesas)
+    private double consultarSaldoConta(Conta conta) {
+        Double receitas = db.lancamentoDao().somaPorTipoConta("receita", usuarioIdAtual, conta.id);
+        Double despesas = db.lancamentoDao().somaPorTipoConta("despesa", usuarioIdAtual, conta.id);
+        receitas = receitas != null ? receitas : 0.0;
+        despesas = despesas != null ? despesas : 0.0;
+        return conta.saldoInicial + receitas - despesas;
+    }
 
-        // Busca todos os lançamentos do usuário no dia/mês/ano atual
-        Calendar inicioDia = Calendar.getInstance();
-        inicioDia.set(currentYear, currentMonth, currentDay, 0, 0, 0);
-        inicioDia.set(Calendar.MILLISECOND, 0);
-        long inicioTimestamp = inicioDia.getTimeInMillis();
-
-        Calendar fimDia = Calendar.getInstance();
-        fimDia.set(currentYear, currentMonth, currentDay, 23, 59, 59);
-        fimDia.set(Calendar.MILLISECOND, 999);
-        long fimTimestamp = fimDia.getTimeInMillis();
-
-        // Supondo que exista método: listarPorUsuarioPeriodo(usuarioId, inicio, fim)
-        List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuarioPeriodo(usuarioIdAtual, inicioTimestamp, fimTimestamp);
-
-        if (lancamentos == null || lancamentos.size() == 0) {
-            TextView empty = new TextView(this);
-            empty.setText("Nenhum lançamento neste dia.");
-            empty.setTextColor(getResources().getColor(R.color.white));
-            empty.setPadding(12,12,12,12);
-            transactionsList.addView(empty);
-            return;
+    // Saldo total de todas as contas (usado no topo)
+    private double consultarSaldoGeral() {
+        List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
+        double saldoTotal = 0.0;
+        for (Conta conta : contas) {
+            saldoTotal += consultarSaldoConta(conta);
         }
-
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-        for (Lancamento l : lancamentos) {
-            LinearLayout item = new LinearLayout(this);
-            item.setOrientation(LinearLayout.VERTICAL);
-            item.setPadding(0, 12, 0, 12);
-
-            TextView title = new TextView(this);
-            title.setText(l.descricao);
-            title.setTextColor(getResources().getColor(R.color.white));
-            title.setTextSize(16);
-            title.setTypeface(null, android.graphics.Typeface.BOLD);
-
-            TextView valor = new TextView(this);
-            valor.setText(String.format("R$%.2f", l.valor));
-            valor.setTextColor("receita".equalsIgnoreCase(l.tipo) ? getResources().getColor(R.color.positiveGreen) : getResources().getColor(R.color.negativeRed));
-            valor.setTextSize(18);
-
-            TextView date = new TextView(this);
-            date.setText(sdf.format(new Date(l.data)));
-            date.setTextColor(getResources().getColor(R.color.white));
-            date.setTextSize(13);
-
-            item.addView(title);
-            item.addView(valor);
-            item.addView(date);
-
-            transactionsList.addView(item);
-        }
+        return saldoTotal;
     }
 }

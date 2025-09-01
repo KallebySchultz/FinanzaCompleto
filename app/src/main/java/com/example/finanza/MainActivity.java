@@ -13,7 +13,7 @@ import android.widget.ImageButton;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Button;
-
+import com.example.finanza.R;
 import com.google.android.material.textfield.TextInputEditText;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +25,7 @@ import com.example.finanza.model.Usuario;
 import com.example.finanza.model.Conta;
 import com.example.finanza.model.Categoria;
 import com.example.finanza.ui.MenuActivity;
+import com.example.finanza.ui.MovementsActivity; // ADICIONE ESTA IMPORTAÇÃO
 
 import java.util.Calendar;
 import java.util.List;
@@ -174,12 +175,17 @@ public class MainActivity extends AppCompatActivity {
                 finish(); // remova se quiser voltar para a MainActivity ao pressionar "back"
             });
         }
+
         final ImageView navMovements = findViewById(R.id.nav_movements);
         if (navMovements != null) {
             navMovements.setOnClickListener(v -> {
                 navHome.setColorFilter(getResources().getColor(R.color.white));
                 navMenu.setColorFilter(getResources().getColor(R.color.white));
                 navMovements.setColorFilter(getResources().getColor(R.color.accentBlue));
+                Intent intent = new Intent(this, MovementsActivity.class); // ADICIONADO
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
             });
         }
 

@@ -3,196 +3,131 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/primaryDarkBlue">
+    android:background="@color/primaryDarkBlue"
+    android:fitsSystemWindows="false">
 
-    <ScrollView
-        android:id="@+id/accounts_scroll"
+    <!-- DASHBOARD SUPERIOR AZUL -->
+    <LinearLayout
+        android:id="@+id/dashboard"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:paddingBottom="120dp">
+        android:layout_height="wrap_content"
+        android:background="@color/primaryDarkBlue"
+        android:orientation="vertical"
+        android:paddingLeft="24dp"
+        android:paddingTop="40dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="0dp"
+        android:elevation="8dp">
 
+        <!-- Navegação de mês -->
         <LinearLayout
-            android:id="@+id/accounts_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:background="@drawable/bg_accounts_card"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp">
 
-            <!-- Mês e navegação -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical|center_horizontal"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/btn_prev_month"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="Anterior"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_arrow_left"
-                    android:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/txt_month"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingLeft="16dp"
-                    android:paddingRight="16dp"
-                    android:text="AGOSTO"
-                    android:textColor="@color/white"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/btn_next_month"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:contentDescription="Próximo"
-                    android:padding="6dp"
-                    android:src="@drawable/ic_arrow_right"
-                    android:tint="@color/white" />
-            </LinearLayout>
-
-            <!-- Conta padrão em destaque -->
-            <LinearLayout
-                android:id="@+id/default_account_box"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="12dp"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical">
-
-                <ImageView
-                    android:id="@+id/default_account_icon"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/ic_bank"
-                    android:background="@drawable/bg_account_icon_circle_purple"
-                    android:padding="6dp" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:paddingLeft="10dp">
-
-                    <TextView
-                        android:id="@+id/default_account_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Conta Padrão"
-                        android:textColor="@color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold"/>
-
-                    <TextView
-                        android:id="@+id/default_account_saldo"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="R$1000,00"
-                        android:textColor="@color/positiveGreen"
-                        android:textSize="18sp"
-                        android:textStyle="bold"/>
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- Saldo atual -->
-            <TextView
-                android:id="@+id/txt_saldo_atual_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:text="SALDO ATUAL"
-                android:textColor="@color/white"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+            <ImageView
+                android:id="@+id/btn_prev_month"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_arrow_left"
+                android:tint="@color/white"
+                android:contentDescription="Mês anterior"
+                android:padding="2dp"
+                android:clickable="true"
+                android:focusable="true" />
 
             <TextView
-                android:id="@+id/txt_saldo_atual"
+                android:id="@+id/txt_month"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:text="R$1836,72"
-                android:textColor="@color/positiveGreen"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <!-- Linha divisória -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp"
-                android:background="@color/white" />
-
-            <!-- Dia da semana (muda ao trocar mês/dia) -->
-            <TextView
-                android:id="@+id/txt_dia"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="start"
-                android:layout_marginBottom="12dp"
-                android:text="TERÇA, 31"
+                android:text="SETEMBRO"
                 android:textColor="@color/white"
                 android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:paddingLeft="8dp"
+                android:paddingRight="8dp"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
 
-            <!-- Lista de contas dinâmica -->
-            <LinearLayout
-                android:id="@+id/accounts_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"/>
-
-            <!-- Lista de transações do mês/dia -->
-            <LinearLayout
-                android:id="@+id/transactions_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginTop="16dp"/>
-
+            <ImageView
+                android:id="@+id/btn_next_month"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_arrow_right"
+                android:tint="@color/white"
+                android:contentDescription="Próximo mês"
+                android:padding="2dp"
+                android:clickable="true"
+                android:focusable="true" />
         </LinearLayout>
+
+        <!-- Saldo do mês -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_bank"
+                android:tint="@color/white"
+                android:layout_marginRight="10dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/saldo_mes_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Saldo do mês"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:id="@+id/saldo_mes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="R$ 0,00"
+                    android:textColor="@color/positiveGreen"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- LISTA DE TRANSAÇÕES -->
+    <ScrollView
+        android:id="@+id/movements_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="120dp"
+        android:background="@color/primaryDarkBlue">
+
+        <LinearLayout
+            android:id="@+id/transactions_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp" />
     </ScrollView>
 
-    <!-- Botão central de adicionar, sobreposto à barra de navegação -->
-    <ImageButton
-        android:id="@+id/nav_add"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="60dp"
-        android:background="@drawable/circle_blue"
-        android:clickable="true"
-        android:contentDescription="Adicionar"
-        android:elevation="16dp"
-        android:focusable="true"
-        android:scaleType="center"
-        android:src="@drawable/ic_add"
-        android:tint="@color/white" />
-
-    <!-- Retângulo azul para recorte visual abaixo do botão -->
-    <View
-        android:id="@+id/nav_add_bg"
-        android:layout_width="72dp"
-        android:layout_height="36dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:background="@color/primaryDarkBlue"
-        android:layout_marginBottom="36dp" />
-
-    <!-- Bottom Navigation fixo -->
+    <!-- BOTTOM NAVIGATION FIXO -->
     <LinearLayout
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
+        android:layout_height="111dp"
         android:layout_gravity="bottom"
         android:background="@color/primaryDarkBlue"
         android:elevation="8dp"
@@ -200,7 +135,7 @@
         android:orientation="horizontal"
         android:paddingLeft="0dp"
         android:paddingRight="0dp"
-        android:paddingBottom="0dp">
+        android:paddingBottom="32dp">
 
         <ImageView
             android:id="@+id/nav_home"
@@ -240,9 +175,9 @@
             android:clickable="true"
             android:contentDescription="Contas"
             android:focusable="true"
+            android:padding="4dp"
             android:src="@drawable/ic_bank"
-            android:tint="@color/white"
-            android:padding="4dp"/>
+            android:tint="@color/white" />
 
         <ImageView
             android:id="@+id/nav_menu"
@@ -252,8 +187,276 @@
             android:clickable="true"
             android:contentDescription="Menu"
             android:focusable="true"
+            android:padding="4dp"
             android:src="@drawable/ic_menu"
-            android:tint="@color/white"
-            android:padding="4dp"/>
+            android:tint="@color/white" />
     </LinearLayout>
+
+    <!-- BOTÃO CENTRAL DE ADICIONAR -->
+    <ImageButton
+        android:id="@+id/nav_add"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="56dp"
+        android:background="@drawable/circle_blue"
+        android:clickable="true"
+        android:contentDescription="Adicionar"
+        android:elevation="12dp"
+        android:focusable="true"
+        android:scaleType="center"
+        android:src="@drawable/ic_add"
+        android:tint="@color/white"
+        app:layout_anchor="@+id/bottom_nav"
+        app:layout_anchorGravity="top|center" />
+
+    <!-- Painel de seleção Receita/Despesa igual ao main -->
+    <FrameLayout
+        android:id="@+id/add_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:clickable="true">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#99000000" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="120dp">
+
+            <LinearLayout
+                android:id="@+id/btnReceita"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_circle_gray"
+                android:layout_marginEnd="16dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_arrow_up"
+                    android:tint="@color/positiveGreen" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="RECEITA"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnDespesa"
+                android:layout_width="110dp"
+                android:layout_height="110dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_circle_gray"
+                android:layout_marginStart="16dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_arrow_down"
+                    android:tint="@color/negativeRed" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DESPESA"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="8dp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Painel para lançar movimentação -->
+    <FrameLayout
+        android:id="@+id/add_transaction_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#99000000" />
+
+        <LinearLayout
+            android:id="@+id/form_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="200dp"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:background="@drawable/bg_modal_blue"
+            android:elevation="12dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxStrokeColor="@color/white"
+                app:hintTextColor="@color/white"
+                android:hint="Nome">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_nome"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:inputType="text"
+                    android:background="@android:color/transparent"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxStrokeColor="@color/white"
+                app:hintTextColor="@color/white"
+                android:hint="Conta">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_conta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:background="@android:color/transparent"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:inputType="none"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxStrokeColor="@color/white"
+                app:hintTextColor="@color/white"
+                android:hint="Data">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_data"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:background="@android:color/transparent"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:inputType="none"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxStrokeColor="@color/white"
+                app:hintTextColor="@color/white"
+                android:hint="Categoria">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_categoria"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:background="@android:color/transparent"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:inputType="none"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_valor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="18dp"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
+                app:boxStrokeColor="@color/white"
+                app:hintTextColor="@color/white"
+                android:hint="Valor">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_valor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
+                    android:inputType="numberDecimal"
+                    android:background="@android:color/transparent"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/btn_salvar_lancamento"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Salvar"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/accentBlue"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:elevation="6dp"/>
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btn_close_panel"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/circle_blue"
+            android:src="@drawable/ic_close"
+            android:tint="@color/white"
+            android:elevation="16dp"
+            android:contentDescription="Fechar"
+            android:padding="16dp"/>
+    </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

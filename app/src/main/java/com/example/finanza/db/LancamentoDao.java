@@ -17,13 +17,13 @@ public interface LancamentoDao {
     @Query("SELECT SUM(valor) FROM Lancamento WHERE tipo = :tipo AND usuarioId = :usuarioId")
     Double somaPorTipo(String tipo, int usuarioId);
 
-    @Query("SELECT SUM(valor) FROM Lancamento WHERE tipo = :tipo AND contaId = :contaId AND usuarioId = :usuarioId")
-    Double somaPorTipoConta(String tipo, int contaId, int usuarioId);
+    // Corrigido: a ordem dos parâmetros precisa ser igual ao uso!
+    @Query("SELECT SUM(valor) FROM Lancamento WHERE tipo = :tipo AND usuarioId = :usuarioId AND contaId = :contaId")
+    Double somaPorTipoConta(String tipo, int usuarioId, int contaId);
 
     @Query("SELECT SUM(valor) FROM Lancamento WHERE contaId = :contaId AND usuarioId = :usuarioId")
     Double saldoPorConta(int contaId, int usuarioId);
 
-    // --- Adicione este método ---
     @Query("SELECT * FROM Lancamento WHERE usuarioId = :usuarioId AND data >= :inicio AND data <= :fim ORDER BY data DESC")
     List<Lancamento> listarPorUsuarioPeriodo(int usuarioId, long inicio, long fim);
 }

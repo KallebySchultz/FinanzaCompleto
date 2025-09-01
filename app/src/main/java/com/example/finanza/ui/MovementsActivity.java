@@ -13,6 +13,8 @@ import android.widget.LinearLayout;
 import android.widget.Button;
 import android.widget.Toast;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
 import com.example.finanza.R;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -287,16 +289,16 @@ public class MovementsActivity extends AppCompatActivity {
         btnSalvarLancamento.setOnClickListener(v -> {
             String nome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
             String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".").trim() : "";
-            
+
             // Clear previous errors
             inputNome.setError(null);
             inputConta.setError(null);
             inputData.setError(null);
             inputCategoria.setError(null);
             inputValor.setError(null);
-            
+
             boolean hasError = false;
-            
+
             if (contaSelecionada == null) {
                 inputConta.setError("Selecione a conta");
                 hasError = true;
@@ -309,17 +311,17 @@ public class MovementsActivity extends AppCompatActivity {
                 inputValor.setError("Digite o valor");
                 hasError = true;
             }
-            
+
             if (!hasError) {
                 try {
                     double valor = Double.parseDouble(valorStr);
-                    
+
                     // Validate positive value
                     if (valor <= 0) {
                         inputValor.setError("O valor deve ser maior que zero");
                         return;
                     }
-                    
+
                     Lancamento lancamento = new Lancamento();
                     lancamento.valor = valor;
                     lancamento.data = dataSelecionada;
@@ -374,14 +376,11 @@ public class MovementsActivity extends AppCompatActivity {
     }
 
     private void updateMovements() {
-        // Atualiza o texto do mês
         SimpleDateFormat monthFormat = new SimpleDateFormat("MMMM", new Locale("pt", "BR"));
         txtMonth.setText(monthFormat.format(currentMonth.getTime()).toUpperCase());
 
-        // Limpa lista de transações
         transactionsList.removeAllViews();
 
-        // Busca lançamentos do mês atual
         Calendar inicio = (Calendar) currentMonth.clone();
         inicio.set(Calendar.HOUR_OF_DAY, 0);
         inicio.set(Calendar.MINUTE, 0);
@@ -404,7 +403,7 @@ public class MovementsActivity extends AppCompatActivity {
 
         if (lancamentos != null && lancamentos.size() > 0) {
             SimpleDateFormat diaFormat = new SimpleDateFormat("EEEE, d", new Locale("pt", "BR"));
-            Collections.sort(lancamentos, (l1, l2) -> Long.compare(l2.data, l1.data)); // mais recente primeiro
+            Collections.sort(lancamentos, (l1, l2) -> Long.compare(l2.data, l1.data));
 
             long ultimoDia = -1;
             for (Lancamento lanc : lancamentos) {
@@ -413,7 +412,6 @@ public class MovementsActivity extends AppCompatActivity {
                 long diaMillis = dataLanc.get(Calendar.YEAR) * 1000 + dataLanc.get(Calendar.DAY_OF_YEAR);
 
                 if (diaMillis != ultimoDia) {
-                    // Mostra o cabeçalho do dia
                     TextView diaHeader = new TextView(this);
                     diaHeader.setText(diaFormat.format(dataLanc.getTime()).toUpperCase());
                     diaHeader.setTextColor(getResources().getColor(R.color.white));
@@ -424,13 +422,16 @@ public class MovementsActivity extends AppCompatActivity {
                     ultimoDia = diaMillis;
                 }
 
-                // Mostra a transação
                 LinearLayout transItem = new LinearLayout(this);
                 transItem.setOrientation(LinearLayout.HORIZONTAL);
                 transItem.setPadding(0, 6, 0, 6);
 
+                // Obtém nome da categoria
+                Categoria categoria = db.categoriaDao().buscarPorId(lanc.categoriaId);
+                String categoriaNome = categoria != null ? categoria.nome : "";
+
                 TextView nome = new TextView(this);
-                nome.setText(lanc.descricao + " • " + (lanc.tipo.equals("receita") ? "Receita" : "Despesa"));
+                nome.setText(lanc.descricao + " • " + categoriaNome + " • " + (lanc.tipo.equals("receita") ? "Receita" : "Despesa"));
                 nome.setTextColor(getResources().getColor(R.color.white));
                 nome.setTextSize(15);
 
@@ -444,11 +445,8 @@ public class MovementsActivity extends AppCompatActivity {
                 transItem.addView(nome);
                 transItem.addView(valor);
 
-                // Add click listener for edit functionality
                 final Lancamento finalLanc = lanc;
                 transItem.setOnClickListener(v -> editarLancamento(finalLanc));
-                
-                // Add long click listener for delete functionality
                 transItem.setOnLongClickListener(v -> {
                     confirmarExclusaoLancamento(finalLanc);
                     return true;
@@ -456,12 +454,10 @@ public class MovementsActivity extends AppCompatActivity {
 
                 transactionsList.addView(transItem);
 
-                // Soma saldo
                 saldoFinal += lanc.tipo.equals("receita") ? lanc.valor : -lanc.valor;
             }
         }
 
-        // Mostra saldo final do mês
         saldoMes.setText(String.format("R$ %.2f", saldoFinal));
     }
 
@@ -469,7 +465,6 @@ public class MovementsActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Transação");
 
-        // Create custom layout for edit dialog
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(50, 40, 50, 10);
@@ -484,12 +479,32 @@ public class MovementsActivity extends AppCompatActivity {
         inputValor.setText(String.valueOf(lancamento.valor));
         layout.addView(inputValor);
 
+        // Categoria editável via Spinner
+        final Spinner inputCategoria = new Spinner(this);
+        List<Categoria> categorias = db.categoriaDao().listarPorTipo(lancamento.tipo);
+        String[] nomesCategorias = new String[categorias.size()];
+        int categoriaSelecionadaIndex = 0;
+        for (int i = 0; i < categorias.size(); i++) {
+            nomesCategorias[i] = categorias.get(i).nome;
+            if (categorias.get(i).id == lancamento.categoriaId) {
+                categoriaSelecionadaIndex = i;
+            }
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, nomesCategorias);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        inputCategoria.setAdapter(adapter);
+        inputCategoria.setSelection(categoriaSelecionadaIndex);
+        layout.addView(inputCategoria);
+
         builder.setView(layout);
 
         builder.setPositiveButton("Salvar", (dialog, which) -> {
             String novaDescricao = inputDescricao.getText().toString().trim();
             String novoValorStr = inputValor.getText().toString().trim();
-            
+
+            int selectedIndex = inputCategoria.getSelectedItemPosition();
+            Categoria categoriaSelecionada = categorias.get(selectedIndex);
+
             if (!novaDescricao.isEmpty() && !novoValorStr.isEmpty()) {
                 try {
                     double novoValor = Double.parseDouble(novoValorStr.replace(",", "."));
@@ -499,6 +514,7 @@ public class MovementsActivity extends AppCompatActivity {
                     }
                     lancamento.descricao = novaDescricao;
                     lancamento.valor = novoValor;
+                    lancamento.categoriaId = categoriaSelecionada.id;
                     db.lancamentoDao().atualizar(lancamento);
                     updateMovements();
                     Toast.makeText(this, "Transação atualizada!", Toast.LENGTH_SHORT).show();
@@ -517,15 +533,15 @@ public class MovementsActivity extends AppCompatActivity {
     private void confirmarExclusaoLancamento(Lancamento lancamento) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Excluir Transação");
-        builder.setMessage("Deseja excluir a transação '" + lancamento.descricao + 
-                          "' no valor de R$ " + String.format("%.2f", lancamento.valor) + "?");
-        
+        builder.setMessage("Deseja excluir a transação '" + lancamento.descricao +
+                "' no valor de R$ " + String.format("%.2f", lancamento.valor) + "?");
+
         builder.setPositiveButton("Sim, excluir", (dialog, which) -> {
             db.lancamentoDao().deletar(lancamento);
             updateMovements();
             Toast.makeText(this, "Transação excluída!", Toast.LENGTH_SHORT).show();
         });
-        
+
         builder.setNegativeButton("Cancelar", null);
         builder.show();
     }
@@ -552,22 +568,19 @@ public class MovementsActivity extends AppCompatActivity {
         });
 
         builder.setNegativeButton("Cancelar", null);
-        
+
         builder.setNeutralButton("Ver Todas", (dialog, which) -> {
-            updateMovements(); // Reset to show all transactions for the month
+            updateMovements();
         });
 
         builder.show();
     }
 
     private void buscarTransacoes(String termoBusca) {
-        // Update month display to show search mode
         txtMonth.setText("BUSCA: " + termoBusca.toUpperCase());
 
-        // Clear transactions list
         transactionsList.removeAllViews();
 
-        // Search transactions
         String searchPattern = "%" + termoBusca + "%";
         List<Lancamento> resultados = db.lancamentoDao().buscarPorDescricaoOuValor(usuarioIdAtual, searchPattern);
 
@@ -577,17 +590,18 @@ public class MovementsActivity extends AppCompatActivity {
             SimpleDateFormat dataFormat = new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
 
             for (Lancamento lanc : resultados) {
-                // Create search result item with different styling
                 LinearLayout resultItem = new LinearLayout(this);
                 resultItem.setOrientation(LinearLayout.HORIZONTAL);
                 resultItem.setPadding(0, 12, 0, 12);
 
+                Categoria categoria = db.categoriaDao().buscarPorId(lanc.categoriaId);
+
                 TextView descricao = new TextView(this);
-                descricao.setText(lanc.descricao + " • " + dataFormat.format(new java.util.Date(lanc.data)));
+                descricao.setText(lanc.descricao + " • " + (categoria != null ? categoria.nome : "") + " • " + dataFormat.format(new java.util.Date(lanc.data)));
                 descricao.setTextColor(getResources().getColor(R.color.white));
                 descricao.setTextSize(15);
-                descricao.setLayoutParams(new LinearLayout.LayoutParams(0, 
-                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+                descricao.setLayoutParams(new LinearLayout.LayoutParams(0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
                 TextView valor = new TextView(this);
                 valor.setText(String.format("R$ %.2f", lanc.valor));
@@ -599,7 +613,6 @@ public class MovementsActivity extends AppCompatActivity {
                 resultItem.addView(descricao);
                 resultItem.addView(valor);
 
-                // Add click functionality
                 final Lancamento finalLanc = lanc;
                 resultItem.setOnClickListener(v -> editarLancamento(finalLanc));
                 resultItem.setOnLongClickListener(v -> {
@@ -609,11 +622,9 @@ public class MovementsActivity extends AppCompatActivity {
 
                 transactionsList.addView(resultItem);
 
-                // Calculate total
                 saldoTotal += lanc.tipo.equals("receita") ? lanc.valor : -lanc.valor;
             }
         } else {
-            // No results found
             TextView noResults = new TextView(this);
             noResults.setText("Nenhuma transação encontrada para: " + termoBusca);
             noResults.setTextColor(getResources().getColor(R.color.white));
@@ -623,8 +634,7 @@ public class MovementsActivity extends AppCompatActivity {
             transactionsList.addView(noResults);
         }
 
-        // Show search results count and total
-        saldoMes.setText(String.format("%d resultados • R$ %.2f", 
-            resultados != null ? resultados.size() : 0, saldoTotal));
+        saldoMes.setText(String.format("%d resultados • R$ %.2f",
+                resultados != null ? resultados.size() : 0, saldoTotal));
     }
 }

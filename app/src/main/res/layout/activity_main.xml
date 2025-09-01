@@ -278,7 +278,7 @@
                 <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/ic_arrow_up"
+                    android:src="@drawable/ic_arrow_stonks"
                     android:tint="@color/positiveGreen" />
 
                 <TextView
@@ -305,7 +305,7 @@
                 <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/ic_arrow_down"
+                    android:src="@drawable/ic_arrow_nstonks"
                     android:tint="@color/negativeRed" />
 
                 <TextView

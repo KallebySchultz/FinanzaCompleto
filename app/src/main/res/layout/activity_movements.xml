@@ -123,14 +123,14 @@
             android:padding="16dp" />
     </ScrollView>
 
-    <!-- BOTTOM NAVIGATION FIXO com estilo consistente -->
+    <!-- BOTTOM NAVIGATION FIXO -->
     <LinearLayout
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="111dp"
         android:layout_gravity="bottom"
         android:background="@color/primaryDarkBlue"
-        android:elevation="12dp"
+        android:elevation="8dp"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingLeft="0dp"
@@ -145,10 +145,9 @@
             android:clickable="true"
             android:contentDescription="Home"
             android:focusable="true"
-            android:padding="8dp"
+            android:padding="4dp"
             android:src="@drawable/ic_home"
-            android:tint="@color/white"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:tint="@color/white" />
 
         <ImageView
             android:id="@+id/nav_movements"
@@ -158,10 +157,9 @@
             android:clickable="true"
             android:contentDescription="Movimentações"
             android:focusable="true"
-            android:padding="8dp"
+            android:padding="4dp"
             android:src="@drawable/ic_arrows"
-            android:tint="@color/accentBlue"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:tint="@color/accentBlue" />
 
         <View
             android:layout_width="0dp"
@@ -177,10 +175,9 @@
             android:clickable="true"
             android:contentDescription="Contas"
             android:focusable="true"
-            android:padding="8dp"
+            android:padding="4dp"
             android:src="@drawable/ic_bank"
-            android:tint="@color/white"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:tint="@color/white" />
 
         <ImageView
             android:id="@+id/nav_menu"
@@ -190,10 +187,9 @@
             android:clickable="true"
             android:contentDescription="Menu"
             android:focusable="true"
-            android:padding="8dp"
+            android:padding="4dp"
             android:src="@drawable/ic_menu"
-            android:tint="@color/white"
-            android:background="?android:attr/selectableItemBackgroundBorderless" />
+            android:tint="@color/white" />
     </LinearLayout>
 
     <!-- BOTÃO CENTRAL DE ADICIONAR -->
@@ -310,25 +306,22 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginLeft="16dp"
-            android:layout_marginRight="16dp"
             android:layout_marginBottom="200dp"
             android:orientation="vertical"
-            android:padding="32dp"
-            android:background="@drawable/bg_modal_modern"
-            android:elevation="16dp">
+            android:padding="24dp"
+            android:background="@drawable/bg_modal_blue"
+            android:elevation="12dp">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:boxBackgroundMode="outline"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
                 app:boxStrokeColor="@color/white"
-                app:boxStrokeWidth="2dp"
                 app:hintTextColor="@color/white"
                 android:hint="Nome">
 
@@ -337,8 +330,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
-                    android:textColorHint="#AAFFFFFF"
-                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
                     android:inputType="text"
                     android:background="@android:color/transparent"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -346,14 +338,13 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:boxBackgroundMode="outline"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
                 app:boxStrokeColor="@color/white"
-                app:boxStrokeWidth="2dp"
                 app:hintTextColor="@color/white"
                 android:hint="Conta">
 
@@ -362,8 +353,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
-                    android:textColorHint="#AAFFFFFF"
-                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
                     android:background="@android:color/transparent"
                     android:focusable="false"
                     android:clickable="true"
@@ -373,14 +363,13 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:boxBackgroundMode="outline"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
                 app:boxStrokeColor="@color/white"
-                app:boxStrokeWidth="2dp"
                 app:hintTextColor="@color/white"
                 android:hint="Data">
 
@@ -389,8 +378,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
-                    android:textColorHint="#AAFFFFFF"
-                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
                     android:background="@android:color/transparent"
                     android:focusable="false"
                     android:clickable="true"
@@ -400,14 +388,13 @@
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="12dp"
                 app:boxBackgroundMode="outline"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
                 app:boxStrokeColor="@color/white"
-                app:boxStrokeWidth="2dp"
                 app:hintTextColor="@color/white"
                 android:hint="Categoria">
 
@@ -416,8 +403,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
-                    android:textColorHint="#AAFFFFFF"
-                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
                     android:background="@android:color/transparent"
                     android:focusable="false"
                     android:clickable="true"
@@ -428,14 +414,13 @@
                 android:id="@+id/til_valor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="18dp"
                 app:boxBackgroundMode="outline"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusTopStart="16dp"
+                app:boxCornerRadiusTopEnd="16dp"
+                app:boxCornerRadiusBottomStart="16dp"
+                app:boxCornerRadiusBottomEnd="16dp"
                 app:boxStrokeColor="@color/white"
-                app:boxStrokeWidth="2dp"
                 app:hintTextColor="@color/white"
                 android:hint="Valor">
 
@@ -444,8 +429,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textColor="@color/white"
-                    android:textColorHint="#AAFFFFFF"
-                    android:textSize="16sp"
+                    android:textColorHint="@color/white"
                     android:inputType="numberDecimal"
                     android:background="@android:color/transparent"/>
             </com.google.android.material.textfield.TextInputLayout>
@@ -453,29 +437,26 @@
             <Button
                 android:id="@+id/btn_salvar_lancamento"
                 android:layout_width="match_parent"
-                android:layout_height="56dp"
+                android:layout_height="48dp"
                 android:text="Salvar"
                 android:textColor="@color/white"
                 android:backgroundTint="@color/accentBlue"
                 android:textStyle="bold"
-                android:textSize="18sp"
-                android:textAllCaps="false"
-                android:letterSpacing="0.02"
-                android:elevation="8dp"/>
+                android:textSize="16sp"
+                android:elevation="6dp"/>
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/btn_close_panel"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="48dp"
+            android:layout_marginBottom="40dp"
             android:background="@drawable/circle_blue"
             android:src="@drawable/ic_close"
             android:tint="@color/white"
-            android:elevation="20dp"
+            android:elevation="16dp"
             android:contentDescription="Fechar"
-            android:padding="12dp"
-            android:scaleType="centerInside" />
+            android:padding="16dp"/>
     </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

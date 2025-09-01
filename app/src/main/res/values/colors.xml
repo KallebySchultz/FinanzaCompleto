@@ -5,11 +5,4 @@
     <color name="negativeRed">#E53935</color>
     <color name="white">#FFFFFF</color>
     <color name="gray">#F5F5F5</color>
-    
-    <!-- Additional modern colors -->
-    <color name="lightBlue">#6B9AFF</color>
-    <color name="surfaceWhite">#FAFAFA</color>
-    <color name="textSecondary">#8A8A8A</color>
-    <color name="cardBackground">#FFFFFF</color>
-    <color name="shadowColor">#1A000000</color>
 </resources>

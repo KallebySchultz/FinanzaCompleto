@@ -14,7 +14,6 @@
         android:gravity="center_horizontal"
         android:background="@color/primaryDarkBlue">
 
-        <!-- Logo centralizada com círculo branco, MAIOR -->
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -38,7 +37,6 @@
             android:layout_width="match_parent"
             android:layout_height="82dp" />
 
-        <!-- Menu centralizado, com opção Gráficos, textos MAIORES -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -113,7 +111,96 @@
         <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
     </LinearLayout>
 
-    <!-- Bottom Navigation igual ao main -->
+    <!-- Painel de categorias flutuante -->
+    <FrameLayout
+        android:id="@+id/categorias_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone"
+        android:elevation="16dp">
+
+        <LinearLayout
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/rounded_white"
+            android:padding="32dp"
+            android:gravity="center_horizontal"
+            android:layout_gravity="center"
+            android:elevation="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cadastrar Categoria"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="@color/primaryDarkBlue"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"/>
+
+            <RadioGroup
+                android:id="@+id/tipo_group"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="16dp">
+
+                <RadioButton
+                    android:id="@+id/radio_receita"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Receita"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:checked="true"/>
+
+                <RadioButton
+                    android:id="@+id/radio_despesa"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Despesa"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:layout_marginStart="24dp"/>
+            </RadioGroup>
+
+            <EditText
+                android:id="@+id/input_nome_categoria"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nome da categoria"
+                android:textColor="@color/primaryDarkBlue"
+                android:textColorHint="@color/primaryDarkBlue"
+                android:background="@drawable/edittext_bg"
+                android:layout_marginBottom="16dp"
+                android:inputType="textPersonName"/>
+
+            <!-- Botão "Cadastrar" azul -->
+            <Button
+                android:id="@+id/btn_salvar_categoria"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Cadastrar"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:background="@drawable/button_blue"
+                android:layout_marginBottom="12dp"
+                android:elevation="2dp"/>
+
+            <!-- Botão "Voltar" cinza abaixo do cadastrar -->
+            <Button
+                android:id="@+id/btn_voltar_painel"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Voltar"
+                android:textColor="@color/primaryDarkBlue"
+                android:textStyle="bold"
+                android:background="@drawable/button_gray"
+                android:elevation="1dp"/>
+        </LinearLayout>
+    </FrameLayout>
+
     <LinearLayout
         android:id="@+id/bottom_nav"
         android:layout_width="match_parent"

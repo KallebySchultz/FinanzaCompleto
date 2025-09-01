@@ -1,8 +1,18 @@
 <resources>
     <style name="Theme.Finanza" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/accentBlue</item>
+        <item name="colorPrimaryVariant">@color/primaryDarkBlue</item>
+        <item name="colorAccent">@color/accentBlue</item>
         <item name="android:statusBarColor">@color/primaryDarkBlue</item>
         <item name="android:navigationBarColor">@color/primaryDarkBlue</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
+        <!-- Recomendações extras -->
+        <item name="android:colorBackground">@color/primaryDarkBlue</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/primaryDarkBlue</item>
+        <item name="colorButtonNormal">@color/gray</item>
+        <item name="android:textColorPrimary">@color/primaryDarkBlue</item>
+        <item name="android:textColorSecondary">@color/accentBlue</item>
     </style>
 </resources>

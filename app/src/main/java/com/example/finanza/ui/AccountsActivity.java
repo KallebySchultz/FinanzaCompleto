@@ -3,13 +3,15 @@ package com.example.finanza;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.app.AlertDialog;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
@@ -31,6 +33,12 @@ public class AccountsActivity extends AppCompatActivity {
     private TextView defaultAccountName, defaultAccountSaldo;
     private ImageView defaultAccountIcon;
     private LinearLayout accountsList;
+
+    // Balão de cadastro de contas
+    private FrameLayout contasPanel;
+    private EditText inputNomeConta, inputSaldoInicial;
+    private Button btnSalvarConta;
+    private ImageButton navAdd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,38 +65,66 @@ public class AccountsActivity extends AppCompatActivity {
         defaultAccountIcon = findViewById(R.id.default_account_icon);
         accountsList = findViewById(R.id.accounts_list);
 
-        // Botão adicionar conta
-        ImageButton navAdd = findViewById(R.id.nav_add);
+        contasPanel = findViewById(R.id.contas_panel);
+        inputNomeConta = findViewById(R.id.input_nome_conta);
+        inputSaldoInicial = findViewById(R.id.input_saldo_inicial);
+        btnSalvarConta = findViewById(R.id.btn_salvar_conta);
+
+        navAdd = findViewById(R.id.nav_add);
+
         navAdd.setOnClickListener(v -> {
-            // Diálogo para nome da nova conta
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Nova Conta");
-            builder.setMessage("Digite o nome da conta:");
-
-            final EditText input = new EditText(this);
-            input.setHint("Nome da conta");
-            builder.setView(input);
-
-            builder.setPositiveButton("Criar", (dialog, which) -> {
-                String nomeConta = input.getText().toString().trim();
-                if (!nomeConta.isEmpty()) {
-                    Conta novaConta = new Conta();
-                    novaConta.nome = nomeConta;
-                    novaConta.saldoInicial = 0.0;
-                    novaConta.usuarioId = usuarioIdAtual;
-                    db.contaDao().inserir(novaConta);
-                    updateAccounts(); // Atualiza a lista
-                    Toast.makeText(this, "Conta criada!", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "Digite um nome válido!", Toast.LENGTH_SHORT).show();
-                }
-            });
-
-            builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
-            builder.show();
+            if (contasPanel.getVisibility() == View.GONE) {
+                contasPanel.setVisibility(View.VISIBLE);
+                navAdd.setImageResource(R.drawable.ic_close);
+            } else {
+                contasPanel.setVisibility(View.GONE);
+                navAdd.setImageResource(R.drawable.ic_add);
+                inputNomeConta.setText("");
+                inputSaldoInicial.setText("");
+            }
         });
 
-        // Bottom Navigation
+        // Fecha painel ao clicar fora do balão/modal
+        contasPanel.setOnClickListener(v -> {
+            contasPanel.setVisibility(View.GONE);
+            navAdd.setImageResource(R.drawable.ic_add);
+            inputNomeConta.setText("");
+            inputSaldoInicial.setText("");
+        });
+        // Evita fechar ao clicar dentro do painel
+        contasPanel.findViewById(R.id.input_nome_conta).setOnClickListener(v -> {});
+        contasPanel.findViewById(R.id.input_saldo_inicial).setOnClickListener(v -> {});
+        contasPanel.findViewById(R.id.btn_salvar_conta).setOnClickListener(v -> {});
+
+        btnSalvarConta.setOnClickListener(v -> {
+            String nomeConta = inputNomeConta.getText().toString().trim();
+            String saldoStr = inputSaldoInicial.getText().toString().trim();
+            double saldoInicial = 0.0;
+            if (!saldoStr.isEmpty()) {
+                try {
+                    saldoInicial = Double.parseDouble(saldoStr.replace(",", "."));
+                } catch (Exception e) {
+                    inputSaldoInicial.setError("Saldo inválido");
+                    return;
+                }
+            }
+            if (nomeConta.isEmpty()) {
+                inputNomeConta.setError("Digite o nome");
+                return;
+            }
+            Conta novaConta = new Conta();
+            novaConta.nome = nomeConta;
+            novaConta.saldoInicial = saldoInicial;
+            novaConta.usuarioId = usuarioIdAtual;
+            db.contaDao().inserir(novaConta);
+            updateAccounts();
+            contasPanel.setVisibility(View.GONE);
+            navAdd.setImageResource(R.drawable.ic_add);
+            inputNomeConta.setText("");
+            inputSaldoInicial.setText("");
+            Toast.makeText(this, "Conta cadastrada!", Toast.LENGTH_SHORT).show();
+        });
+
         final ImageView navHome = findViewById(R.id.nav_home);
         final ImageView navMenu = findViewById(R.id.nav_menu);
         final ImageView navAccounts = findViewById(R.id.nav_accounts);
@@ -121,7 +157,6 @@ public class AccountsActivity extends AppCompatActivity {
             navMenu.setColorFilter(getResources().getColor(R.color.white));
             navAccounts.setColorFilter(getResources().getColor(R.color.accentBlue));
             navMovements.setColorFilter(getResources().getColor(R.color.white));
-            // Já está na tela de contas!
         });
 
         navMovements.setOnClickListener(v -> {
@@ -135,7 +170,6 @@ public class AccountsActivity extends AppCompatActivity {
             finish();
         });
 
-        // Inicial: destaca Accounts
         navAccounts.setColorFilter(getResources().getColor(R.color.accentBlue));
         navHome.setColorFilter(getResources().getColor(R.color.white));
         navMenu.setColorFilter(getResources().getColor(R.color.white));
@@ -149,10 +183,8 @@ public class AccountsActivity extends AppCompatActivity {
 
         accountsList.removeAllViews();
 
-        // Saldo total (todas as contas)
         double saldoTotal = consultarSaldoGeral();
 
-        // Conta padrão
         Conta contaPadrao = null;
         for (Conta c : contas) {
             if ("Conta Padrão".equals(c.nome)) {
@@ -161,17 +193,14 @@ public class AccountsActivity extends AppCompatActivity {
             }
         }
 
-        // Atualiza SALDO ATUAL (topo)
         txtSaldoAtual.setText(String.format("R$ %.2f", saldoTotal));
 
-        // Conta padrão mostra saldo calculado
         if (contaPadrao != null) {
             defaultAccountName.setText(contaPadrao.nome);
             defaultAccountSaldo.setText(String.format("R$ %.2f", consultarSaldoConta(contaPadrao)));
             defaultAccountIcon.setImageResource(R.drawable.ic_bank);
         }
 
-        // Lista as contas individualmente (saldo atualizado), exceto "Conta Padrão"
         for (Conta conta : contas) {
             if (contaPadrao != null && conta.id == contaPadrao.id) continue;
 
@@ -212,7 +241,6 @@ public class AccountsActivity extends AppCompatActivity {
         }
     }
 
-    // Saldo real de cada conta (saldoInicial + receitas - despesas)
     private double consultarSaldoConta(Conta conta) {
         Double receitas = db.lancamentoDao().somaPorTipoConta("receita", usuarioIdAtual, conta.id);
         Double despesas = db.lancamentoDao().somaPorTipoConta("despesa", usuarioIdAtual, conta.id);
@@ -221,7 +249,6 @@ public class AccountsActivity extends AppCompatActivity {
         return conta.saldoInicial + receitas - despesas;
     }
 
-    // Saldo total de todas as contas (usado no topo)
     private double consultarSaldoGeral() {
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
         double saldoTotal = 0.0;

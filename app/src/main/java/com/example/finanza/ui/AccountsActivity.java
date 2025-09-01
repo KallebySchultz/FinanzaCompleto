@@ -1,4 +1,4 @@
-package com.example.finanza;
+package com.example.finanza.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,14 +12,16 @@ import android.widget.Toast;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Button;
+import android.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
+import com.example.finanza.R;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Conta;
 import com.example.finanza.model.Usuario;
-import com.example.finanza.ui.MenuActivity;
-import com.example.finanza.ui.MovementsActivity;
+import com.example.finanza.model.Lancamento;
+import com.example.finanza.MainActivity;
 
 import java.util.List;
 
@@ -237,6 +239,16 @@ public class AccountsActivity extends AppCompatActivity {
             item.addView(icon);
             item.addView(infoBox);
 
+            // Add click listener for edit functionality
+            final Conta finalConta = conta;
+            item.setOnClickListener(v -> editarConta(finalConta));
+            
+            // Add long click listener for delete functionality
+            item.setOnLongClickListener(v -> {
+                confirmarExclusaoConta(finalConta);
+                return true;
+            });
+
             accountsList.addView(item);
         }
     }
@@ -256,5 +268,80 @@ public class AccountsActivity extends AppCompatActivity {
             saldoTotal += consultarSaldoConta(conta);
         }
         return saldoTotal;
+    }
+
+    private void editarConta(Conta conta) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Editar Conta");
+
+        // Create custom layout for edit dialog
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 10);
+
+        final EditText inputNome = new EditText(this);
+        inputNome.setHint("Nome da conta");
+        inputNome.setText(conta.nome);
+        layout.addView(inputNome);
+
+        final EditText inputSaldo = new EditText(this);
+        inputSaldo.setHint("Saldo inicial");
+        inputSaldo.setText(String.valueOf(conta.saldoInicial));
+        layout.addView(inputSaldo);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Salvar", (dialog, which) -> {
+            String novoNome = inputNome.getText().toString().trim();
+            String novoSaldoStr = inputSaldo.getText().toString().trim();
+            
+            if (!novoNome.isEmpty()) {
+                conta.nome = novoNome;
+                if (!novoSaldoStr.isEmpty()) {
+                    try {
+                        conta.saldoInicial = Double.parseDouble(novoSaldoStr.replace(",", "."));
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(this, "Saldo inválido", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                }
+                db.contaDao().atualizar(conta);
+                updateAccounts();
+                Toast.makeText(this, "Conta atualizada!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
+    }
+
+    private void confirmarExclusaoConta(Conta conta) {
+        // Check if account has transactions
+        List<Lancamento> lancamentos = db.lancamentoDao().listarPorConta(conta.id);
+        
+        String message = "Deseja excluir a conta '" + conta.nome + "'?";
+        if (!lancamentos.isEmpty()) {
+            message += "\n\nATENÇÃO: Esta conta possui " + lancamentos.size() + 
+                      " transação(ões). Elas também serão excluídas.";
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Excluir Conta");
+        builder.setMessage(message);
+        
+        builder.setPositiveButton("Sim, excluir", (dialog, which) -> {
+            // Delete all transactions first (due to foreign key constraints)
+            for (Lancamento lancamento : lancamentos) {
+                db.lancamentoDao().deletar(lancamento);
+            }
+            
+            // Then delete the account
+            db.contaDao().deletar(conta);
+            updateAccounts();
+            Toast.makeText(this, "Conta excluída!", Toast.LENGTH_SHORT).show();
+        });
+        
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
     }
 }

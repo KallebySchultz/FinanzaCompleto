@@ -225,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                 navHome.setColorFilter(getResources().getColor(R.color.white));
                 navMenu.setColorFilter(getResources().getColor(R.color.white));
                 navAccounts.setColorFilter(getResources().getColor(R.color.accentBlue));
-                Intent intent = new Intent(this, AccountsActivity.class);
+                Intent intent = new Intent(this, com.example.finanza.ui.AccountsActivity.class);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
                 finish(); // remova se quiser voltar para a MainActivity ao pressionar "back"
@@ -349,32 +349,61 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnSalvarLancamento.setOnClickListener(v -> {
-            String nome = inputNome.getText() != null ? inputNome.getText().toString() : "";
-            String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".") : "";
-            if (contaSelecionada != null && categoriaSelecionada != null && !valorStr.isEmpty()) {
+            String nome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
+            String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".").trim() : "";
+            
+            // Clear previous errors
+            inputNome.setError(null);
+            inputConta.setError(null);
+            inputData.setError(null);
+            inputCategoria.setError(null);
+            inputValor.setError(null);
+            
+            boolean hasError = false;
+            
+            if (contaSelecionada == null) {
+                inputConta.setError("Selecione a conta");
+                hasError = true;
+            }
+            if (categoriaSelecionada == null) {
+                inputCategoria.setError("Selecione a categoria");
+                hasError = true;
+            }
+            if (valorStr.isEmpty()) {
+                inputValor.setError("Digite o valor");
+                hasError = true;
+            }
+            
+            if (!hasError) {
                 try {
                     double valor = Double.parseDouble(valorStr);
+                    
+                    // Validate positive value
+                    if (valor <= 0) {
+                        inputValor.setError("O valor deve ser maior que zero");
+                        return;
+                    }
+                    
+                    // Create transaction
                     Lancamento lancamento = new Lancamento();
                     lancamento.valor = valor;
                     lancamento.data = dataSelecionada;
-                    lancamento.descricao = nome.isEmpty() ? "Reajuste de saldo" : nome;
+                    lancamento.descricao = nome.isEmpty() ? (isReceitaPanel ? "Receita" : "Despesa") : nome;
                     lancamento.contaId = contaSelecionada.id;
                     lancamento.categoriaId = categoriaSelecionada.id;
                     lancamento.usuarioId = usuarioIdAtual;
                     lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
+                    
                     db.lancamentoDao().inserir(lancamento);
                     atualizarValores(tvSaldo, tvReceita, tvDespesa);
                     if (!saldoVisivel) tvSaldo.setText("****");
                     addTransactionPanel.setVisibility(View.GONE);
                     navAdd.setImageResource(R.drawable.ic_add);
                     limparCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor);
+                    
                 } catch (NumberFormatException e) {
-                    inputValor.setError("Valor inválido!");
+                    inputValor.setError("Valor inválido! Use apenas números e ponto para decimais.");
                 }
-            } else {
-                if (contaSelecionada == null) inputConta.setError("Selecione a conta");
-                if (categoriaSelecionada == null) inputCategoria.setError("Selecione a categoria");
-                if (valorStr.isEmpty()) inputValor.setError("Digite o valor");
             }
         });
     }

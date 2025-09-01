@@ -14,10 +14,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.room.Room;
 import com.example.finanza.R;
-import com.example.finanza.AccountsActivity;
+import com.example.finanza.ui.AccountsActivity;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Categoria;
+import com.example.finanza.model.Lancamento;
+import com.example.finanza.model.Conta;
 import com.example.finanza.ui.MovementsActivity;
+import com.example.finanza.ui.CategoriaActivity;
+import com.example.finanza.ui.ReportsActivity;
 
 public class MenuActivity extends AppCompatActivity {
     private FrameLayout categoriasPanel;
@@ -85,7 +89,10 @@ public class MenuActivity extends AppCompatActivity {
         TextView btnCategorias = findViewById(R.id.btnCategorias);
         if (btnCategorias != null) {
             btnCategorias.setOnClickListener(v -> {
-                categoriasPanel.setVisibility(View.VISIBLE);
+                Intent intent = new Intent(MenuActivity.this, CategoriaActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
             });
         }
 
@@ -121,6 +128,61 @@ public class MenuActivity extends AppCompatActivity {
                 tipoGroup.check(R.id.radio_receita);
             });
         }
+
+        // Export functionality
+        TextView btnExportar = findViewById(R.id.btnExportar);
+        if (btnExportar != null) {
+            btnExportar.setOnClickListener(v -> exportarDados());
+        }
+
+        // Reports functionality
+        TextView btnGraficos = findViewById(R.id.btnGraficos);
+        if (btnGraficos != null) {
+            btnGraficos.setOnClickListener(v -> {
+                Intent intent = new Intent(MenuActivity.this, ReportsActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+            });
+        }
+    }
+
+    private void exportarDados() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Exportar Dados");
+        builder.setMessage("Esta funcionalidade permite exportar todos os seus dados financeiros.\n\n" +
+                          "Em uma versão completa, os dados seriam exportados para um arquivo CSV ou PDF.");
+        
+        builder.setPositiveButton("Exportar CSV (Simulado)", (dialog, which) -> {
+            // In a real implementation, this would create and export a CSV file
+            // For now, just show a simulation
+            StringBuilder csvData = new StringBuilder();
+            csvData.append("Tipo,Descrição,Valor,Data,Categoria,Conta\n");
+            
+            List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1); // assuming user ID 1
+            for (Lancamento lanc : lancamentos) {
+                Categoria categoria = db.categoriaDao().buscarPorId(lanc.categoriaId);
+                Conta conta = db.contaDao().buscarPorId(lanc.contaId);
+                
+                csvData.append(lanc.tipo).append(",")
+                       .append(lanc.descricao).append(",")
+                       .append(lanc.valor).append(",")
+                       .append(new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(lanc.data))).append(",")
+                       .append(categoria != null ? categoria.nome : "N/A").append(",")
+                       .append(conta != null ? conta.nome : "N/A").append("\n");
+            }
+            
+            // Show preview of CSV data
+            AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
+            previewBuilder.setTitle("Preview dos Dados CSV");
+            previewBuilder.setMessage(csvData.length() > 1000 ? 
+                csvData.substring(0, 1000) + "..." : csvData.toString());
+            previewBuilder.setPositiveButton("OK", null);
+            previewBuilder.show();
+        });
+        
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
     }
 
     private void highlightBottomNav() {

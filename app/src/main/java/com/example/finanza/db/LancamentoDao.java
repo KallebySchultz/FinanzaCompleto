@@ -3,6 +3,8 @@ package com.example.finanza.db;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
+import androidx.room.Update;
+import androidx.room.Delete;
 import com.example.finanza.model.Lancamento;
 import java.util.List;
 
@@ -10,6 +12,12 @@ import java.util.List;
 public interface LancamentoDao {
     @Insert
     long inserir(Lancamento lancamento);
+
+    @Update
+    void atualizar(Lancamento lancamento);
+
+    @Delete
+    void deletar(Lancamento lancamento);
 
     @Query("SELECT * FROM Lancamento WHERE usuarioId = :usuarioId ORDER BY data DESC")
     List<Lancamento> listarPorUsuario(int usuarioId);
@@ -26,4 +34,16 @@ public interface LancamentoDao {
 
     @Query("SELECT * FROM Lancamento WHERE usuarioId = :usuarioId AND data >= :inicio AND data <= :fim ORDER BY data DESC")
     List<Lancamento> listarPorUsuarioPeriodo(int usuarioId, long inicio, long fim);
+
+    @Query("SELECT * FROM Lancamento WHERE id = :id")
+    Lancamento buscarPorId(int id);
+
+    @Query("SELECT * FROM Lancamento WHERE contaId = :contaId ORDER BY data DESC")
+    List<Lancamento> listarPorConta(int contaId);
+
+    @Query("SELECT * FROM Lancamento WHERE categoriaId = :categoriaId ORDER BY data DESC")
+    List<Lancamento> listarPorCategoria(int categoriaId);
+
+    @Query("SELECT * FROM Lancamento WHERE usuarioId = :usuarioId AND (descricao LIKE :searchTerm OR CAST(valor AS TEXT) LIKE :searchTerm) ORDER BY data DESC")
+    List<Lancamento> buscarPorDescricaoOuValor(int usuarioId, String searchTerm);
 }

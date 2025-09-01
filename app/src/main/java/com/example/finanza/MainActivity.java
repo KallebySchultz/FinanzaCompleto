@@ -25,7 +25,7 @@ import com.example.finanza.model.Usuario;
 import com.example.finanza.model.Conta;
 import com.example.finanza.model.Categoria;
 import com.example.finanza.ui.MenuActivity;
-import com.example.finanza.ui.MovementsActivity; // ADICIONE ESTA IMPORTAÇÃO
+import com.example.finanza.ui.MovementsActivity;
 
 import java.util.Calendar;
 import java.util.List;
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         contaPadraoId = contaPadrao.id;
         contaSelecionada = contaPadrao;
 
-// Busca ou cria categorias padrão de receita
+        // Busca ou cria categorias padrão de receita
         String[][] categoriasReceitaPadrao = {
                 {"Receita", "#22BB33"},
                 {"Salário", "#22BB33"},
@@ -117,10 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 db.categoriaDao().inserir(nova);
             }
         }
-// Atualiza a lista após possíveis inserções
         receitasCats = db.categoriaDao().listarPorTipo("receita");
-
-// Seleciona a categoria "Receita" (principal)
         Categoria catReceita = null;
         for (Categoria cat : receitasCats) {
             if ("Receita".equalsIgnoreCase(cat.nome)) {
@@ -129,11 +126,11 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (catReceita == null && !receitasCats.isEmpty()) {
-            catReceita = receitasCats.get(0); // fallback
+            catReceita = receitasCats.get(0);
         }
         categoriaReceitaId = catReceita != null ? catReceita.id : -1;
 
-// Busca ou cria categorias padrão de despesa
+        // Busca ou cria categorias padrão de despesa
         String[][] categoriasDespesaPadrao = {
                 {"Despesa", "#FF2222"},
                 {"Alimentação", "#FF2222"},
@@ -167,10 +164,7 @@ public class MainActivity extends AppCompatActivity {
                 db.categoriaDao().inserir(nova);
             }
         }
-// Atualiza a lista após possíveis inserções
         despesaCats = db.categoriaDao().listarPorTipo("despesa");
-
-// Seleciona a categoria "Despesa" (principal)
         Categoria catDespesa = null;
         for (Categoria cat : despesaCats) {
             if ("Despesa".equalsIgnoreCase(cat.nome)) {
@@ -179,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (catDespesa == null && !despesaCats.isEmpty()) {
-            catDespesa = despesaCats.get(0); // fallback
+            catDespesa = despesaCats.get(0);
         }
         categoriaDespesaId = catDespesa != null ? catDespesa.id : -1;
 
@@ -234,7 +228,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(this, com.example.finanza.ui.AccountsActivity.class);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
-                finish(); // remova se quiser voltar para a MainActivity ao pressionar "back"
+                finish();
             });
         }
 
@@ -244,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
                 navHome.setColorFilter(getResources().getColor(R.color.white));
                 navMenu.setColorFilter(getResources().getColor(R.color.white));
                 navMovements.setColorFilter(getResources().getColor(R.color.accentBlue));
-                Intent intent = new Intent(this, MovementsActivity.class); // ADICIONADO
+                Intent intent = new Intent(this, MovementsActivity.class);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
                 finish();
@@ -357,16 +351,16 @@ public class MainActivity extends AppCompatActivity {
         btnSalvarLancamento.setOnClickListener(v -> {
             String nome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
             String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".").trim() : "";
-            
+
             // Clear previous errors
             inputNome.setError(null);
             inputConta.setError(null);
             inputData.setError(null);
             inputCategoria.setError(null);
             inputValor.setError(null);
-            
+
             boolean hasError = false;
-            
+
             if (contaSelecionada == null) {
                 inputConta.setError("Selecione a conta");
                 hasError = true;
@@ -379,17 +373,17 @@ public class MainActivity extends AppCompatActivity {
                 inputValor.setError("Digite o valor");
                 hasError = true;
             }
-            
+
             if (!hasError) {
                 try {
                     double valor = Double.parseDouble(valorStr);
-                    
+
                     // Validate positive value
                     if (valor <= 0) {
                         inputValor.setError("O valor deve ser maior que zero");
                         return;
                     }
-                    
+
                     // Create transaction
                     Lancamento lancamento = new Lancamento();
                     lancamento.valor = valor;
@@ -399,13 +393,13 @@ public class MainActivity extends AppCompatActivity {
                     lancamento.categoriaId = categoriaSelecionada.id;
                     lancamento.usuarioId = usuarioIdAtual;
                     lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
-                    
+
                     db.lancamentoDao().inserir(lancamento);
                     atualizarValores(tvSaldo, tvReceita, tvDespesa);
                     addTransactionPanel.setVisibility(View.GONE);
                     navAdd.setImageResource(R.drawable.ic_add);
                     limparCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor);
-                    
+
                 } catch (NumberFormatException e) {
                     inputValor.setError("Valor inválido! Use apenas números e ponto para decimais.");
                 }

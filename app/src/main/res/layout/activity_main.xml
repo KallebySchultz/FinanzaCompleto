@@ -353,66 +353,87 @@
                 android:textColor="@color/primaryDarkBlue"
                 android:layout_gravity="center"
                 android:layout_marginBottom="16dp"/>
-            <EditText
-                android:id="@+id/input_nome"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Nome"
-                android:textColor="@color/primaryDarkBlue"
-                android:textColorHint="@color/primaryDarkBlue"
-                android:background="@drawable/edittext_bg"
-                android:layout_marginBottom="16dp"
-                android:inputType="text"/>
 
-            <EditText
-                android:id="@+id/input_conta"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Conta"
-                android:textColor="@color/primaryDarkBlue"
-                android:textColorHint="@color/primaryDarkBlue"
-                android:background="@drawable/edittext_bg"
-                android:layout_marginBottom="16dp"
-                android:focusable="false"
-                android:clickable="true"
-                android:inputType="none"/>
+                android:layout_marginBottom="16dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_nome"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Nome"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:textColorHint="@color/primaryDarkBlue"
+                    android:background="@drawable/edittext_bg"
+                    android:inputType="text"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <EditText
-                android:id="@+id/input_data"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Data"
-                android:textColor="@color/primaryDarkBlue"
-                android:textColorHint="@color/primaryDarkBlue"
-                android:background="@drawable/edittext_bg"
-                android:layout_marginBottom="16dp"
-                android:focusable="false"
-                android:clickable="true"
-                android:inputType="none"/>
+                android:layout_marginBottom="16dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_conta"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Conta"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:textColorHint="@color/primaryDarkBlue"
+                    android:background="@drawable/edittext_bg"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:inputType="none"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <EditText
-                android:id="@+id/input_categoria"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Categoria"
-                android:textColor="@color/primaryDarkBlue"
-                android:textColorHint="@color/primaryDarkBlue"
-                android:background="@drawable/edittext_bg"
-                android:layout_marginBottom="16dp"
-                android:focusable="false"
-                android:clickable="true"
-                android:inputType="none"/>
+                android:layout_marginBottom="16dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_data"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Data"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:textColorHint="@color/primaryDarkBlue"
+                    android:background="@drawable/edittext_bg"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:inputType="none"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-            <EditText
-                android:id="@+id/input_valor"
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Valor"
-                android:textColor="@color/primaryDarkBlue"
-                android:textColorHint="@color/primaryDarkBlue"
-                android:background="@drawable/edittext_bg"
-                android:layout_marginBottom="16dp"
-                android:inputType="numberDecimal"/>
+                android:layout_marginBottom="16dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_categoria"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Categoria"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:textColorHint="@color/primaryDarkBlue"
+                    android:background="@drawable/edittext_bg"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:inputType="none"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/input_valor"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Valor"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:textColorHint="@color/primaryDarkBlue"
+                    android:background="@drawable/edittext_bg"
+                    android:inputType="numberDecimal"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:id="@+id/btn_salvar_lancamento"

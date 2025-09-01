@@ -21,6 +21,7 @@ import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Conta;
 import com.example.finanza.ui.MovementsActivity;
 import com.example.finanza.ui.CategoriaActivity;
+import com.example.finanza.ui.ReportsActivity;
 
 public class MenuActivity extends AppCompatActivity {
     private FrameLayout categoriasPanel;
@@ -132,6 +133,17 @@ public class MenuActivity extends AppCompatActivity {
         TextView btnExportar = findViewById(R.id.btnExportar);
         if (btnExportar != null) {
             btnExportar.setOnClickListener(v -> exportarDados());
+        }
+
+        // Reports functionality
+        TextView btnGraficos = findViewById(R.id.btnGraficos);
+        if (btnGraficos != null) {
+            btnGraficos.setOnClickListener(v -> {
+                Intent intent = new Intent(MenuActivity.this, ReportsActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+            });
         }
     }
 

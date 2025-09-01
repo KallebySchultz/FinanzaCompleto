@@ -43,4 +43,7 @@ public interface LancamentoDao {
 
     @Query("SELECT * FROM Lancamento WHERE categoriaId = :categoriaId ORDER BY data DESC")
     List<Lancamento> listarPorCategoria(int categoriaId);
+
+    @Query("SELECT * FROM Lancamento WHERE usuarioId = :usuarioId AND (descricao LIKE :searchTerm OR CAST(valor AS TEXT) LIKE :searchTerm) ORDER BY data DESC")
+    List<Lancamento> buscarPorDescricaoOuValor(int usuarioId, String searchTerm);
 }

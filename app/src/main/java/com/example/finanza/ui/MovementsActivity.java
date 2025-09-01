@@ -159,6 +159,12 @@ public class MovementsActivity extends AppCompatActivity {
             dpd.show();
         });
 
+        // Long click on month for search functionality
+        txtMonth.setOnLongClickListener(v -> {
+            showSearchDialog();
+            return true;
+        });
+
         // Navegação pelos botões inferiores
         ImageView navHome = findViewById(R.id.nav_home);
         ImageView navMovements = findViewById(R.id.nav_movements);
@@ -522,5 +528,103 @@ public class MovementsActivity extends AppCompatActivity {
         
         builder.setNegativeButton("Cancelar", null);
         builder.show();
+    }
+
+    private void showSearchDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🔍 Buscar Transações");
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 40, 50, 10);
+
+        final EditText inputBusca = new EditText(this);
+        inputBusca.setHint("Digite a descrição ou valor...");
+        layout.addView(inputBusca);
+
+        builder.setView(layout);
+
+        builder.setPositiveButton("Buscar", (dialog, which) -> {
+            String termoBusca = inputBusca.getText().toString().trim();
+            if (!termoBusca.isEmpty()) {
+                buscarTransacoes(termoBusca);
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", null);
+        
+        builder.setNeutralButton("Ver Todas", (dialog, which) -> {
+            updateMovements(); // Reset to show all transactions for the month
+        });
+
+        builder.show();
+    }
+
+    private void buscarTransacoes(String termoBusca) {
+        // Update month display to show search mode
+        txtMonth.setText("BUSCA: " + termoBusca.toUpperCase());
+
+        // Clear transactions list
+        transactionsList.removeAllViews();
+
+        // Search transactions
+        String searchPattern = "%" + termoBusca + "%";
+        List<Lancamento> resultados = db.lancamentoDao().buscarPorDescricaoOuValor(usuarioIdAtual, searchPattern);
+
+        double saldoTotal = 0.0;
+
+        if (resultados != null && resultados.size() > 0) {
+            SimpleDateFormat dataFormat = new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR"));
+
+            for (Lancamento lanc : resultados) {
+                // Create search result item with different styling
+                LinearLayout resultItem = new LinearLayout(this);
+                resultItem.setOrientation(LinearLayout.HORIZONTAL);
+                resultItem.setPadding(0, 12, 0, 12);
+
+                TextView descricao = new TextView(this);
+                descricao.setText(lanc.descricao + " • " + dataFormat.format(new java.util.Date(lanc.data)));
+                descricao.setTextColor(getResources().getColor(R.color.white));
+                descricao.setTextSize(15);
+                descricao.setLayoutParams(new LinearLayout.LayoutParams(0, 
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                TextView valor = new TextView(this);
+                valor.setText(String.format("R$ %.2f", lanc.valor));
+                valor.setTextColor(getResources().getColor(
+                        lanc.tipo.equals("receita") ? R.color.positiveGreen : R.color.negativeRed));
+                valor.setTextSize(15);
+                valor.setTypeface(null, android.graphics.Typeface.BOLD);
+
+                resultItem.addView(descricao);
+                resultItem.addView(valor);
+
+                // Add click functionality
+                final Lancamento finalLanc = lanc;
+                resultItem.setOnClickListener(v -> editarLancamento(finalLanc));
+                resultItem.setOnLongClickListener(v -> {
+                    confirmarExclusaoLancamento(finalLanc);
+                    return true;
+                });
+
+                transactionsList.addView(resultItem);
+
+                // Calculate total
+                saldoTotal += lanc.tipo.equals("receita") ? lanc.valor : -lanc.valor;
+            }
+        } else {
+            // No results found
+            TextView noResults = new TextView(this);
+            noResults.setText("Nenhuma transação encontrada para: " + termoBusca);
+            noResults.setTextColor(getResources().getColor(R.color.white));
+            noResults.setTextSize(16);
+            noResults.setPadding(0, 20, 0, 20);
+            noResults.setGravity(android.view.Gravity.CENTER);
+            transactionsList.addView(noResults);
+        }
+
+        // Show search results count and total
+        saldoMes.setText(String.format("%d resultados • R$ %.2f", 
+            resultados != null ? resultados.size() : 0, saldoTotal));
     }
 }

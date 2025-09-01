@@ -26,6 +26,7 @@
         <activity android:name=".ui.AccountsActivity" />
         <activity android:name=".ui.MovementsActivity" />
         <activity android:name=".ui.CategoriaActivity" />
+        <activity android:name=".ui.ReportsActivity" />
 
     </application>
 </manifest>

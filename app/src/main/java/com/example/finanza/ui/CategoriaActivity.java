@@ -143,7 +143,7 @@ public class CategoriaActivity extends AppCompatActivity {
         } else {
             for (Categoria categoria : todasCategorias) {
                 if (categoria.nome.toLowerCase().contains(filtro.toLowerCase()) ||
-                    categoria.tipo.toLowerCase().contains(filtro.toLowerCase())) {
+                        categoria.tipo.toLowerCase().contains(filtro.toLowerCase())) {
                     categoriasFiltradas.add(categoria);
                 }
             }
@@ -175,7 +175,7 @@ public class CategoriaActivity extends AppCompatActivity {
             iconParams.setMargins(0, 0, 10, 0);
             icon.setLayoutParams(iconParams);
             icon.setImageResource(R.drawable.ic_arrows);
-            
+
             if ("receita".equals(categoria.tipo)) {
                 icon.setBackground(getResources().getDrawable(R.drawable.bg_account_icon_circle_green));
                 icon.setColorFilter(getResources().getColor(R.color.positiveGreen));
@@ -189,7 +189,7 @@ public class CategoriaActivity extends AppCompatActivity {
             infoBox.setOrientation(LinearLayout.VERTICAL);
             infoBox.setPadding(10, 0, 0, 0);
             LinearLayout.LayoutParams infoParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT);
             infoParams.weight = 1;
             infoBox.setLayoutParams(infoParams);
 
@@ -202,7 +202,7 @@ public class CategoriaActivity extends AppCompatActivity {
             TextView tipo = new TextView(this);
             tipo.setText(categoria.tipo.toUpperCase());
             tipo.setTextColor(getResources().getColor(
-                "receita".equals(categoria.tipo) ? R.color.positiveGreen : R.color.negativeRed));
+                    "receita".equals(categoria.tipo) ? R.color.positiveGreen : R.color.negativeRed));
             tipo.setTextSize(12);
             tipo.setTypeface(null, android.graphics.Typeface.BOLD);
 
@@ -215,7 +215,7 @@ public class CategoriaActivity extends AppCompatActivity {
             // Add click listener for edit functionality
             final Categoria finalCategoria = categoria;
             item.setOnClickListener(v -> editarCategoria(finalCategoria));
-            
+
             // Add long click listener for delete functionality
             item.setOnLongClickListener(v -> {
                 confirmarExclusaoCategoria(finalCategoria);
@@ -232,12 +232,12 @@ public class CategoriaActivity extends AppCompatActivity {
 
         // Create a styled layout that matches the transaction launch panel
         FrameLayout frameLayout = new FrameLayout(this);
-        
+
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(32, 32, 32, 32);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
-        
+
         // Title
         TextView title = new TextView(this);
         title.setText("Nova Categoria");
@@ -246,7 +246,7 @@ public class CategoriaActivity extends AppCompatActivity {
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         title.setGravity(android.view.Gravity.CENTER);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         titleParams.bottomMargin = 16;
         title.setLayoutParams(titleParams);
         layout.addView(title);
@@ -256,10 +256,10 @@ public class CategoriaActivity extends AppCompatActivity {
         inputNome.setHint("Nome da categoria");
         inputNome.setText(nomeInicial);
         inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputNome.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputNome.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
         inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         inputParams.bottomMargin = 16;
         inputNome.setLayoutParams(inputParams);
         layout.addView(inputNome);
@@ -268,27 +268,27 @@ public class CategoriaActivity extends AppCompatActivity {
         final RadioGroup tipoGroup = new RadioGroup(this);
         tipoGroup.setOrientation(RadioGroup.HORIZONTAL);
         tipoGroup.setGravity(Gravity.CENTER);
-        
+
         RadioButton radioReceita = new RadioButton(this);
         radioReceita.setText("Receita");
         radioReceita.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         radioReceita.setId(1);
         radioReceita.setChecked(true);
-        
+
         RadioButton radioDespesa = new RadioButton(this);
         radioDespesa.setText("Despesa");
         radioDespesa.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         radioDespesa.setId(2);
         LinearLayout.LayoutParams radioParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         radioParams.leftMargin = 24;
         radioDespesa.setLayoutParams(radioParams);
-        
+
         tipoGroup.addView(radioReceita);
         tipoGroup.addView(radioDespesa);
-        
+
         LinearLayout.LayoutParams tipoParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         tipoParams.bottomMargin = 16;
         tipoGroup.setLayoutParams(tipoParams);
         layout.addView(tipoGroup);
@@ -304,7 +304,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-            0, 48);
+                0, 48);
         btnSalvarParams.weight = 1;
         btnSalvarParams.rightMargin = 8;
         btnSalvar.setLayoutParams(btnSalvarParams);
@@ -315,7 +315,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-            0, 48);
+                0, 48);
         btnCancelarParams.weight = 1;
         btnCancelarParams.leftMargin = 8;
         btnCancelar.setLayoutParams(btnCancelarParams);
@@ -329,11 +329,11 @@ public class CategoriaActivity extends AppCompatActivity {
 
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        
+
         btnSalvar.setOnClickListener(v -> {
             String nome = inputNome.getText().toString().trim();
             String tipo = tipoGroup.getCheckedRadioButtonId() == 1 ? "receita" : "despesa";
-            
+
             if (!nome.isEmpty()) {
                 Categoria categoria = new Categoria();
                 categoria.nome = nome;
@@ -350,7 +350,7 @@ public class CategoriaActivity extends AppCompatActivity {
         });
 
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
-        
+
         dialog.show();
     }
 
@@ -360,12 +360,12 @@ public class CategoriaActivity extends AppCompatActivity {
 
         // Create a styled layout that matches the transaction launch panel
         FrameLayout frameLayout = new FrameLayout(this);
-        
+
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(32, 32, 32, 32);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
-        
+
         // Title
         TextView title = new TextView(this);
         title.setText("Editar Categoria");
@@ -374,7 +374,7 @@ public class CategoriaActivity extends AppCompatActivity {
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         title.setGravity(android.view.Gravity.CENTER);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         titleParams.bottomMargin = 16;
         title.setLayoutParams(titleParams);
         layout.addView(title);
@@ -384,10 +384,10 @@ public class CategoriaActivity extends AppCompatActivity {
         inputNome.setHint("Nome da categoria");
         inputNome.setText(categoria.nome);
         inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputNome.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputNome.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
         inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         inputParams.bottomMargin = 16;
         inputNome.setLayoutParams(inputParams);
         layout.addView(inputNome);
@@ -396,32 +396,32 @@ public class CategoriaActivity extends AppCompatActivity {
         final RadioGroup tipoGroup = new RadioGroup(this);
         tipoGroup.setOrientation(RadioGroup.HORIZONTAL);
         tipoGroup.setGravity(Gravity.CENTER);
-        
+
         RadioButton radioReceita = new RadioButton(this);
         radioReceita.setText("Receita");
         radioReceita.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         radioReceita.setId(1);
-        
+
         RadioButton radioDespesa = new RadioButton(this);
         radioDespesa.setText("Despesa");
         radioDespesa.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         radioDespesa.setId(2);
         LinearLayout.LayoutParams radioParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         radioParams.leftMargin = 24;
         radioDespesa.setLayoutParams(radioParams);
-        
+
         tipoGroup.addView(radioReceita);
         tipoGroup.addView(radioDespesa);
-        
+
         if ("receita".equals(categoria.tipo)) {
             tipoGroup.check(1);
         } else {
             tipoGroup.check(2);
         }
-        
+
         LinearLayout.LayoutParams tipoParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         tipoParams.bottomMargin = 16;
         tipoGroup.setLayoutParams(tipoParams);
         layout.addView(tipoGroup);
@@ -437,7 +437,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-            0, 48);
+                0, 48);
         btnSalvarParams.weight = 1;
         btnSalvarParams.rightMargin = 8;
         btnSalvar.setLayoutParams(btnSalvarParams);
@@ -448,7 +448,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-            0, 48);
+                0, 48);
         btnCancelarParams.weight = 1;
         btnCancelarParams.leftMargin = 8;
         btnCancelar.setLayoutParams(btnCancelarParams);
@@ -462,11 +462,11 @@ public class CategoriaActivity extends AppCompatActivity {
 
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        
+
         btnSalvar.setOnClickListener(v -> {
             String novoNome = inputNome.getText().toString().trim();
             String novoTipo = tipoGroup.getCheckedRadioButtonId() == 1 ? "receita" : "despesa";
-            
+
             if (!novoNome.isEmpty()) {
                 categoria.nome = novoNome;
                 categoria.tipo = novoTipo;
@@ -481,36 +481,36 @@ public class CategoriaActivity extends AppCompatActivity {
         });
 
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
-        
+
         dialog.show();
     }
 
     private void confirmarExclusaoCategoria(Categoria categoria) {
         // Check if category has transactions
         List<Lancamento> lancamentos = db.lancamentoDao().listarPorCategoria(categoria.id);
-        
+
         String message = "Deseja excluir a categoria '" + categoria.nome + "'?";
         if (!lancamentos.isEmpty()) {
-            message += "\n\nATENÇÃO: Esta categoria possui " + lancamentos.size() + 
-                      " transação(ões). Elas também serão excluídas.";
+            message += "\n\nATENÇÃO: Esta categoria possui " + lancamentos.size() +
+                    " transação(ões). Elas também serão excluídas.";
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Excluir Categoria");
         builder.setMessage(message);
-        
+
         builder.setPositiveButton("Sim, excluir", (dialog, which) -> {
             // Delete all transactions first (due to foreign key constraints)
             for (Lancamento lancamento : lancamentos) {
                 db.lancamentoDao().deletar(lancamento);
             }
-            
+
             // Then delete the category
             db.categoriaDao().deletar(categoria);
             carregarCategorias();
             Toast.makeText(this, "Categoria excluída!", Toast.LENGTH_SHORT).show();
         });
-        
+
         builder.setNegativeButton("Cancelar", null);
         builder.show();
     }

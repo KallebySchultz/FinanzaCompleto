@@ -465,15 +465,13 @@ public class MovementsActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Transação");
 
-        // Create a styled layout that matches the transaction launch panel
+        // Custom styled layout
         FrameLayout frameLayout = new FrameLayout(this);
-        
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(32, 32, 32, 32);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
-        
-        // Title
+
         TextView title = new TextView(this);
         title.setText("Editar Transação");
         title.setTextSize(22);
@@ -481,20 +479,19 @@ public class MovementsActivity extends AppCompatActivity {
         title.setTypeface(null, android.graphics.Typeface.BOLD);
         title.setGravity(android.view.Gravity.CENTER);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         titleParams.bottomMargin = 16;
         title.setLayoutParams(titleParams);
         layout.addView(title);
 
-        // Input fields with proper styling
         final TextInputEditText inputDescricao = new TextInputEditText(this);
         inputDescricao.setHint("Descrição");
         inputDescricao.setText(lancamento.descricao);
         inputDescricao.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputDescricao.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputDescricao.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
         inputDescricao.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams1 = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         inputParams1.bottomMargin = 16;
         inputDescricao.setLayoutParams(inputParams1);
         layout.addView(inputDescricao);
@@ -503,11 +500,11 @@ public class MovementsActivity extends AppCompatActivity {
         inputValor.setHint("Valor");
         inputValor.setText(String.valueOf(lancamento.valor));
         inputValor.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputValor.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputValor.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
         inputValor.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         inputValor.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         LinearLayout.LayoutParams inputParams2 = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         inputParams2.bottomMargin = 16;
         inputValor.setLayoutParams(inputParams2);
         layout.addView(inputValor);
@@ -518,14 +515,13 @@ public class MovementsActivity extends AppCompatActivity {
         inputCategoria.setFocusable(false);
         inputCategoria.setClickable(true);
         inputCategoria.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputCategoria.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputCategoria.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
         inputCategoria.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams3 = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         inputParams3.bottomMargin = 16;
         inputCategoria.setLayoutParams(inputParams3);
-        
-        // Load and set current category
+
         List<Categoria> categorias = db.categoriaDao().listarPorTipo(lancamento.tipo);
         Categoria categoriaSelecionada = null;
         for (Categoria cat : categorias) {
@@ -536,7 +532,7 @@ public class MovementsActivity extends AppCompatActivity {
             }
         }
         final Categoria[] categoriaFinal = {categoriaSelecionada};
-        
+
         inputCategoria.setOnClickListener(v -> {
             String[] nomesCategorias = new String[categorias.size()];
             for (int i = 0; i < categorias.size(); i++) {
@@ -557,7 +553,7 @@ public class MovementsActivity extends AppCompatActivity {
         buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
         buttonLayout.setGravity(android.view.Gravity.CENTER);
         LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         buttonLayoutParams.topMargin = 16;
         buttonLayout.setLayoutParams(buttonLayoutParams);
 
@@ -567,7 +563,7 @@ public class MovementsActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-            0, 48);
+                0, 48);
         btnSalvarParams.weight = 1;
         btnSalvarParams.rightMargin = 8;
         btnSalvar.setLayoutParams(btnSalvarParams);
@@ -578,7 +574,7 @@ public class MovementsActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-            0, 48);
+                0, 48);
         btnCancelarParams.weight = 1;
         btnCancelarParams.leftMargin = 8;
         btnCancelar.setLayoutParams(btnCancelarParams);
@@ -592,7 +588,7 @@ public class MovementsActivity extends AppCompatActivity {
 
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        
+
         btnSalvar.setOnClickListener(v -> {
             String novaDescricao = inputDescricao.getText().toString().trim();
             String novoValorStr = inputValor.getText().toString().trim();
@@ -620,7 +616,7 @@ public class MovementsActivity extends AppCompatActivity {
         });
 
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
-        
+
         dialog.show();
     }
 

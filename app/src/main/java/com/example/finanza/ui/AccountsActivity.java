@@ -1,7 +1,9 @@
 package com.example.finanza.ui;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageButton;
@@ -293,8 +295,8 @@ public class AccountsActivity extends AppCompatActivity {
         title.setText("Editar Conta");
         title.setTextSize(22);
         title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setGravity(android.view.Gravity.CENTER);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         titleParams.bottomMargin = 16;
@@ -306,7 +308,7 @@ public class AccountsActivity extends AppCompatActivity {
         inputNome.setHint("Nome da conta");
         inputNome.setText(conta.nome);
         inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputNome.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams1 = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -318,9 +320,9 @@ public class AccountsActivity extends AppCompatActivity {
         inputSaldo.setHint("Saldo inicial");
         inputSaldo.setText(String.valueOf(conta.saldoInicial));
         inputSaldo.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputSaldo.setTextColorHint(getResources().getColor(R.color.primaryDarkBlue));
+        inputSaldo.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         inputSaldo.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
-        inputSaldo.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        inputSaldo.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         LinearLayout.LayoutParams inputParams2 = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         inputParams2.bottomMargin = 16;
@@ -330,7 +332,7 @@ public class AccountsActivity extends AppCompatActivity {
         // Styled buttons
         LinearLayout buttonLayout = new LinearLayout(this);
         buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        buttonLayout.setGravity(android.view.Gravity.CENTER);
+        buttonLayout.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         buttonLayoutParams.topMargin = 16;
@@ -339,7 +341,7 @@ public class AccountsActivity extends AppCompatActivity {
         Button btnSalvar = new Button(this);
         btnSalvar.setText("Salvar");
         btnSalvar.setTextColor(getResources().getColor(R.color.white));
-        btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnSalvar.setTypeface(null, Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
             0, 48);
@@ -350,7 +352,7 @@ public class AccountsActivity extends AppCompatActivity {
         Button btnCancelar = new Button(this);
         btnCancelar.setText("Cancelar");
         btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setTypeface(null, Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
             0, 48);

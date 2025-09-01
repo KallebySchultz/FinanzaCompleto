@@ -93,17 +93,31 @@ public class MovementsActivity extends AppCompatActivity {
         inputCategoria = findViewById(R.id.input_categoria);
         inputValor = findViewById(R.id.input_valor);
 
-        // Inicializa mês atual
+        // Inicializa mês atual (corrige para garantir hora zero)
         currentMonth = Calendar.getInstance();
         currentMonth.set(Calendar.DAY_OF_MONTH, 1);
+        currentMonth.set(Calendar.HOUR_OF_DAY, 0);
+        currentMonth.set(Calendar.MINUTE, 0);
+        currentMonth.set(Calendar.SECOND, 0);
+        currentMonth.set(Calendar.MILLISECOND, 0);
 
         // Navegação dos meses
         btnPrevMonth.setOnClickListener(v -> {
             currentMonth.add(Calendar.MONTH, -1);
+            currentMonth.set(Calendar.DAY_OF_MONTH, 1);
+            currentMonth.set(Calendar.HOUR_OF_DAY, 0);
+            currentMonth.set(Calendar.MINUTE, 0);
+            currentMonth.set(Calendar.SECOND, 0);
+            currentMonth.set(Calendar.MILLISECOND, 0);
             updateMovements();
         });
         btnNextMonth.setOnClickListener(v -> {
             currentMonth.add(Calendar.MONTH, 1);
+            currentMonth.set(Calendar.DAY_OF_MONTH, 1);
+            currentMonth.set(Calendar.HOUR_OF_DAY, 0);
+            currentMonth.set(Calendar.MINUTE, 0);
+            currentMonth.set(Calendar.SECOND, 0);
+            currentMonth.set(Calendar.MILLISECOND, 0);
             updateMovements();
         });
 
@@ -115,6 +129,11 @@ public class MovementsActivity extends AppCompatActivity {
             DatePickerDialog dpd = new DatePickerDialog(this, (view, y, m, d) -> {
                 currentMonth.set(Calendar.YEAR, y);
                 currentMonth.set(Calendar.MONTH, m);
+                currentMonth.set(Calendar.DAY_OF_MONTH, 1);
+                currentMonth.set(Calendar.HOUR_OF_DAY, 0);
+                currentMonth.set(Calendar.MINUTE, 0);
+                currentMonth.set(Calendar.SECOND, 0);
+                currentMonth.set(Calendar.MILLISECOND, 0);
                 updateMovements();
             }, year, month, 1);
 
@@ -330,11 +349,17 @@ public class MovementsActivity extends AppCompatActivity {
 
         // Busca lançamentos do mês atual
         Calendar inicio = (Calendar) currentMonth.clone();
+        inicio.set(Calendar.HOUR_OF_DAY, 0);
+        inicio.set(Calendar.MINUTE, 0);
+        inicio.set(Calendar.SECOND, 0);
+        inicio.set(Calendar.MILLISECOND, 0);
+
         Calendar fim = (Calendar) currentMonth.clone();
         fim.set(Calendar.DAY_OF_MONTH, fim.getActualMaximum(Calendar.DAY_OF_MONTH));
         fim.set(Calendar.HOUR_OF_DAY, 23);
         fim.set(Calendar.MINUTE, 59);
         fim.set(Calendar.SECOND, 59);
+        fim.set(Calendar.MILLISECOND, 999);
 
         List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuarioPeriodo(
                 usuarioIdAtual,
@@ -351,7 +376,7 @@ public class MovementsActivity extends AppCompatActivity {
             for (Lancamento lanc : lancamentos) {
                 Calendar dataLanc = Calendar.getInstance();
                 dataLanc.setTimeInMillis(lanc.data);
-                long diaMillis = dataLanc.getTimeInMillis() / (1000 * 60 * 60 * 24); // só o dia
+                long diaMillis = dataLanc.get(Calendar.YEAR) * 1000 + dataLanc.get(Calendar.DAY_OF_YEAR);
 
                 if (diaMillis != ultimoDia) {
                     // Mostra o cabeçalho do dia

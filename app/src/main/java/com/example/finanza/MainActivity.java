@@ -89,43 +89,99 @@ public class MainActivity extends AppCompatActivity {
         contaPadraoId = contaPadrao.id;
         contaSelecionada = contaPadrao;
 
-        // Busca ou cria categoria Receita
-        Categoria catReceita = null;
+// Busca ou cria categorias padrão de receita
+        String[][] categoriasReceitaPadrao = {
+                {"Receita", "#22BB33"},
+                {"Salário", "#22BB33"},
+                {"Freelancer", "#22BB33"},
+                {"Serviço autônomo", "#22BB33"},
+                {"Venda", "#22BB33"},
+                {"Recebimento de aluguel", "#22BB33"},
+                {"Reajuste de saldo", "#22BB33"}
+        };
+
         List<Categoria> receitasCats = db.categoriaDao().listarPorTipo("receita");
+        for (String[] catPadrao : categoriasReceitaPadrao) {
+            boolean existe = false;
+            for (Categoria cat : receitasCats) {
+                if (cat.nome.equalsIgnoreCase(catPadrao[0])) {
+                    existe = true;
+                    break;
+                }
+            }
+            if (!existe) {
+                Categoria nova = new Categoria();
+                nova.nome = catPadrao[0];
+                nova.corHex = catPadrao[1];
+                nova.tipo = "receita";
+                db.categoriaDao().inserir(nova);
+            }
+        }
+// Atualiza a lista após possíveis inserções
+        receitasCats = db.categoriaDao().listarPorTipo("receita");
+
+// Seleciona a categoria "Receita" (principal)
+        Categoria catReceita = null;
         for (Categoria cat : receitasCats) {
-            if ("Receita".equals(cat.nome)) {
+            if ("Receita".equalsIgnoreCase(cat.nome)) {
                 catReceita = cat;
                 break;
             }
         }
-        if (catReceita == null) {
-            catReceita = new Categoria();
-            catReceita.nome = "Receita";
-            catReceita.corHex = "#22BB33";
-            catReceita.tipo = "receita";
-            int id = (int) db.categoriaDao().inserir(catReceita);
-            catReceita.id = id;
+        if (catReceita == null && !receitasCats.isEmpty()) {
+            catReceita = receitasCats.get(0); // fallback
         }
-        categoriaReceitaId = catReceita.id;
+        categoriaReceitaId = catReceita != null ? catReceita.id : -1;
 
-        // Busca ou cria categoria Despesa
-        Categoria catDespesa = null;
+// Busca ou cria categorias padrão de despesa
+        String[][] categoriasDespesaPadrao = {
+                {"Despesa", "#FF2222"},
+                {"Alimentação", "#FF2222"},
+                {"Transporte", "#FF2222"},
+                {"Moradia", "#FF2222"},
+                {"Saúde", "#FF2222"},
+                {"Educação", "#FF2222"},
+                {"Lazer", "#FF2222"},
+                {"Compras", "#FF2222"},
+                {"Supermercado", "#FF2222"},
+                {"Assinaturas", "#FF2222"},
+                {"Contas", "#FF2222"},
+                {"Cartão de crédito", "#FF2222"},
+                {"Viagem", "#FF2222"}
+        };
+
         List<Categoria> despesaCats = db.categoriaDao().listarPorTipo("despesa");
+        for (String[] catPadrao : categoriasDespesaPadrao) {
+            boolean existe = false;
+            for (Categoria cat : despesaCats) {
+                if (cat.nome.equalsIgnoreCase(catPadrao[0])) {
+                    existe = true;
+                    break;
+                }
+            }
+            if (!existe) {
+                Categoria nova = new Categoria();
+                nova.nome = catPadrao[0];
+                nova.corHex = catPadrao[1];
+                nova.tipo = "despesa";
+                db.categoriaDao().inserir(nova);
+            }
+        }
+// Atualiza a lista após possíveis inserções
+        despesaCats = db.categoriaDao().listarPorTipo("despesa");
+
+// Seleciona a categoria "Despesa" (principal)
+        Categoria catDespesa = null;
         for (Categoria cat : despesaCats) {
-            if ("Despesa".equals(cat.nome)) {
+            if ("Despesa".equalsIgnoreCase(cat.nome)) {
                 catDespesa = cat;
                 break;
             }
         }
-        if (catDespesa == null) {
-            catDespesa = new Categoria();
-            catDespesa.nome = "Despesa";
-            catDespesa.corHex = "#FF2222";
-            catDespesa.tipo = "despesa";
-            int id = (int) db.categoriaDao().inserir(catDespesa);
-            catDespesa.id = id;
+        if (catDespesa == null && !despesaCats.isEmpty()) {
+            catDespesa = despesaCats.get(0); // fallback
         }
-        categoriaDespesaId = catDespesa.id;
+        categoriaDespesaId = catDespesa != null ? catDespesa.id : -1;
 
         final TextView tvSaldo = findViewById(R.id.tvSaldo);
         final TextView tvReceita = findViewById(R.id.tvReceita);

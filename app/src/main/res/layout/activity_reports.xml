@@ -90,12 +90,6 @@
             android:src="@drawable/ic_arrows"
             android:tint="@color/white" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:visibility="invisible" />
-
         <ImageView
             android:id="@+id/nav_accounts"
             android:layout_width="0dp"
@@ -122,22 +116,5 @@
     </LinearLayout>
 
     <!-- Botão central de adicionar -->
-    <ImageButton
-        android:id="@+id/nav_add"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="56dp"
-        android:background="@drawable/circle_blue"
-        android:clickable="true"
-        android:contentDescription="Adicionar"
-        android:elevation="12dp"
-        android:focusable="true"
-        android:padding="40dp"
-        android:scaleType="center"
-        android:src="@drawable/ic_add"
-        android:tint="@color/white"
-        app:layout_anchor="@+id/bottom_nav"
-        app:layout_anchorGravity="top|center" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

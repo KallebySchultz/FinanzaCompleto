@@ -478,14 +478,20 @@ public class MovementsActivity extends AppCompatActivity {
     }
 
     /**
-     * Modal para edição de movimentação (transação) com botões corrigidos e layout comentado
+     * Modal para edição de movimentação (transação) centralizado na tela, com botões corrigidos
      */
     private void editarLancamento(Lancamento lancamento) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Transação");
 
-        // FrameLayout para fundo arredondado e tamanho customizado
+        // FrameLayout centralizado
         FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
+        );
+        frameLayout.setLayoutParams(frameParams);
 
         // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
@@ -493,7 +499,6 @@ public class MovementsActivity extends AppCompatActivity {
         // LinearLayout principal do modal
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        // Modal maior: padding 24dp e largura 340dp
         int dpPadding = (int) android.util.TypedValue.applyDimension(
                 android.util.TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
         layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);

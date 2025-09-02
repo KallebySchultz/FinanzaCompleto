@@ -189,19 +189,13 @@ public class MainActivity extends AppCompatActivity {
         imgEye.setOnClickListener(v -> {
             saldoVisivel = !saldoVisivel;
             if (saldoVisivel) {
-                double saldo = consultarSaldo();
-                double receitas = consultarReceitas();
-                double despesas = consultarDespesas();
-                tvSaldo.setText(String.format("R$ %.2f", saldo));
-                tvReceita.setText(String.format("R$ %.2f", receitas));
-                tvDespesa.setText(String.format("R$ %.2f", despesas));
                 imgEye.setImageResource(R.drawable.ic_eye_open);
             } else {
-                tvSaldo.setText("****");
-                tvReceita.setText("****");
-                tvDespesa.setText("****");
                 imgEye.setImageResource(R.drawable.ic_eye_closed);
             }
+            // Atualiza todos os valores da tela
+            atualizarValores(tvSaldo, tvReceita, tvDespesa);
+            updateHomeContent();
         });
 
         final ImageView navHome = findViewById(R.id.nav_home);
@@ -456,9 +450,9 @@ public class MainActivity extends AppCompatActivity {
         double despesas = consultarDespesas();
         double saldo = receitas - despesas;
         if (saldoVisivel) {
-            tvSaldo.setText(String.format("R$ %.2f", saldo));
-            tvReceita.setText(String.format("R$ %.2f", receitas));
-            tvDespesa.setText(String.format("R$ %.2f", despesas));
+            tvSaldo.setText(formatarMoeda(saldo));
+            tvReceita.setText(formatarMoeda(receitas));
+            tvDespesa.setText(formatarMoeda(despesas));
         } else {
             tvSaldo.setText("****");
             tvReceita.setText("****");
@@ -478,6 +472,13 @@ public class MainActivity extends AppCompatActivity {
 
     private double consultarSaldo() {
         return consultarReceitas() - consultarDespesas();
+    }
+
+    /**
+     * Formata valor monetário para exibição
+     */
+    private String formatarMoeda(double valor) {
+        return String.format("R$ %.2f", valor);
     }
 
     /**
@@ -525,8 +526,13 @@ public class MainActivity extends AppCompatActivity {
             
             TextView saldoConta = new TextView(this);
             double saldoAtual = consultarSaldoConta(conta);
-            saldoConta.setText(String.format("R$ %.2f", saldoAtual));
-            saldoConta.setTextColor(saldoAtual >= 0 ? getResources().getColor(R.color.positiveGreen) : getResources().getColor(R.color.negativeRed));
+            if (saldoVisivel) {
+                saldoConta.setText(formatarMoeda(saldoAtual));
+                saldoConta.setTextColor(saldoAtual >= 0 ? getResources().getColor(R.color.positiveGreen) : getResources().getColor(R.color.negativeRed));
+            } else {
+                saldoConta.setText("****");
+                saldoConta.setTextColor(getResources().getColor(R.color.white));
+            }
             saldoConta.setTextSize(14);
             
             infoContainer.addView(nomeConta);
@@ -581,8 +587,13 @@ public class MainActivity extends AppCompatActivity {
             nomeCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
             
             TextView valorCategoria = new TextView(this);
-            valorCategoria.setText(String.format("R$ %.2f", categoryExpense.totalGasto));
-            valorCategoria.setTextColor(getResources().getColor(R.color.negativeRed));
+            if (saldoVisivel) {
+                valorCategoria.setText(formatarMoeda(categoryExpense.totalGasto));
+                valorCategoria.setTextColor(getResources().getColor(R.color.negativeRed));
+            } else {
+                valorCategoria.setText("****");
+                valorCategoria.setTextColor(getResources().getColor(R.color.white));
+            }
             valorCategoria.setTextSize(14);
             
             infoContainer.addView(nomeCategoria);
@@ -658,10 +669,15 @@ public class MainActivity extends AppCompatActivity {
             descricaoTransacao.setTypeface(null, android.graphics.Typeface.BOLD);
             
             TextView valorTransacao = new TextView(this);
-            valorTransacao.setText(String.format("R$ %.2f", transacao.valor));
-            valorTransacao.setTextColor(transacao.tipo.equals("receita") ? 
-                getResources().getColor(R.color.positiveGreen) : 
-                getResources().getColor(R.color.negativeRed));
+            if (saldoVisivel) {
+                valorTransacao.setText(formatarMoeda(transacao.valor));
+                valorTransacao.setTextColor(transacao.tipo.equals("receita") ? 
+                    getResources().getColor(R.color.positiveGreen) : 
+                    getResources().getColor(R.color.negativeRed));
+            } else {
+                valorTransacao.setText("****");
+                valorTransacao.setTextColor(getResources().getColor(R.color.white));
+            }
             valorTransacao.setTextSize(14);
             
             infoContainer.addView(descricaoTransacao);

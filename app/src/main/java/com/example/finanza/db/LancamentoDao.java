@@ -52,4 +52,7 @@ public interface LancamentoDao {
 
     @Query("SELECT SUM(valor) FROM Lancamento WHERE contaId = :contaId AND tipo = :tipo")
     Double somaPorContaETipo(int contaId, String tipo);
+
+    @Query("SELECT SUM(valor) FROM Lancamento WHERE categoriaId = :categoriaId AND usuarioId = :usuarioId")
+    Double somaPorCategoria(int categoriaId, int usuarioId);
 }

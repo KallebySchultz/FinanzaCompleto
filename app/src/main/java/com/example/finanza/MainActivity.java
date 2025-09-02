@@ -500,19 +500,21 @@ public class MainActivity extends AppCompatActivity {
         for (Conta conta : contas) {
             LinearLayout itemConta = new LinearLayout(this);
             itemConta.setOrientation(LinearLayout.HORIZONTAL);
-            itemConta.setPadding(0, 8, 0, 8);
+            itemConta.setPadding(16, 12, 16, 12);
+            itemConta.setClickable(true);
+            itemConta.setFocusable(true);
             
-            // Ícone da conta
-            ImageView icon = new ImageView(this);
-            icon.setImageResource(R.drawable.ic_bank);
-            icon.setLayoutParams(new LinearLayout.LayoutParams(48, 48));
-            icon.setColorFilter(getResources().getColor(R.color.accentBlue));
+            // Adiciona click listener para abrir tela de contas
+            itemConta.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, AccountsActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+            });
             
-            // Informações da conta
+            // Informações da conta (sem ícone)
             LinearLayout infoContainer = new LinearLayout(this);
             infoContainer.setOrientation(LinearLayout.VERTICAL);
             infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-            infoContainer.setPadding(16, 0, 0, 0);
             
             TextView nomeConta = new TextView(this);
             nomeConta.setText(conta.nome);
@@ -529,7 +531,6 @@ public class MainActivity extends AppCompatActivity {
             infoContainer.addView(nomeConta);
             infoContainer.addView(saldoConta);
             
-            itemConta.addView(icon);
             itemConta.addView(infoContainer);
             
             container.addView(itemConta);
@@ -537,43 +538,78 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Atualiza o resumo de categorias mais utilizadas
+     * Atualiza o gráfico de gastos por categoria
      */
     private void updateCategoriesSummary() {
         LinearLayout container = findViewById(R.id.categories_summary_container);
         container.removeAllViews();
 
-        List<Categoria> categorias = db.categoriaDao().listarTodas();
+        List<Categoria> categoriasDespesa = db.categoriaDao().listarPorTipo("despesa");
         
-        // Mostrar apenas as 5 categorias mais utilizadas
-        int maxCategorias = Math.min(5, categorias.size());
+        // Cria lista de categorias com valores de gasto
+        java.util.List<CategoryExpense> categoryExpenses = new java.util.ArrayList<>();
+        
+        for (Categoria categoria : categoriasDespesa) {
+            Double totalGasto = db.lancamentoDao().somaPorCategoria(categoria.id, usuarioIdAtual);
+            if (totalGasto != null && totalGasto > 0) {
+                categoryExpenses.add(new CategoryExpense(categoria, totalGasto));
+            }
+        }
+        
+        // Ordena por valor decrescente
+        java.util.Collections.sort(categoryExpenses, (a, b) -> Double.compare(b.totalGasto, a.totalGasto));
+        
+        // Mostra as 5 categorias com maior gasto
+        int maxCategorias = Math.min(5, categoryExpenses.size());
         for (int i = 0; i < maxCategorias; i++) {
-            Categoria categoria = categorias.get(i);
+            CategoryExpense categoryExpense = categoryExpenses.get(i);
             
             LinearLayout itemCategoria = new LinearLayout(this);
             itemCategoria.setOrientation(LinearLayout.HORIZONTAL);
-            itemCategoria.setPadding(0, 8, 0, 8);
+            itemCategoria.setPadding(16, 12, 16, 12);
             
-            // Ícone da categoria
-            ImageView icon = new ImageView(this);
-            icon.setImageResource(categoria.tipo.equals("receita") ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down);
-            icon.setLayoutParams(new LinearLayout.LayoutParams(48, 48));
-            icon.setColorFilter(categoria.tipo.equals("receita") ? 
-                getResources().getColor(R.color.positiveGreen) : 
-                getResources().getColor(R.color.negativeRed));
+            // Informações da categoria
+            LinearLayout infoContainer = new LinearLayout(this);
+            infoContainer.setOrientation(LinearLayout.VERTICAL);
+            infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
             
-            // Nome da categoria
             TextView nomeCategoria = new TextView(this);
-            nomeCategoria.setText(categoria.nome);
+            nomeCategoria.setText(categoryExpense.categoria.nome);
             nomeCategoria.setTextColor(getResources().getColor(R.color.white));
             nomeCategoria.setTextSize(16);
-            nomeCategoria.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-            nomeCategoria.setPadding(16, 0, 0, 0);
+            nomeCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
             
-            itemCategoria.addView(icon);
-            itemCategoria.addView(nomeCategoria);
+            TextView valorCategoria = new TextView(this);
+            valorCategoria.setText(String.format("R$ %.2f", categoryExpense.totalGasto));
+            valorCategoria.setTextColor(getResources().getColor(R.color.negativeRed));
+            valorCategoria.setTextSize(14);
+            
+            infoContainer.addView(nomeCategoria);
+            infoContainer.addView(valorCategoria);
+            
+            itemCategoria.addView(infoContainer);
             
             container.addView(itemCategoria);
+        }
+        
+        if (categoryExpenses.isEmpty()) {
+            TextView noData = new TextView(this);
+            noData.setText("Nenhuma despesa registrada");
+            noData.setTextColor(getResources().getColor(R.color.white));
+            noData.setTextSize(14);
+            noData.setGravity(android.view.Gravity.CENTER);
+            container.addView(noData);
+        }
+    }
+    
+    // Classe auxiliar para armazenar categoria e total de gastos
+    private static class CategoryExpense {
+        Categoria categoria;
+        double totalGasto;
+        
+        CategoryExpense(Categoria categoria, double totalGasto) {
+            this.categoria = categoria;
+            this.totalGasto = totalGasto;
         }
     }
 
@@ -589,7 +625,16 @@ public class MainActivity extends AppCompatActivity {
         for (Lancamento transacao : transacoes) {
             LinearLayout itemTransacao = new LinearLayout(this);
             itemTransacao.setOrientation(LinearLayout.HORIZONTAL);
-            itemTransacao.setPadding(0, 8, 0, 8);
+            itemTransacao.setPadding(16, 12, 16, 12);
+            itemTransacao.setClickable(true);
+            itemTransacao.setFocusable(true);
+            
+            // Adiciona click listener para abrir tela de movimentações
+            itemTransacao.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, MovementsActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+            });
             
             // Ícone da transação
             ImageView icon = new ImageView(this);

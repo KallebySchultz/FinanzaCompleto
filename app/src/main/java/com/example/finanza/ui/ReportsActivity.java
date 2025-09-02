@@ -123,9 +123,9 @@ public class ReportsActivity extends AppCompatActivity {
         
         double saldoDoMes = totalReceitas - totalDespesas;
         
-        addReportItem("Receitas do mês", String.format("R$ %.2f", totalReceitas), R.color.positiveGreen);
-        addReportItem("Despesas do mês", String.format("R$ %.2f", totalDespesas), R.color.negativeRed);
-        addReportItem("Saldo do mês", String.format("R$ %.2f", saldoDoMes), 
+        addReportItem("Receitas do mês", formatarMoeda(totalReceitas), R.color.positiveGreen);
+        addReportItem("Despesas do mês", formatarMoeda(totalDespesas), R.color.negativeRed);
+        addReportItem("Saldo do mês", formatarMoeda(saldoDoMes), 
                 saldoDoMes >= 0 ? R.color.positiveGreen : R.color.negativeRed);
 
         // Category Analysis
@@ -153,7 +153,7 @@ public class ReportsActivity extends AppCompatActivity {
                 .limit(5)
                 .forEach(entry -> addReportItem(
                     "💸 " + entry.getKey(), 
-                    String.format("R$ %.2f", entry.getValue()), 
+                    formatarMoeda(entry.getValue()), 
                     R.color.negativeRed));
 
         // Top income categories
@@ -162,7 +162,7 @@ public class ReportsActivity extends AppCompatActivity {
                 .limit(3)
                 .forEach(entry -> addReportItem(
                     "💰 " + entry.getKey(), 
-                    String.format("R$ %.2f", entry.getValue()), 
+                    formatarMoeda(entry.getValue()), 
                     R.color.positiveGreen));
 
         // Account Analysis
@@ -171,7 +171,7 @@ public class ReportsActivity extends AppCompatActivity {
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
         for (Conta conta : contas) {
             double saldoConta = consultarSaldoConta(conta);
-            addReportItem(conta.nome, String.format("R$ %.2f", saldoConta), 
+            addReportItem(conta.nome, formatarMoeda(saldoConta),
                     saldoConta >= 0 ? R.color.positiveGreen : R.color.negativeRed);
         }
 
@@ -234,5 +234,12 @@ public class ReportsActivity extends AppCompatActivity {
         receitas = receitas != null ? receitas : 0.0;
         despesas = despesas != null ? despesas : 0.0;
         return conta.saldoInicial + receitas - despesas;
+    }
+
+    /**
+     * Formata valor monetário para exibição
+     */
+    private String formatarMoeda(double valor) {
+        return String.format("R$ %.2f", valor);
     }
 }

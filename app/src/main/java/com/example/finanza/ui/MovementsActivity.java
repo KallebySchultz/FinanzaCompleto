@@ -451,7 +451,7 @@ public class MovementsActivity extends AppCompatActivity {
                         LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
                 TextView valor = new TextView(this);
-                valor.setText(String.format("R$ %.2f", lanc.valor));
+                valor.setText(formatarMoeda(lanc.valor));
                 valor.setTextColor(getResources().getColor(
                         lanc.tipo.equals("receita") ? R.color.positiveGreen : R.color.negativeRed));
                 valor.setTextSize(17);
@@ -474,7 +474,7 @@ public class MovementsActivity extends AppCompatActivity {
             }
         }
 
-        saldoMes.setText(String.format("R$ %.2f", saldoFinal));
+        saldoMes.setText(formatarMoeda(saldoFinal));
     }
 
     /**
@@ -703,7 +703,7 @@ public class MovementsActivity extends AppCompatActivity {
         // Mensagem de confirmação
         TextView messageText = new TextView(this);
         String message = "Deseja excluir a transação '" + lancamento.descricao +
-                "' no valor de R$ " + String.format("%.2f", lancamento.valor) + "?";
+                "' no valor de " + formatarMoeda(lancamento.valor) + "?";
         messageText.setText(message);
         messageText.setTextSize(16);
         messageText.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
@@ -824,7 +824,7 @@ public class MovementsActivity extends AppCompatActivity {
                         LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
                 TextView valor = new TextView(this);
-                valor.setText(String.format("R$ %.2f", lanc.valor));
+                valor.setText(formatarMoeda(lanc.valor));
                 valor.setTextColor(getResources().getColor(
                         lanc.tipo.equals("receita") ? R.color.positiveGreen : R.color.negativeRed));
                 valor.setTextSize(15);
@@ -854,7 +854,14 @@ public class MovementsActivity extends AppCompatActivity {
             transactionsList.addView(noResults);
         }
 
-        saldoMes.setText(String.format("%d resultados • R$ %.2f",
-                resultados != null ? resultados.size() : 0, saldoTotal));
+        saldoMes.setText(String.format("%d resultados • %s",
+                resultados != null ? resultados.size() : 0, formatarMoeda(saldoTotal)));
+    }
+
+    /**
+     * Formata valor monetário para exibição
+     */
+    private String formatarMoeda(double valor) {
+        return String.format("R$ %.2f", valor);
     }
 }

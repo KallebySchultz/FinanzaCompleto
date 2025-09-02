@@ -203,7 +203,7 @@ public class AccountsActivity extends AppCompatActivity {
         accountsList.removeAllViews();
 
         double saldoTotal = consultarSaldoGeral();
-        txtSaldoAtual.setText(String.format("R$ %.2f", saldoTotal));
+        txtSaldoAtual.setText(formatarMoeda(saldoTotal));
 
         // Remove o tratamento especial da conta padrão - todas as contas são tratadas igualmente
         for (Conta conta : contas) {
@@ -234,7 +234,7 @@ public class AccountsActivity extends AppCompatActivity {
 
             TextView saldo = new TextView(this);
             double saldoConta = consultarSaldoConta(conta);
-            saldo.setText(String.format("R$ %.2f", saldoConta));
+            saldo.setText(formatarMoeda(saldoConta));
             saldo.setTextColor(saldoConta >= 0 ? getResources().getColor(R.color.positiveGreen) : getResources().getColor(R.color.negativeRed));
             saldo.setTextSize(16);
             saldo.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -536,4 +536,12 @@ public class AccountsActivity extends AppCompatActivity {
 
         dialog.show();
     }
+
+    /**
+     * Formata valor monetário para exibição
+     */
+    private String formatarMoeda(double valor) {
+        return String.format("R$ %.2f", valor);
+    }
+}
 }

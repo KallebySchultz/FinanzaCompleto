@@ -191,10 +191,8 @@ public class MovementsActivity extends AppCompatActivity {
             finish();
         });
         navMenu.setOnClickListener(v -> {
-            Intent intent = new Intent(MovementsActivity.this, MenuActivity.class);
-            startActivity(intent);
-            overridePendingTransition(0, 0);
-            finish();
+            // Smart back navigation - nav_menu acts as back button
+            finish(); // Returns to previous activity
         });
 
         navMovements.setColorFilter(getResources().getColor(R.color.accentBlue));
@@ -237,18 +235,7 @@ public class MovementsActivity extends AppCompatActivity {
 
         // Campo Conta (dialogo de seleção)
         inputConta.setOnClickListener(v -> {
-            List<Conta> contasList = db.contaDao().listarPorUsuario(usuarioIdAtual);
-            String[] contasArray = new String[contasList.size()];
-            for (int i = 0; i < contasList.size(); i++) {
-                contasArray[i] = contasList.get(i).nome;
-            }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecionar conta");
-            builder.setItems(contasArray, (dialog, which) -> {
-                contaSelecionada = contasList.get(which);
-                inputConta.setText(contaSelecionada.nome);
-            });
-            builder.show();
+            mostrarDialogoSelecaoContas(inputConta);
         });
 
         // Campo Data (DatePicker)
@@ -270,19 +257,7 @@ public class MovementsActivity extends AppCompatActivity {
 
         // Campo Categoria (dialogo de seleção)
         inputCategoria.setOnClickListener(v -> {
-            String tipo = isReceitaPanel ? "receita" : "despesa";
-            List<Categoria> categoriasList = db.categoriaDao().listarPorTipo(tipo);
-            String[] categoriasArray = new String[categoriasList.size()];
-            for (int i = 0; i < categoriasList.size(); i++) {
-                categoriasArray[i] = categoriasList.get(i).nome;
-            }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecionar categoria");
-            builder.setItems(categoriasArray, (dialog, which) -> {
-                categoriaSelecionada = categoriasList.get(which);
-                inputCategoria.setText(categoriaSelecionada.nome);
-            });
-            builder.show();
+            mostrarDialogoSelecaoCategorias(inputCategoria, isReceitaPanel ? "receita" : "despesa");
         });
 
         btnSalvarLancamento.setOnClickListener(v -> {
@@ -571,17 +546,7 @@ public class MovementsActivity extends AppCompatActivity {
         final Categoria[] categoriaFinal = {categoriaSelecionada};
 
         inputCategoria.setOnClickListener(v -> {
-            String[] nomesCategorias = new String[categorias.size()];
-            for (int i = 0; i < categorias.size(); i++) {
-                nomesCategorias[i] = categorias.get(i).nome;
-            }
-            AlertDialog.Builder catBuilder = new AlertDialog.Builder(this);
-            catBuilder.setTitle("Selecionar categoria");
-            catBuilder.setItems(nomesCategorias, (dialog, which) -> {
-                categoriaFinal[0] = categorias.get(which);
-                inputCategoria.setText(categoriaFinal[0].nome);
-            });
-            catBuilder.show();
+            mostrarDialogoSelecaoCategoriasParaEdicao(inputCategoria, categorias, categoriaFinal);
         });
         layout.addView(inputCategoria);
 
@@ -772,32 +737,134 @@ public class MovementsActivity extends AppCompatActivity {
 
     private void showSearchDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("🔍 Buscar Transações");
 
+        // FrameLayout centralizado
+        FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
+        );
+        frameLayout.setLayoutParams(frameParams);
+
+        // ScrollView para garantir responsividade
+        ScrollView scrollView = new ScrollView(this);
+
+        // LinearLayout principal do modal
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(50, 40, 50, 10);
+        int dpPadding = (int) android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
+        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        layout.setElevation(16f);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) android.util.TypedValue.applyDimension(
+                        android.util.TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
 
+        // Título do modal
+        TextView title = new TextView(this);
+        title.setText("🔍 Buscar Transações");
+        title.setTextSize(22);
+        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = dpPadding / 2;
+        title.setLayoutParams(titleParams);
+        layout.addView(title);
+
+        // Campo de busca
         final EditText inputBusca = new EditText(this);
         inputBusca.setHint("Digite a descrição ou valor...");
+        inputBusca.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        inputBusca.setHintTextColor(getResources().getColor(R.color.darkGray));
+        inputBusca.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
+        LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        inputParams.bottomMargin = dpPadding / 2;
+        inputBusca.setLayoutParams(inputParams);
         layout.addView(inputBusca);
 
-        builder.setView(layout);
+        // Botões "Buscar", "Ver Todas" e "Cancelar"
+        LinearLayout buttonLayout = new LinearLayout(this);
+        buttonLayout.setOrientation(LinearLayout.VERTICAL);
+        buttonLayout.setGravity(Gravity.CENTER);
 
-        builder.setPositiveButton("Buscar", (dialog, which) -> {
+        Button btnBuscar = new Button(this);
+        btnBuscar.setText("Buscar");
+        btnBuscar.setTextColor(getResources().getColor(R.color.white));
+        btnBuscar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnBuscar.setBackground(getResources().getDrawable(R.drawable.button_blue));
+        LinearLayout.LayoutParams btnBuscarParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnBuscarParams.bottomMargin = dpPadding / 4;
+        btnBuscar.setLayoutParams(btnBuscarParams);
+
+        Button btnVerTodas = new Button(this);
+        btnVerTodas.setText("Ver Todas");
+        btnVerTodas.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnVerTodas.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnVerTodas.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnVerTodasParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnVerTodasParams.bottomMargin = dpPadding / 4;
+        btnVerTodas.setLayoutParams(btnVerTodasParams);
+
+        Button btnCancelar = new Button(this);
+        btnCancelar.setText("Cancelar");
+        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnCancelar.setLayoutParams(btnCancelarParams);
+
+        buttonLayout.addView(btnBuscar);
+        buttonLayout.addView(btnVerTodas);
+        buttonLayout.addView(btnCancelar);
+        layout.addView(buttonLayout);
+
+        // Adiciona o layout ao ScrollView e ao FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
+        builder.setView(frameLayout);
+
+        // Fundo transparente para mostrar os cantos arredondados do modal
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        // Force center the dialog window
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setGravity(Gravity.CENTER);
+        }
+
+        // Listener do botão Buscar
+        btnBuscar.setOnClickListener(v -> {
             String termoBusca = inputBusca.getText() != null ? inputBusca.getText().toString().trim() : "";
             if (!termoBusca.isEmpty()) {
                 buscarTransacoes(termoBusca);
+                dialog.dismiss();
+            } else {
+                Toast.makeText(this, "Digite um termo para buscar", Toast.LENGTH_SHORT).show();
             }
         });
 
-        builder.setNegativeButton("Cancelar", null);
-
-        builder.setNeutralButton("Ver Todas", (dialog, which) -> {
+        // Listener do botão Ver Todas
+        btnVerTodas.setOnClickListener(v -> {
             updateMovements();
+            dialog.dismiss();
         });
 
-        builder.show();
+        // Listener do botão Cancelar
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 
     private void buscarTransacoes(String termoBusca) {
@@ -860,6 +927,334 @@ public class MovementsActivity extends AppCompatActivity {
 
         saldoMes.setText(String.format("%d resultados • %s",
                 resultados != null ? resultados.size() : 0, formatarMoeda(saldoTotal)));
+    }
+
+    /**
+     * Modal padronizado para seleção de contas
+     */
+    private void mostrarDialogoSelecaoContas(TextInputEditText inputConta) {
+        List<Conta> contasList = db.contaDao().listarPorUsuario(usuarioIdAtual);
+        
+        if (contasList.isEmpty()) {
+            Toast.makeText(this, "Nenhuma conta encontrada", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // FrameLayout centralizado
+        FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+        );
+        frameLayout.setLayoutParams(frameParams);
+
+        // ScrollView para garantir responsividade
+        ScrollView scrollView = new ScrollView(this);
+
+        // LinearLayout principal do modal
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int dpPadding = (int) android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
+        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        layout.setElevation(16f);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) android.util.TypedValue.applyDimension(
+                        android.util.TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
+
+        // Título do modal
+        TextView title = new TextView(this);
+        title.setText("Selecionar Conta");
+        title.setTextSize(22);
+        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = dpPadding / 2;
+        title.setLayoutParams(titleParams);
+        layout.addView(title);
+
+        // Lista de contas
+        for (Conta conta : contasList) {
+            Button btnConta = new Button(this);
+            btnConta.setText(conta.nome);
+            btnConta.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+            btnConta.setTypeface(null, android.graphics.Typeface.BOLD);
+            btnConta.setBackground(getResources().getDrawable(R.drawable.button_gray));
+            LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            btnParams.bottomMargin = dpPadding / 4;
+            btnConta.setLayoutParams(btnParams);
+            layout.addView(btnConta);
+            
+            btnConta.setOnClickListener(v -> {
+                contaSelecionada = conta;
+                inputConta.setText(conta.nome);
+                ((AlertDialog) v.getTag()).dismiss();
+            });
+        }
+
+        // Botão Cancelar
+        Button btnCancelar = new Button(this);
+        btnCancelar.setText("Cancelar");
+        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnCancelar.setLayoutParams(btnCancelarParams);
+        layout.addView(btnCancelar);
+
+        // Adiciona o layout ao ScrollView e ao FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
+        builder.setView(frameLayout);
+
+        // Fundo transparente para mostrar os cantos arredondados do modal
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setGravity(Gravity.CENTER);
+        }
+
+        // Set dialog reference for buttons
+        for (int i = 0; i < layout.getChildCount() - 1; i++) {
+            if (layout.getChildAt(i) instanceof Button) {
+                layout.getChildAt(i).setTag(dialog);
+            }
+        }
+
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    /**
+     * Modal padronizado para seleção de categorias
+     */
+    private void mostrarDialogoSelecaoCategorias(TextInputEditText inputCategoria, String tipo) {
+        List<Categoria> categoriasList = db.categoriaDao().listarPorTipo(tipo);
+        
+        if (categoriasList.isEmpty()) {
+            Toast.makeText(this, "Nenhuma categoria de " + tipo + " encontrada", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // FrameLayout centralizado
+        FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+        );
+        frameLayout.setLayoutParams(frameParams);
+
+        // ScrollView para garantir responsividade
+        ScrollView scrollView = new ScrollView(this);
+
+        // LinearLayout principal do modal
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int dpPadding = (int) android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
+        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        layout.setElevation(16f);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) android.util.TypedValue.applyDimension(
+                        android.util.TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
+
+        // Título do modal
+        TextView title = new TextView(this);
+        title.setText("Selecionar Categoria");
+        title.setTextSize(22);
+        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = dpPadding / 2;
+        title.setLayoutParams(titleParams);
+        layout.addView(title);
+
+        // Lista de categorias
+        for (Categoria categoria : categoriasList) {
+            Button btnCategoria = new Button(this);
+            btnCategoria.setText(categoria.nome);
+            btnCategoria.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+            btnCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
+            btnCategoria.setBackground(getResources().getDrawable(R.drawable.button_gray));
+            LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            btnParams.bottomMargin = dpPadding / 4;
+            btnCategoria.setLayoutParams(btnParams);
+            layout.addView(btnCategoria);
+            
+            btnCategoria.setOnClickListener(v -> {
+                categoriaSelecionada = categoria;
+                inputCategoria.setText(categoria.nome);
+                ((AlertDialog) v.getTag()).dismiss();
+            });
+        }
+
+        // Botão Cancelar
+        Button btnCancelar = new Button(this);
+        btnCancelar.setText("Cancelar");
+        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnCancelar.setLayoutParams(btnCancelarParams);
+        layout.addView(btnCancelar);
+
+        // Adiciona o layout ao ScrollView e ao FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
+        builder.setView(frameLayout);
+
+        // Fundo transparente para mostrar os cantos arredondados do modal
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setGravity(Gravity.CENTER);
+        }
+
+        // Set dialog reference for buttons
+        for (int i = 0; i < layout.getChildCount() - 1; i++) {
+            if (layout.getChildAt(i) instanceof Button) {
+                layout.getChildAt(i).setTag(dialog);
+            }
+        }
+
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    /**
+     * Modal padronizado para seleção de categorias na edição
+     */
+    private void mostrarDialogoSelecaoCategoriasParaEdicao(EditText inputCategoria, List<Categoria> categorias, Categoria[] categoriaFinal) {
+        if (categorias.isEmpty()) {
+            Toast.makeText(this, "Nenhuma categoria encontrada", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // FrameLayout centralizado
+        FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+        );
+        frameLayout.setLayoutParams(frameParams);
+
+        // ScrollView para garantir responsividade
+        ScrollView scrollView = new ScrollView(this);
+
+        // LinearLayout principal do modal
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int dpPadding = (int) android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
+        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        layout.setElevation(16f);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) android.util.TypedValue.applyDimension(
+                        android.util.TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
+
+        // Título do modal
+        TextView title = new TextView(this);
+        title.setText("Selecionar Categoria");
+        title.setTextSize(22);
+        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = dpPadding / 2;
+        title.setLayoutParams(titleParams);
+        layout.addView(title);
+
+        // Lista de categorias
+        for (Categoria categoria : categorias) {
+            Button btnCategoria = new Button(this);
+            btnCategoria.setText(categoria.nome);
+            btnCategoria.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+            btnCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
+            btnCategoria.setBackground(getResources().getDrawable(R.drawable.button_gray));
+            LinearLayout.LayoutParams btnParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            btnParams.bottomMargin = dpPadding / 4;
+            btnCategoria.setLayoutParams(btnParams);
+            layout.addView(btnCategoria);
+            
+            btnCategoria.setOnClickListener(v -> {
+                categoriaFinal[0] = categoria;
+                inputCategoria.setText(categoria.nome);
+                ((AlertDialog) v.getTag()).dismiss();
+            });
+        }
+
+        // Botão Cancelar
+        Button btnCancelar = new Button(this);
+        btnCancelar.setText("Cancelar");
+        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnCancelar.setLayoutParams(btnCancelarParams);
+        layout.addView(btnCancelar);
+
+        // Adiciona o layout ao ScrollView e ao FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
+        builder.setView(frameLayout);
+
+        // Fundo transparente para mostrar os cantos arredondados do modal
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setGravity(Gravity.CENTER);
+        }
+
+        // Set dialog reference for buttons
+        for (int i = 0; i < layout.getChildCount() - 1; i++) {
+            if (layout.getChildAt(i) instanceof Button) {
+                layout.getChildAt(i).setTag(dialog);
+            }
+        }
+
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 
     /**

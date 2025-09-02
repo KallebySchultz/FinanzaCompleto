@@ -207,11 +207,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         navMenu.setOnClickListener(v -> {
-            navHome.setColorFilter(getResources().getColor(R.color.white));
-            navMenu.setColorFilter(getResources().getColor(R.color.accentBlue));
-            Intent intent = new Intent(this, MenuActivity.class);
-            startActivity(intent);
-            overridePendingTransition(0, 0);
+            // Smart back navigation - nav_menu acts as back button
+            // For MainActivity, we'll close the app as it's the home screen
             finish();
         });
 

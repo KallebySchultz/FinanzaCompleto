@@ -158,14 +158,8 @@ public class AccountsActivity extends AppCompatActivity {
         });
 
         navMenu.setOnClickListener(v -> {
-            navHome.setColorFilter(getResources().getColor(R.color.white));
-            navMenu.setColorFilter(getResources().getColor(R.color.accentBlue));
-            navAccounts.setColorFilter(getResources().getColor(R.color.white));
-            navMovements.setColorFilter(getResources().getColor(R.color.white));
-            Intent intent = new Intent(this, MenuActivity.class);
-            startActivity(intent);
-            overridePendingTransition(0, 0);
-            finish();
+            // Smart back navigation - nav_menu acts as back button
+            finish(); // Returns to previous activity
         });
 
         navAccounts.setOnClickListener(v -> {

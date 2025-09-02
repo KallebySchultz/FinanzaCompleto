@@ -118,11 +118,29 @@
         android:background="@color/primaryDarkBlue">
 
         <LinearLayout
-            android:id="@+id/transactions_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp" />
+            android:padding="16dp">
+
+            <LinearLayout
+                android:id="@+id/transactions_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <!-- Hint para funcionalidade de exclusão -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="💡 Toque para editar • Mantenha pressionado para excluir"
+                android:textSize="12sp"
+                android:textColor="@color/white"
+                android:textStyle="italic"
+                android:gravity="center"
+                android:padding="16dp"
+                android:alpha="0.7" />
+        </LinearLayout>
     </ScrollView>
 
     <!-- BOTTOM NAVIGATION FIXO -->

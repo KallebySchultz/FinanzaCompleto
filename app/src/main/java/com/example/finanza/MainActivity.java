@@ -248,7 +248,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Painel customizado
         final FrameLayout addTransactionPanel = findViewById(R.id.add_transaction_panel);
-        final ImageButton btnClosePanel = findViewById(R.id.btn_close_panel);
         final Button btnSalvarLancamento = findViewById(R.id.btn_salvar_lancamento);
 
         final TextInputEditText inputNome = findViewById(R.id.input_nome);
@@ -287,11 +286,6 @@ public class MainActivity extends AppCompatActivity {
             navAdd.setImageResource(R.drawable.ic_close);
             isReceitaPanel = false;
             inicializarCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor, false);
-        });
-
-        btnClosePanel.setOnClickListener(v -> {
-            addTransactionPanel.setVisibility(View.GONE);
-            navAdd.setImageResource(R.drawable.ic_add);
         });
 
         // Campo Conta (dialogo de seleção)

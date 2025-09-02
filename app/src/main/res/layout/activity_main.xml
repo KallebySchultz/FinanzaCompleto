@@ -545,18 +545,7 @@
                 android:elevation="2dp"/>
         </LinearLayout>
 
-        <!-- Botão X para fechar -->
-        <ImageButton
-            android:id="@+id/btn_close_panel"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="40dp"
-            android:background="@drawable/circle_blue"
-            android:src="@drawable/ic_close"
-            android:tint="@color/white"
-            android:elevation="16dp"
-            android:contentDescription="Fechar"
-            android:padding="16dp"/>
+        <!-- Botão X para fechar - REMOVIDO para evitar conflito com nav_add -->
+        <!-- O botão nav_add agora funciona como botão de fechar quando o painel está aberto -->
     </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

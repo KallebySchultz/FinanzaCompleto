@@ -56,7 +56,7 @@ public class MovementsActivity extends AppCompatActivity {
     // Painel customizado
     private FrameLayout addPanel, addTransactionPanel;
     private LinearLayout btnReceita, btnDespesa;
-    private ImageButton btnClosePanel, navAdd;
+    private ImageButton navAdd;
     private Button btnSalvarLancamento;
     private TextInputEditText inputNome, inputConta, inputData, inputCategoria, inputValor;
 
@@ -93,7 +93,6 @@ public class MovementsActivity extends AppCompatActivity {
         btnReceita = findViewById(R.id.btnReceita);
         btnDespesa = findViewById(R.id.btnDespesa);
         addTransactionPanel = findViewById(R.id.add_transaction_panel);
-        btnClosePanel = findViewById(R.id.btn_close_panel);
         btnSalvarLancamento = findViewById(R.id.btn_salvar_lancamento);
         inputNome = findViewById(R.id.input_nome);
         inputConta = findViewById(R.id.input_conta);
@@ -234,11 +233,6 @@ public class MovementsActivity extends AppCompatActivity {
             navAdd.setImageResource(R.drawable.ic_close);
             isReceitaPanel = false;
             inicializarCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor, false);
-        });
-
-        btnClosePanel.setOnClickListener(v -> {
-            addTransactionPanel.setVisibility(View.GONE);
-            navAdd.setImageResource(R.drawable.ic_add);
         });
 
         // Campo Conta (dialogo de seleção)

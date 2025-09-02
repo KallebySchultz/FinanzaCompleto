@@ -631,8 +631,8 @@ public class MovementsActivity extends AppCompatActivity {
 
         // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
-            String novaDescricao = inputDescricao.getText().toString().trim();
-            String novoValorStr = inputValor.getText().toString().trim();
+            String novaDescricao = inputDescricao.getText() != null ? inputDescricao.getText().toString().trim() : "";
+            String novoValorStr = inputValor.getText() != null ? inputValor.getText().toString().trim() : "";
 
             if (!novaDescricao.isEmpty() && !novoValorStr.isEmpty() && categoriaFinal[0] != null) {
                 try {
@@ -781,7 +781,7 @@ public class MovementsActivity extends AppCompatActivity {
         builder.setView(layout);
 
         builder.setPositiveButton("Buscar", (dialog, which) -> {
-            String termoBusca = inputBusca.getText().toString().trim();
+            String termoBusca = inputBusca.getText() != null ? inputBusca.getText().toString().trim() : "";
             if (!termoBusca.isEmpty()) {
                 buscarTransacoes(termoBusca);
             }

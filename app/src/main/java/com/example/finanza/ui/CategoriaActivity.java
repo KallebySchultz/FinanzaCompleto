@@ -76,7 +76,7 @@ public class CategoriaActivity extends AppCompatActivity {
 
         // Adiciona nova categoria
         btnAdicionarCategoria.setOnClickListener(v -> {
-            String nomeCategoria = etNovaCategoria.getText().toString().trim();
+            String nomeCategoria = etNovaCategoria.getText() != null ? etNovaCategoria.getText().toString().trim() : "";
             if (!nomeCategoria.isEmpty()) {
                 mostrarDialogoNovaCategoria(nomeCategoria);
             } else {
@@ -371,7 +371,7 @@ public class CategoriaActivity extends AppCompatActivity {
 
         // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
-            String nome = inputNome.getText().toString().trim();
+            String nome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
             String tipo = tipoGroup.getCheckedRadioButtonId() == 1 ? "receita" : "despesa";
             if (!nome.isEmpty()) {
                 Categoria categoria = new Categoria();
@@ -521,7 +521,7 @@ public class CategoriaActivity extends AppCompatActivity {
 
         // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
-            String novoNome = inputNome.getText().toString().trim();
+            String novoNome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
             String novoTipo = tipoGroup.getCheckedRadioButtonId() == 1 ? "receita" : "despesa";
             if (!novoNome.isEmpty()) {
                 categoria.nome = novoNome;
@@ -612,7 +612,7 @@ public class CategoriaActivity extends AppCompatActivity {
         btnExcluir.setText("Sim, excluir");
         btnExcluir.setTextColor(getResources().getColor(R.color.white));
         btnExcluir.setTypeface(null, android.graphics.Typeface.BOLD);
-        btnExcluir.setBackground(getResources().getDrawable(R.drawable.button_red));
+        btnExcluir.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnExcluirParams = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
         btnExcluirParams.rightMargin = dpPadding / 4;

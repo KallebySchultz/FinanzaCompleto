@@ -206,7 +206,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CATEGORIAS MAIS UTILIZADAS"
+                        android:text="GASTOS POR CATEGORIA"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/white"

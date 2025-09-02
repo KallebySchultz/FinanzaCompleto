@@ -46,4 +46,10 @@ public interface LancamentoDao {
 
     @Query("SELECT * FROM Lancamento WHERE usuarioId = :usuarioId AND (descricao LIKE :searchTerm OR CAST(valor AS TEXT) LIKE :searchTerm) ORDER BY data DESC")
     List<Lancamento> buscarPorDescricaoOuValor(int usuarioId, String searchTerm);
+
+    @Query("SELECT * FROM Lancamento WHERE usuarioId = :usuarioId ORDER BY data DESC LIMIT :limit")
+    List<Lancamento> listarUltimasPorUsuario(int usuarioId, int limit);
+
+    @Query("SELECT SUM(valor) FROM Lancamento WHERE contaId = :contaId AND tipo = :tipo")
+    Double somaPorContaETipo(int contaId, String tipo);
 }

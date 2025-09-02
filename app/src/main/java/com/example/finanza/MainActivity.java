@@ -183,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
         final ImageView imgEye = findViewById(R.id.imgEye);
 
         atualizarValores(tvSaldo, tvReceita, tvDespesa);
+        updateHomeContent();
 
         imgEye.setOnClickListener(v -> {
             saldoVisivel = !saldoVisivel;
@@ -396,6 +397,7 @@ public class MainActivity extends AppCompatActivity {
 
                     db.lancamentoDao().inserir(lancamento);
                     atualizarValores(tvSaldo, tvReceita, tvDespesa);
+                    updateHomeContent();
                     addTransactionPanel.setVisibility(View.GONE);
                     navAdd.setImageResource(R.drawable.ic_add);
                     limparCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor);
@@ -464,5 +466,167 @@ public class MainActivity extends AppCompatActivity {
 
     private double consultarSaldo() {
         return consultarReceitas() - consultarDespesas();
+    }
+
+    /**
+     * Atualiza o conteúdo da tela inicial com resumos e informações úteis
+     */
+    private void updateHomeContent() {
+        updateAccountsSummary();
+        updateCategoriesSummary();
+        updateRecentTransactions();
+    }
+
+    /**
+     * Atualiza o resumo de contas na tela inicial
+     */
+    private void updateAccountsSummary() {
+        LinearLayout container = findViewById(R.id.accounts_summary_container);
+        container.removeAllViews();
+
+        List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
+        
+        for (Conta conta : contas) {
+            LinearLayout itemConta = new LinearLayout(this);
+            itemConta.setOrientation(LinearLayout.HORIZONTAL);
+            itemConta.setPadding(0, 8, 0, 8);
+            
+            // Ícone da conta
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(R.drawable.ic_bank);
+            icon.setLayoutParams(new LinearLayout.LayoutParams(48, 48));
+            icon.setColorFilter(getResources().getColor(R.color.accentBlue));
+            
+            // Informações da conta
+            LinearLayout infoContainer = new LinearLayout(this);
+            infoContainer.setOrientation(LinearLayout.VERTICAL);
+            infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            infoContainer.setPadding(16, 0, 0, 0);
+            
+            TextView nomeConta = new TextView(this);
+            nomeConta.setText(conta.nome);
+            nomeConta.setTextColor(getResources().getColor(R.color.white));
+            nomeConta.setTextSize(16);
+            nomeConta.setTypeface(null, android.graphics.Typeface.BOLD);
+            
+            TextView saldoConta = new TextView(this);
+            double saldoAtual = consultarSaldoConta(conta);
+            saldoConta.setText(String.format("R$ %.2f", saldoAtual));
+            saldoConta.setTextColor(saldoAtual >= 0 ? getResources().getColor(R.color.positiveGreen) : getResources().getColor(R.color.negativeRed));
+            saldoConta.setTextSize(14);
+            
+            infoContainer.addView(nomeConta);
+            infoContainer.addView(saldoConta);
+            
+            itemConta.addView(icon);
+            itemConta.addView(infoContainer);
+            
+            container.addView(itemConta);
+        }
+    }
+
+    /**
+     * Atualiza o resumo de categorias mais utilizadas
+     */
+    private void updateCategoriesSummary() {
+        LinearLayout container = findViewById(R.id.categories_summary_container);
+        container.removeAllViews();
+
+        List<Categoria> categorias = db.categoriaDao().listarTodas();
+        
+        // Mostrar apenas as 5 categorias mais utilizadas
+        int maxCategorias = Math.min(5, categorias.size());
+        for (int i = 0; i < maxCategorias; i++) {
+            Categoria categoria = categorias.get(i);
+            
+            LinearLayout itemCategoria = new LinearLayout(this);
+            itemCategoria.setOrientation(LinearLayout.HORIZONTAL);
+            itemCategoria.setPadding(0, 8, 0, 8);
+            
+            // Ícone da categoria
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(categoria.tipo.equals("receita") ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down);
+            icon.setLayoutParams(new LinearLayout.LayoutParams(48, 48));
+            icon.setColorFilter(categoria.tipo.equals("receita") ? 
+                getResources().getColor(R.color.positiveGreen) : 
+                getResources().getColor(R.color.negativeRed));
+            
+            // Nome da categoria
+            TextView nomeCategoria = new TextView(this);
+            nomeCategoria.setText(categoria.nome);
+            nomeCategoria.setTextColor(getResources().getColor(R.color.white));
+            nomeCategoria.setTextSize(16);
+            nomeCategoria.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            nomeCategoria.setPadding(16, 0, 0, 0);
+            
+            itemCategoria.addView(icon);
+            itemCategoria.addView(nomeCategoria);
+            
+            container.addView(itemCategoria);
+        }
+    }
+
+    /**
+     * Atualiza as últimas transações na tela inicial
+     */
+    private void updateRecentTransactions() {
+        LinearLayout container = findViewById(R.id.recent_transactions_container);
+        container.removeAllViews();
+
+        List<Lancamento> transacoes = db.lancamentoDao().listarUltimasPorUsuario(usuarioIdAtual, 5);
+        
+        for (Lancamento transacao : transacoes) {
+            LinearLayout itemTransacao = new LinearLayout(this);
+            itemTransacao.setOrientation(LinearLayout.HORIZONTAL);
+            itemTransacao.setPadding(0, 8, 0, 8);
+            
+            // Ícone da transação
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(transacao.tipo.equals("receita") ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down);
+            icon.setLayoutParams(new LinearLayout.LayoutParams(48, 48));
+            icon.setColorFilter(transacao.tipo.equals("receita") ? 
+                getResources().getColor(R.color.positiveGreen) : 
+                getResources().getColor(R.color.negativeRed));
+            
+            // Informações da transação
+            LinearLayout infoContainer = new LinearLayout(this);
+            infoContainer.setOrientation(LinearLayout.VERTICAL);
+            infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            infoContainer.setPadding(16, 0, 0, 0);
+            
+            TextView descricaoTransacao = new TextView(this);
+            descricaoTransacao.setText(transacao.descricao);
+            descricaoTransacao.setTextColor(getResources().getColor(R.color.white));
+            descricaoTransacao.setTextSize(16);
+            descricaoTransacao.setTypeface(null, android.graphics.Typeface.BOLD);
+            
+            TextView valorTransacao = new TextView(this);
+            valorTransacao.setText(String.format("R$ %.2f", transacao.valor));
+            valorTransacao.setTextColor(transacao.tipo.equals("receita") ? 
+                getResources().getColor(R.color.positiveGreen) : 
+                getResources().getColor(R.color.negativeRed));
+            valorTransacao.setTextSize(14);
+            
+            infoContainer.addView(descricaoTransacao);
+            infoContainer.addView(valorTransacao);
+            
+            itemTransacao.addView(icon);
+            itemTransacao.addView(infoContainer);
+            
+            container.addView(itemTransacao);
+        }
+    }
+
+    /**
+     * Consulta o saldo atual de uma conta específica
+     */
+    private double consultarSaldoConta(Conta conta) {
+        Double receitas = db.lancamentoDao().somaPorContaETipo(conta.id, "receita");
+        Double despesas = db.lancamentoDao().somaPorContaETipo(conta.id, "despesa");
+        
+        double totalReceitas = receitas != null ? receitas : 0.0;
+        double totalDespesas = despesas != null ? despesas : 0.0;
+        
+        return conta.saldoInicial + totalReceitas - totalDespesas;
     }
 }

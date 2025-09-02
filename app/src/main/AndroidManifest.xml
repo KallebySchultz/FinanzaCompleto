@@ -14,7 +14,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -24,7 +25,9 @@
         <!-- Adicione suas Activities abaixo -->
         <activity android:name=".ui.MenuActivity" />
         <activity android:name=".ui.AccountsActivity" />
-        <activity android:name=".ui.MovementsActivity" />
+        <activity 
+            android:name=".ui.MovementsActivity"
+            android:windowSoftInputMode="adjustPan" />
         <activity android:name=".ui.CategoriaActivity" />
         <activity android:name=".ui.ReportsActivity" />
 

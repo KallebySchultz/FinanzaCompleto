@@ -2,6 +2,7 @@ package com.example.finanza.ui;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -10,6 +11,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.room.Room;
@@ -147,6 +149,11 @@ public class MenuActivity extends AppCompatActivity {
         }
     }
 
+    private static final int CREATE_CSV_FILE = 1;
+    private static final int CREATE_REPORT_FILE = 2;
+    private StringBuilder pendingCsvData;
+    private StringBuilder pendingReportData;
+
     private void exportarDados() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Exportar Dados");
@@ -173,35 +180,11 @@ public class MenuActivity extends AppCompatActivity {
                            .append("\"").append(conta != null ? conta.nome.replace("\"", "\"\"") : "N/A").append("\"\n");
                 }
                 
-                // Create file in internal storage
-                String fileName = "finanza_dados_" + new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date()) + ".csv";
-                java.io.File csvFile = new java.io.File(getFilesDir(), fileName);
+                // Store data for later use when file is selected
+                pendingCsvData = csvData;
                 
-                try (java.io.FileWriter writer = new java.io.FileWriter(csvFile)) {
-                    writer.write(csvData.toString());
-                }
-                
-                // Show success dialog with file info
-                AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
-                successBuilder.setTitle("Exportação Concluída");
-                successBuilder.setMessage("Arquivo CSV criado com sucesso!\n\n" +
-                        "Arquivo: " + fileName + "\n" +
-                        "Registros exportados: " + lancamentos.size() + "\n" +
-                        "Tamanho: " + (csvFile.length() / 1024) + " KB\n\n" +
-                        "O arquivo foi salvo no armazenamento interno do aplicativo.");
-                
-                successBuilder.setPositiveButton("Visualizar Dados", (d, w) -> {
-                    // Show preview of CSV data
-                    AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
-                    previewBuilder.setTitle("Preview dos Dados CSV");
-                    previewBuilder.setMessage(csvData.length() > 1000 ? 
-                        csvData.substring(0, 1000) + "..." : csvData.toString());
-                    previewBuilder.setPositiveButton("OK", null);
-                    previewBuilder.show();
-                });
-                
-                successBuilder.setNegativeButton("OK", null);
-                successBuilder.show();
+                // Launch file picker
+                createCsvFile();
                 
             } catch (Exception e) {
                 AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
@@ -250,31 +233,11 @@ public class MenuActivity extends AppCompatActivity {
                     reportData.append("- ").append(conta.nome).append(": ").append(formatter.format(saldoConta)).append("\n");
                 }
                 
-                // Create file
-                String fileName = "finanza_relatorio_" + new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date()) + ".txt";
-                java.io.File reportFile = new java.io.File(getFilesDir(), fileName);
+                // Store data for later use when file is selected
+                pendingReportData = reportData;
                 
-                try (java.io.FileWriter writer = new java.io.FileWriter(reportFile)) {
-                    writer.write(reportData.toString());
-                }
-                
-                // Show success dialog
-                AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
-                successBuilder.setTitle("Relatório Gerado");
-                successBuilder.setMessage("Relatório criado com sucesso!\n\n" +
-                        "Arquivo: " + fileName + "\n" +
-                        "Tamanho: " + (reportFile.length() / 1024) + " KB");
-                
-                successBuilder.setPositiveButton("Visualizar", (d, w) -> {
-                    AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
-                    previewBuilder.setTitle("Relatório Financeiro");
-                    previewBuilder.setMessage(reportData.toString());
-                    previewBuilder.setPositiveButton("OK", null);
-                    previewBuilder.show();
-                });
-                
-                successBuilder.setNegativeButton("OK", null);
-                successBuilder.show();
+                // Launch file picker
+                createReportFile();
                 
             } catch (Exception e) {
                 AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
@@ -303,5 +266,101 @@ public class MenuActivity extends AppCompatActivity {
             navMovements.setColorFilter(ContextCompat.getColor(this, R.color.white));
         if (navAccounts != null)
             navAccounts.setColorFilter(ContextCompat.getColor(this, R.color.white));
+    }
+
+    private void createCsvFile() {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("text/csv");
+        String fileName = "finanza_dados_" + new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date()) + ".csv";
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        startActivityForResult(intent, CREATE_CSV_FILE);
+    }
+
+    private void createReportFile() {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("text/plain");
+        String fileName = "finanza_relatorio_" + new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date()) + ".txt";
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        startActivityForResult(intent, CREATE_REPORT_FILE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+            Uri uri = null;
+            if (data != null) {
+                uri = data.getData();
+            }
+
+            if (uri != null) {
+                try {
+                    if (requestCode == CREATE_CSV_FILE && pendingCsvData != null) {
+                        writeToFile(uri, pendingCsvData.toString());
+                        
+                        // Count records for success message
+                        List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1);
+                        
+                        AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
+                        successBuilder.setTitle("Exportação Concluída");
+                        successBuilder.setMessage("Arquivo CSV criado com sucesso!\n\n" +
+                                "Registros exportados: " + lancamentos.size() + "\n" +
+                                "Arquivo salvo no local selecionado.");
+                        
+                        successBuilder.setPositiveButton("Visualizar Dados", (d, w) -> {
+                            AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
+                            previewBuilder.setTitle("Preview dos Dados CSV");
+                            previewBuilder.setMessage(pendingCsvData.length() > 1000 ? 
+                                pendingCsvData.substring(0, 1000) + "..." : pendingCsvData.toString());
+                            previewBuilder.setPositiveButton("OK", null);
+                            previewBuilder.show();
+                        });
+                        
+                        successBuilder.setNegativeButton("OK", null);
+                        successBuilder.show();
+                        
+                        pendingCsvData = null;
+                        
+                    } else if (requestCode == CREATE_REPORT_FILE && pendingReportData != null) {
+                        writeToFile(uri, pendingReportData.toString());
+                        
+                        AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
+                        successBuilder.setTitle("Relatório Gerado");
+                        successBuilder.setMessage("Relatório criado com sucesso!\n\n" +
+                                "Arquivo salvo no local selecionado.");
+                        
+                        successBuilder.setPositiveButton("Visualizar", (d, w) -> {
+                            AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
+                            previewBuilder.setTitle("Relatório Financeiro");
+                            previewBuilder.setMessage(pendingReportData.toString());
+                            previewBuilder.setPositiveButton("OK", null);
+                            previewBuilder.show();
+                        });
+                        
+                        successBuilder.setNegativeButton("OK", null);
+                        successBuilder.show();
+                        
+                        pendingReportData = null;
+                    }
+                    
+                } catch (Exception e) {
+                    AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
+                    errorBuilder.setTitle("Erro ao Salvar Arquivo");
+                    errorBuilder.setMessage("Ocorreu um erro ao salvar o arquivo:\n" + e.getMessage());
+                    errorBuilder.setPositiveButton("OK", null);
+                    errorBuilder.show();
+                }
+            }
+        }
+    }
+
+    private void writeToFile(Uri uri, String content) throws Exception {
+        try (java.io.OutputStream outputStream = getContentResolver().openOutputStream(uri);
+             java.io.OutputStreamWriter writer = new java.io.OutputStreamWriter(outputStream)) {
+            writer.write(content);
+        }
     }
 }

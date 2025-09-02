@@ -93,21 +93,6 @@
             <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
 
             <TextView
-                android:id="@+id/btnExportar"
-                android:layout_width="match_parent"
-                android:layout_height="62dp"
-                android:text="Exportar Dados"
-                android:textSize="26sp"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:gravity="center"
-                android:background="@android:color/transparent"
-                android:clickable="true"
-                android:focusable="true"/>
-
-            <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
-
-            <TextView
                 android:id="@+id/btnGraficos"
                 android:layout_width="match_parent"
                 android:layout_height="62dp"

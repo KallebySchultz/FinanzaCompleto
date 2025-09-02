@@ -374,6 +374,11 @@ public class CategoriaActivity extends AppCompatActivity {
         // Fundo transparente para mostrar os cantos arredondados do modal
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        // Force center the dialog window
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setGravity(Gravity.CENTER);
+        }
 
         // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
@@ -530,6 +535,11 @@ public class CategoriaActivity extends AppCompatActivity {
         // Fundo transparente para mostrar os cantos arredondados do modal
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        // Force center the dialog window
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setGravity(Gravity.CENTER);
+        }
 
         // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
@@ -658,6 +668,11 @@ public class CategoriaActivity extends AppCompatActivity {
         // Fundo transparente para mostrar os cantos arredondados do modal
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        // Force center the dialog window
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setGravity(Gravity.CENTER);
+        }
 
         // Listener do botão Excluir
         btnExcluir.setOnClickListener(v -> {

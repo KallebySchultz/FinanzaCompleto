@@ -503,6 +503,7 @@ public class MovementsActivity extends AppCompatActivity {
                 android.util.TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
         layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        layout.setElevation(16f); // Add high elevation to ensure modal appears above everything
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 (int) android.util.TypedValue.applyDimension(
                         android.util.TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),

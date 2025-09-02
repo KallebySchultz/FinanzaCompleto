@@ -345,6 +345,7 @@ public class AccountsActivity extends AppCompatActivity {
         int dpPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
         layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        layout.setElevation(16f); // Add high elevation to ensure modal appears above everything
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
                 ViewGroup.LayoutParams.WRAP_CONTENT

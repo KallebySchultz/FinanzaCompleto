@@ -15,6 +15,7 @@ import android.widget.Toast;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
+import android.widget.ScrollView;
 import com.example.finanza.R;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -473,8 +474,12 @@ public class MovementsActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Transação");
 
-        // Custom styled layout
+        // Custom styled layout with ScrollView for better content handling
         FrameLayout frameLayout = new FrameLayout(this);
+        
+        // Add ScrollView to ensure all content is accessible
+        ScrollView scrollView = new ScrollView(this);
+        
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(32, 32, 32, 32);
@@ -591,7 +596,9 @@ public class MovementsActivity extends AppCompatActivity {
         buttonLayout.addView(btnCancelar);
         layout.addView(buttonLayout);
 
-        frameLayout.addView(layout);
+        // Add the layout to ScrollView and then to FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
         builder.setView(frameLayout);
 
         AlertDialog dialog = builder.create();

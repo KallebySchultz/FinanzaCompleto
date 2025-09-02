@@ -14,6 +14,7 @@ import android.widget.Toast;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
@@ -36,7 +37,7 @@ public class AccountsActivity extends AppCompatActivity {
     private TextView txtSaldoAtual;
     private TextView defaultAccountName, defaultAccountSaldo;
     private ImageView defaultAccountIcon;
-    private LinearLayout accountsList;
+    private LinearLayout accountsList, defaultAccountBox;
 
     // Balão de cadastro de contas
     private FrameLayout contasPanel;
@@ -67,6 +68,7 @@ public class AccountsActivity extends AppCompatActivity {
         defaultAccountName = findViewById(R.id.default_account_name);
         defaultAccountSaldo = findViewById(R.id.default_account_saldo);
         defaultAccountIcon = findViewById(R.id.default_account_icon);
+        defaultAccountBox = findViewById(R.id.default_account_box);
         accountsList = findViewById(R.id.accounts_list);
 
         contasPanel = findViewById(R.id.contas_panel);
@@ -203,6 +205,14 @@ public class AccountsActivity extends AppCompatActivity {
             defaultAccountName.setText(contaPadrao.nome);
             defaultAccountSaldo.setText(String.format("R$ %.2f", consultarSaldoConta(contaPadrao)));
             defaultAccountIcon.setImageResource(R.drawable.ic_bank);
+            
+            // Add click listeners for default account edit functionality
+            final Conta finalContaPadrao = contaPadrao;
+            defaultAccountBox.setOnClickListener(v -> editarConta(finalContaPadrao));
+            defaultAccountBox.setOnLongClickListener(v -> {
+                confirmarExclusaoConta(finalContaPadrao);
+                return true;
+            });
         }
 
         int accountIndex = 0;
@@ -216,6 +226,12 @@ public class AccountsActivity extends AppCompatActivity {
             
             // Create styled background similar to default account
             item.setBackground(getResources().getDrawable(R.drawable.bg_transaction_item));
+            
+            // Add margin bottom for consistent spacing
+            LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            itemParams.bottomMargin = 8;
+            item.setLayoutParams(itemParams);
 
             ImageView icon = new ImageView(this);
             LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(40, 40);
@@ -293,8 +309,11 @@ public class AccountsActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Conta");
 
-        // Create a styled layout that matches the transaction launch panel
+        // Create a styled layout that matches the transaction launch panel with ScrollView
         FrameLayout frameLayout = new FrameLayout(this);
+        
+        // Add ScrollView to ensure all content is accessible
+        ScrollView scrollView = new ScrollView(this);
         
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -319,7 +338,7 @@ public class AccountsActivity extends AppCompatActivity {
         inputNome.setHint("Nome da conta");
         inputNome.setText(conta.nome);
         inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        inputNome.setHintTextColor(getResources().getColor(R.color.darkGray));
         inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams1 = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -331,7 +350,7 @@ public class AccountsActivity extends AppCompatActivity {
         inputSaldo.setHint("Saldo inicial");
         inputSaldo.setText(String.valueOf(conta.saldoInicial));
         inputSaldo.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputSaldo.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        inputSaldo.setHintTextColor(getResources().getColor(R.color.darkGray));
         inputSaldo.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         inputSaldo.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         LinearLayout.LayoutParams inputParams2 = new LinearLayout.LayoutParams(
@@ -375,7 +394,9 @@ public class AccountsActivity extends AppCompatActivity {
         buttonLayout.addView(btnCancelar);
         layout.addView(buttonLayout);
 
-        frameLayout.addView(layout);
+        // Add the layout to ScrollView and then to FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
         builder.setView(frameLayout);
 
         AlertDialog dialog = builder.create();

@@ -292,8 +292,14 @@ public class AccountsActivity extends AppCompatActivity {
     private void editarConta(Conta conta) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        // FrameLayout para fundo arredondado e tamanho customizado
+        // FrameLayout centralizado
         FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
+        );
+        frameLayout.setLayoutParams(frameParams);
 
         // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
@@ -436,8 +442,14 @@ public class AccountsActivity extends AppCompatActivity {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        // FrameLayout para fundo arredondado e tamanho customizado
+        // FrameLayout centralizado
         FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
+        );
+        frameLayout.setLayoutParams(frameParams);
 
         // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
@@ -541,7 +553,8 @@ public class AccountsActivity extends AppCompatActivity {
      * Formata valor monetário para exibição
      */
     private String formatarMoeda(double valor) {
-        return String.format("R$ %.2f", valor);
+        java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
+        return formatter.format(valor);
     }
 }
 }

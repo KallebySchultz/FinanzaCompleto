@@ -150,35 +150,139 @@ public class MenuActivity extends AppCompatActivity {
     private void exportarDados() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Exportar Dados");
-        builder.setMessage("Esta funcionalidade permite exportar todos os seus dados financeiros.\n\n" +
-                          "Em uma versão completa, os dados seriam exportados para um arquivo CSV ou PDF.");
+        builder.setMessage("Escolha o formato para exportar seus dados financeiros:");
         
-        builder.setPositiveButton("Exportar CSV (Simulado)", (dialog, which) -> {
-            // In a real implementation, this would create and export a CSV file
-            // For now, just show a simulation
-            StringBuilder csvData = new StringBuilder();
-            csvData.append("Tipo,Descrição,Valor,Data,Categoria,Conta\n");
-            
-            List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1); // assuming user ID 1
-            for (Lancamento lanc : lancamentos) {
-                Categoria categoria = db.categoriaDao().buscarPorId(lanc.categoriaId);
-                Conta conta = db.contaDao().buscarPorId(lanc.contaId);
+        builder.setPositiveButton("Exportar CSV", (dialog, which) -> {
+            try {
+                // Create CSV data
+                StringBuilder csvData = new StringBuilder();
+                csvData.append("Tipo,Descrição,Valor,Data,Categoria,Conta\n");
                 
-                csvData.append(lanc.tipo).append(",")
-                       .append(lanc.descricao).append(",")
-                       .append(lanc.valor).append(",")
-                       .append(new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(lanc.data))).append(",")
-                       .append(categoria != null ? categoria.nome : "N/A").append(",")
-                       .append(conta != null ? conta.nome : "N/A").append("\n");
+                List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1); // assuming user ID 1
+                java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
+                
+                for (Lancamento lanc : lancamentos) {
+                    Categoria categoria = db.categoriaDao().buscarPorId(lanc.categoriaId);
+                    Conta conta = db.contaDao().buscarPorId(lanc.contaId);
+                    
+                    csvData.append("\"").append(lanc.tipo).append("\",")
+                           .append("\"").append(lanc.descricao.replace("\"", "\"\"")).append("\",")
+                           .append("\"").append(formatter.format(lanc.valor)).append("\",")
+                           .append("\"").append(new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(lanc.data))).append("\",")
+                           .append("\"").append(categoria != null ? categoria.nome.replace("\"", "\"\"") : "N/A").append("\",")
+                           .append("\"").append(conta != null ? conta.nome.replace("\"", "\"\"") : "N/A").append("\"\n");
+                }
+                
+                // Create file in internal storage
+                String fileName = "finanza_dados_" + new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date()) + ".csv";
+                java.io.File csvFile = new java.io.File(getFilesDir(), fileName);
+                
+                try (java.io.FileWriter writer = new java.io.FileWriter(csvFile)) {
+                    writer.write(csvData.toString());
+                }
+                
+                // Show success dialog with file info
+                AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
+                successBuilder.setTitle("Exportação Concluída");
+                successBuilder.setMessage("Arquivo CSV criado com sucesso!\n\n" +
+                        "Arquivo: " + fileName + "\n" +
+                        "Registros exportados: " + lancamentos.size() + "\n" +
+                        "Tamanho: " + (csvFile.length() / 1024) + " KB\n\n" +
+                        "O arquivo foi salvo no armazenamento interno do aplicativo.");
+                
+                successBuilder.setPositiveButton("Visualizar Dados", (d, w) -> {
+                    // Show preview of CSV data
+                    AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
+                    previewBuilder.setTitle("Preview dos Dados CSV");
+                    previewBuilder.setMessage(csvData.length() > 1000 ? 
+                        csvData.substring(0, 1000) + "..." : csvData.toString());
+                    previewBuilder.setPositiveButton("OK", null);
+                    previewBuilder.show();
+                });
+                
+                successBuilder.setNegativeButton("OK", null);
+                successBuilder.show();
+                
+            } catch (Exception e) {
+                AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
+                errorBuilder.setTitle("Erro na Exportação");
+                errorBuilder.setMessage("Ocorreu um erro ao exportar os dados:\n" + e.getMessage());
+                errorBuilder.setPositiveButton("OK", null);
+                errorBuilder.show();
             }
-            
-            // Show preview of CSV data
-            AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
-            previewBuilder.setTitle("Preview dos Dados CSV");
-            previewBuilder.setMessage(csvData.length() > 1000 ? 
-                csvData.substring(0, 1000) + "..." : csvData.toString());
-            previewBuilder.setPositiveButton("OK", null);
-            previewBuilder.show();
+        });
+        
+        builder.setNeutralButton("Exportar Relatório", (dialog, which) -> {
+            try {
+                // Create summary report
+                StringBuilder reportData = new StringBuilder();
+                reportData.append("=== RELATÓRIO FINANCEIRO FINANZA ===\n");
+                reportData.append("Gerado em: ").append(new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date())).append("\n\n");
+                
+                // Get summary data
+                List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1);
+                double totalReceitas = 0, totalDespesas = 0;
+                java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
+                
+                for (Lancamento lanc : lancamentos) {
+                    if ("receita".equals(lanc.tipo)) {
+                        totalReceitas += lanc.valor;
+                    } else {
+                        totalDespesas += lanc.valor;
+                    }
+                }
+                
+                reportData.append("RESUMO GERAL:\n");
+                reportData.append("Total de Receitas: ").append(formatter.format(totalReceitas)).append("\n");
+                reportData.append("Total de Despesas: ").append(formatter.format(totalDespesas)).append("\n");
+                reportData.append("Saldo Total: ").append(formatter.format(totalReceitas - totalDespesas)).append("\n");
+                reportData.append("Total de Transações: ").append(lancamentos.size()).append("\n\n");
+                
+                // Add accounts summary
+                List<Conta> contas = db.contaDao().listarTodasContas();
+                reportData.append("CONTAS:\n");
+                for (Conta conta : contas) {
+                    double saldoConta = conta.saldoInicial;
+                    List<Lancamento> lancamentosConta = db.lancamentoDao().buscarPorConta(conta.id);
+                    for (Lancamento lanc : lancamentosConta) {
+                        saldoConta += "receita".equals(lanc.tipo) ? lanc.valor : -lanc.valor;
+                    }
+                    reportData.append("- ").append(conta.nome).append(": ").append(formatter.format(saldoConta)).append("\n");
+                }
+                
+                // Create file
+                String fileName = "finanza_relatorio_" + new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date()) + ".txt";
+                java.io.File reportFile = new java.io.File(getFilesDir(), fileName);
+                
+                try (java.io.FileWriter writer = new java.io.FileWriter(reportFile)) {
+                    writer.write(reportData.toString());
+                }
+                
+                // Show success dialog
+                AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
+                successBuilder.setTitle("Relatório Gerado");
+                successBuilder.setMessage("Relatório criado com sucesso!\n\n" +
+                        "Arquivo: " + fileName + "\n" +
+                        "Tamanho: " + (reportFile.length() / 1024) + " KB");
+                
+                successBuilder.setPositiveButton("Visualizar", (d, w) -> {
+                    AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
+                    previewBuilder.setTitle("Relatório Financeiro");
+                    previewBuilder.setMessage(reportData.toString());
+                    previewBuilder.setPositiveButton("OK", null);
+                    previewBuilder.show();
+                });
+                
+                successBuilder.setNegativeButton("OK", null);
+                successBuilder.show();
+                
+            } catch (Exception e) {
+                AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
+                errorBuilder.setTitle("Erro na Geração do Relatório");
+                errorBuilder.setMessage("Ocorreu um erro ao gerar o relatório:\n" + e.getMessage());
+                errorBuilder.setPositiveButton("OK", null);
+                errorBuilder.show();
+            }
         });
         
         builder.setNegativeButton("Cancelar", null);

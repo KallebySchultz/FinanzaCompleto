@@ -256,8 +256,14 @@ public class CategoriaActivity extends AppCompatActivity {
     private void mostrarDialogoNovaCategoria(String nomeInicial) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        // FrameLayout para fundo arredondado e tamanho customizado
+        // FrameLayout centralizado
         FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
+        );
+        frameLayout.setLayoutParams(frameParams);
 
         // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
@@ -401,8 +407,14 @@ public class CategoriaActivity extends AppCompatActivity {
     private void editarCategoria(Categoria categoria) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        // FrameLayout para fundo arredondado e tamanho customizado
+        // FrameLayout centralizado
         FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
+        );
+        frameLayout.setLayoutParams(frameParams);
 
         // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
@@ -557,8 +569,14 @@ public class CategoriaActivity extends AppCompatActivity {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        // FrameLayout para fundo arredondado e tamanho customizado
+        // FrameLayout centralizado
         FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
+        );
+        frameLayout.setLayoutParams(frameParams);
 
         // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);

@@ -106,6 +106,21 @@
                 android:focusable="true"/>
 
             <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
+
+            <TextView
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:text="Sair"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:textColor="@color/negativeRed"
+                android:gravity="center"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true"/>
+
+            <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/white" />
         </LinearLayout>
 
         <Space android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>

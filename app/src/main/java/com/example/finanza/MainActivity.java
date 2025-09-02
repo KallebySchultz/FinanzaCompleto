@@ -57,22 +57,19 @@ public class MainActivity extends AppCompatActivity {
 
         db = Room.databaseBuilder(getApplicationContext(),
                         AppDatabase.class, "finanza-db")
+                .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
                 .allowMainThreadQueries()
                 .build();
 
-        // Busca/cria usuário padrão
-        Usuario usuario;
-        List<Usuario> usuarios = db.usuarioDao().listarTodos();
-        if (usuarios.size() == 0) {
-            usuario = new Usuario();
-            usuario.nome = "Usuário";
-            usuario.email = "exemplo@email.com";
-            int id = (int) db.usuarioDao().inserir(usuario);
-            usuario.id = id;
-        } else {
-            usuario = usuarios.get(0);
+        // Obter usuário autenticado
+        usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
+        if (usuarioIdAtual == -1) {
+            // Usuário não autenticado, voltar para login
+            Intent loginIntent = new Intent(this, com.example.finanza.ui.LoginActivity.class);
+            startActivity(loginIntent);
+            finish();
+            return;
         }
-        usuarioIdAtual = usuario.id;
 
         // Busca/cria conta padrão
         Conta contaPadrao;
@@ -203,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
             navHome.setColorFilter(getResources().getColor(R.color.white));
             navMenu.setColorFilter(getResources().getColor(R.color.accentBlue));
             Intent intent = new Intent(this, MenuActivity.class);
+            intent.putExtra("usuarioId", usuarioIdAtual);
             startActivity(intent);
             overridePendingTransition(0, 0);
             finish();
@@ -215,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
                 navMenu.setColorFilter(getResources().getColor(R.color.white));
                 navAccounts.setColorFilter(getResources().getColor(R.color.accentBlue));
                 Intent intent = new Intent(this, AccountsActivity.class);
+                intent.putExtra("usuarioId", usuarioIdAtual);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
                 finish();
@@ -228,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
                 navMenu.setColorFilter(getResources().getColor(R.color.white));
                 navMovements.setColorFilter(getResources().getColor(R.color.accentBlue));
                 Intent intent = new Intent(this, MovementsActivity.class);
+                intent.putExtra("usuarioId", usuarioIdAtual);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
                 finish();
@@ -452,6 +452,7 @@ public class MainActivity extends AppCompatActivity {
 
             itemConta.setOnClickListener(v -> {
                 Intent intent = new Intent(MainActivity.this, AccountsActivity.class);
+                intent.putExtra("usuarioId", usuarioIdAtual);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
             });
@@ -570,6 +571,7 @@ public class MainActivity extends AppCompatActivity {
 
             itemTransacao.setOnClickListener(v -> {
                 Intent intent = new Intent(MainActivity.this, MovementsActivity.class);
+                intent.putExtra("usuarioId", usuarioIdAtual);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
             });

@@ -3,6 +3,7 @@ package com.example.finanza.ui;
 import android.app.DatePickerDialog;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -63,11 +64,23 @@ public class MovementsActivity extends AppCompatActivity {
 
         db = Room.databaseBuilder(getApplicationContext(),
                         AppDatabase.class, "finanza-db")
+                .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
                 .allowMainThreadQueries()
                 .build();
 
-        List<Usuario> usuarios = db.usuarioDao().listarTodos();
-        usuarioIdAtual = usuarios.size() > 0 ? usuarios.get(0).id : 0;
+        // Obter usuário da intent ou de SharedPreferences
+        usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
+        if (usuarioIdAtual == -1) {
+            SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
+            usuarioIdAtual = prefs.getInt("usuarioId", -1);
+            if (usuarioIdAtual == -1) {
+                // Usuário não autenticado, voltar para login
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            }
+        }
 
         txtMonth = findViewById(R.id.txt_month);
         saldoMes = findViewById(R.id.saldo_mes);

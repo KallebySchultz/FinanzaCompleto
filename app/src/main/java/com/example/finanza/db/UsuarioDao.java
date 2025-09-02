@@ -16,4 +16,10 @@ public interface UsuarioDao {
 
     @Query("SELECT * FROM Usuario")
     List<Usuario> listarTodos();
+    
+    @Query("SELECT * FROM Usuario WHERE email = :email")
+    Usuario buscarPorEmail(String email);
+    
+    @Query("SELECT * FROM Usuario WHERE email = :email AND senha = :senha")
+    Usuario login(String email, String senha);
 }

@@ -22,6 +22,7 @@ import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Categoria;
 import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Conta;
+import com.example.finanza.network.SyncService;
 import com.example.finanza.ui.MovementsActivity;
 import com.example.finanza.ui.CategoriaActivity;
 import com.example.finanza.ui.ReportsActivity;
@@ -33,6 +34,8 @@ public class MenuActivity extends AppCompatActivity {
     private Button btnSalvarCategoria;
     private Button btnVoltarPainel;
     private AppDatabase db;
+    private SyncService syncService;
+    private int usuarioIdAtual;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +44,26 @@ public class MenuActivity extends AppCompatActivity {
 
         db = Room.databaseBuilder(getApplicationContext(),
                         AppDatabase.class, "finanza-db")
+                .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
+
+        // Inicializar serviço de sincronização
+        syncService = new SyncService(this);
+
+        // Obter usuário da intent ou de SharedPreferences
+        usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
+        if (usuarioIdAtual == -1) {
+            SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
+            usuarioIdAtual = prefs.getInt("usuarioId", -1);
+            if (usuarioIdAtual == -1) {
+                // Usuário não autenticado, voltar para login
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            }
+        }
 
         ImageView navHome = findViewById(R.id.nav_home);
         if (navHome != null) {
@@ -147,6 +168,12 @@ public class MenuActivity extends AppCompatActivity {
                 overridePendingTransition(0, 0);
                 finish();
             });
+        }
+
+        // Sync functionality
+        TextView btnSyncServer = findViewById(R.id.btnSyncServer);
+        if (btnSyncServer != null) {
+            btnSyncServer.setOnClickListener(v -> realizarSincronizacao());
         }
 
         // Logout functionality
@@ -369,6 +396,20 @@ public class MenuActivity extends AppCompatActivity {
              java.io.OutputStreamWriter writer = new java.io.OutputStreamWriter(outputStream)) {
             writer.write(content);
         }
+    }
+
+    private void realizarSincronizacao() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Sincronização com Servidor");
+        builder.setMessage("Deseja sincronizar seus dados com o servidor?");
+        builder.setPositiveButton("Sincronizar", (dialog, which) -> {
+            // Testar conexão primeiro
+            syncService.testarConexao("localhost", 8080);
+            // Sincronizar dados do usuário
+            syncService.sincronizarTudo(usuarioIdAtual);
+        });
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
     }
 
     private void realizarLogout() {

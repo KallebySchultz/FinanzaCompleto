@@ -25,7 +25,6 @@ public interface LancamentoDao {
     @Query("SELECT SUM(valor) FROM Lancamento WHERE tipo = :tipo AND usuarioId = :usuarioId")
     Double somaPorTipo(String tipo, int usuarioId);
 
-    // Corrigido: a ordem dos parâmetros precisa ser igual ao uso!
     @Query("SELECT SUM(valor) FROM Lancamento WHERE tipo = :tipo AND usuarioId = :usuarioId AND contaId = :contaId")
     Double somaPorTipoConta(String tipo, int usuarioId, int contaId);
 
@@ -40,6 +39,9 @@ public interface LancamentoDao {
 
     @Query("SELECT * FROM Lancamento WHERE contaId = :contaId ORDER BY data DESC")
     List<Lancamento> listarPorConta(int contaId);
+
+    @Query("SELECT * FROM Lancamento WHERE contaId = :contaId ORDER BY data DESC")
+    List<Lancamento> buscarPorConta(int contaId); // <-- método adicionado
 
     @Query("SELECT * FROM Lancamento WHERE categoriaId = :categoriaId ORDER BY data DESC")
     List<Lancamento> listarPorCategoria(int categoriaId);

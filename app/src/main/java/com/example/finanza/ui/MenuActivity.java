@@ -239,7 +239,7 @@ public class MenuActivity extends AppCompatActivity {
                 reportData.append("Total de Transações: ").append(lancamentos.size()).append("\n\n");
                 
                 // Add accounts summary
-                List<Conta> contas = db.contaDao().listarTodasContas();
+                List<Conta> contas = db.contaDao().listarTodos();
                 reportData.append("CONTAS:\n");
                 for (Conta conta : contas) {
                     double saldoConta = conta.saldoInicial;

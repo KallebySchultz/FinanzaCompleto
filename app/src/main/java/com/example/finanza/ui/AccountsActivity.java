@@ -557,4 +557,3 @@ public class AccountsActivity extends AppCompatActivity {
         return formatter.format(valor);
     }
 }
-}

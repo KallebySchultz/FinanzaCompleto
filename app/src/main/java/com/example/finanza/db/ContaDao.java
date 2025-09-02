@@ -24,4 +24,7 @@ public interface ContaDao {
 
     @Query("SELECT * FROM Conta WHERE id = :id")
     Conta buscarPorId(int id);
+
+    @Query("SELECT * FROM Conta")
+    List<Conta> listarTodos(); // <-- Novo método para buscar todas as contas
 }

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageButton;
@@ -18,6 +19,7 @@ import android.widget.ScrollView;
 import android.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
+import android.view.ViewGroup;
 
 import com.example.finanza.R;
 import com.example.finanza.db.AppDatabase;
@@ -28,12 +30,15 @@ import com.example.finanza.MainActivity;
 
 import java.util.List;
 
+/**
+ * Activity para gerenciamento de contas
+ */
 public class AccountsActivity extends AppCompatActivity {
 
     private AppDatabase db;
     private int usuarioIdAtual;
 
-    // Views
+    // Views principais
     private TextView txtSaldoAtual;
     private TextView defaultAccountName, defaultAccountSaldo;
     private ImageView defaultAccountIcon;
@@ -50,10 +55,12 @@ public class AccountsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_accounts);
 
+        // Ajusta as cores da barra de status e navegação
         getWindow().setStatusBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().getDecorView().setSystemUiVisibility(0);
 
+        // Inicializa banco de dados Room
         db = Room.databaseBuilder(getApplicationContext(),
                         AppDatabase.class, "finanza-db")
                 .allowMainThreadQueries()
@@ -63,7 +70,7 @@ public class AccountsActivity extends AppCompatActivity {
         List<Usuario> usuarios = db.usuarioDao().listarTodos();
         usuarioIdAtual = usuarios.size() > 0 ? usuarios.get(0).id : 0;
 
-        // Referências dos elementos
+        // Inicialização das views
         txtSaldoAtual = findViewById(R.id.txt_saldo_atual);
         defaultAccountName = findViewById(R.id.default_account_name);
         defaultAccountSaldo = findViewById(R.id.default_account_saldo);
@@ -78,6 +85,7 @@ public class AccountsActivity extends AppCompatActivity {
 
         navAdd = findViewById(R.id.nav_add);
 
+        // Botão para mostrar/ocultar painel de cadastro de conta
         navAdd.setOnClickListener(v -> {
             if (contasPanel.getVisibility() == View.GONE) {
                 contasPanel.setVisibility(View.VISIBLE);
@@ -102,6 +110,7 @@ public class AccountsActivity extends AppCompatActivity {
         contasPanel.findViewById(R.id.input_saldo_inicial).setOnClickListener(v -> {});
         contasPanel.findViewById(R.id.btn_salvar_conta).setOnClickListener(v -> {});
 
+        // Salvar nova conta
         btnSalvarConta.setOnClickListener(v -> {
             String nomeConta = inputNomeConta.getText().toString().trim();
             String saldoStr = inputSaldoInicial.getText().toString().trim();
@@ -131,6 +140,7 @@ public class AccountsActivity extends AppCompatActivity {
             Toast.makeText(this, "Conta cadastrada!", Toast.LENGTH_SHORT).show();
         });
 
+        // Navegação inferior
         final ImageView navHome = findViewById(R.id.nav_home);
         final ImageView navMenu = findViewById(R.id.nav_menu);
         final ImageView navAccounts = findViewById(R.id.nav_accounts);
@@ -184,6 +194,9 @@ public class AccountsActivity extends AppCompatActivity {
         updateAccounts();
     }
 
+    /**
+     * Atualiza a lista de contas exibida
+     */
     private void updateAccounts() {
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
 
@@ -205,8 +218,8 @@ public class AccountsActivity extends AppCompatActivity {
             defaultAccountName.setText(contaPadrao.nome);
             defaultAccountSaldo.setText(String.format("R$ %.2f", consultarSaldoConta(contaPadrao)));
             defaultAccountIcon.setImageResource(R.drawable.ic_bank);
-            
-            // Add click listeners for default account edit functionality
+
+            // Clique curto: editar conta padrão
             final Conta finalContaPadrao = contaPadrao;
             defaultAccountBox.setOnClickListener(v -> editarConta(finalContaPadrao));
             defaultAccountBox.setOnLongClickListener(v -> {
@@ -223,34 +236,36 @@ public class AccountsActivity extends AppCompatActivity {
             item.setOrientation(LinearLayout.HORIZONTAL);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setPadding(12, 16, 12, 16);
-            
-            // Create styled background similar to default account
+
+            // Fundo estilizado
             item.setBackground(getResources().getDrawable(R.drawable.bg_transaction_item));
-            
-            // Add margin bottom for consistent spacing
+
+            // Margem inferior para distanciamento
             LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             itemParams.bottomMargin = 8;
             item.setLayoutParams(itemParams);
 
+            // Ícone da conta
             ImageView icon = new ImageView(this);
             LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(40, 40);
             iconParams.setMargins(0, 0, 10, 0);
             icon.setLayoutParams(iconParams);
             icon.setImageResource(R.drawable.ic_bank);
-            
-            // Cycle through different colors for account icons
+
+            // Cores cíclicas para ícones
             int[] iconColors = {
-                R.drawable.bg_account_icon_circle_purple,
-                R.drawable.bg_account_icon_circle_green,
-                R.drawable.bg_account_icon_circle_orange,
-                R.drawable.bg_account_icon_circle_blue,
-                R.drawable.bg_account_icon_circle_pink
+                    R.drawable.bg_account_icon_circle_purple,
+                    R.drawable.bg_account_icon_circle_green,
+                    R.drawable.bg_account_icon_circle_orange,
+                    R.drawable.bg_account_icon_circle_blue,
+                    R.drawable.bg_account_icon_circle_pink
             };
             icon.setBackground(getResources().getDrawable(iconColors[accountIndex % iconColors.length]));
             icon.setPadding(6, 6, 6, 6);
             accountIndex++;
 
+            // Informações da conta
             LinearLayout infoBox = new LinearLayout(this);
             infoBox.setOrientation(LinearLayout.VERTICAL);
             infoBox.setPadding(10, 0, 0, 0);
@@ -274,11 +289,11 @@ public class AccountsActivity extends AppCompatActivity {
             item.addView(icon);
             item.addView(infoBox);
 
-            // Add click listener for edit functionality
+            // Clique curto: editar conta
             final Conta finalConta = conta;
             item.setOnClickListener(v -> editarConta(finalConta));
-            
-            // Add long click listener for delete functionality
+
+            // Clique longo: excluir conta
             item.setOnLongClickListener(v -> {
                 confirmarExclusaoConta(finalConta);
                 return true;
@@ -288,6 +303,9 @@ public class AccountsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Retorna saldo atual de uma conta
+     */
     private double consultarSaldoConta(Conta conta) {
         Double receitas = db.lancamentoDao().somaPorTipoConta("receita", usuarioIdAtual, conta.id);
         Double despesas = db.lancamentoDao().somaPorTipoConta("despesa", usuarioIdAtual, conta.id);
@@ -296,6 +314,9 @@ public class AccountsActivity extends AppCompatActivity {
         return conta.saldoInicial + receitas - despesas;
     }
 
+    /**
+     * Retorna saldo geral somando todas as contas
+     */
     private double consultarSaldoGeral() {
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
         double saldoTotal = 0.0;
@@ -305,22 +326,33 @@ public class AccountsActivity extends AppCompatActivity {
         return saldoTotal;
     }
 
+    /**
+     * Modal para edição de conta com botões corrigidos e layout comentado
+     */
     private void editarConta(Conta conta) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Editar Conta");
 
-        // Create a styled layout that matches the transaction launch panel with ScrollView
+        // FrameLayout para fundo arredondado e tamanho customizado
         FrameLayout frameLayout = new FrameLayout(this);
-        
-        // Add ScrollView to ensure all content is accessible
+
+        // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
-        
+
+        // LinearLayout principal do modal
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 32, 32, 32);
+        // Modal maior: padding 24dp e largura 340dp
+        int dpPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
-        
-        // Title
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
+
+        // Título do modal
         TextView title = new TextView(this);
         title.setText("Editar Conta");
         title.setTextSize(22);
@@ -328,12 +360,12 @@ public class AccountsActivity extends AppCompatActivity {
         title.setTypeface(null, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        titleParams.bottomMargin = 16;
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = dpPadding / 2;
         title.setLayoutParams(titleParams);
         layout.addView(title);
 
-        // Input fields with proper styling
+        // Campo nome da conta
         final EditText inputNome = new EditText(this);
         inputNome.setHint("Nome da conta");
         inputNome.setText(conta.nome);
@@ -341,11 +373,12 @@ public class AccountsActivity extends AppCompatActivity {
         inputNome.setHintTextColor(getResources().getColor(R.color.darkGray));
         inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams1 = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams1.bottomMargin = 16;
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        inputParams1.bottomMargin = dpPadding / 2;
         inputNome.setLayoutParams(inputParams1);
         layout.addView(inputNome);
 
+        // Campo saldo inicial
         final EditText inputSaldo = new EditText(this);
         inputSaldo.setHint("Saldo inicial");
         inputSaldo.setText(String.valueOf(conta.saldoInicial));
@@ -354,19 +387,15 @@ public class AccountsActivity extends AppCompatActivity {
         inputSaldo.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         inputSaldo.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         LinearLayout.LayoutParams inputParams2 = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams2.bottomMargin = 16;
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        inputParams2.bottomMargin = dpPadding / 2;
         inputSaldo.setLayoutParams(inputParams2);
         layout.addView(inputSaldo);
 
-        // Styled buttons
+        // Botões "Salvar" e "Cancelar" com layout corrigido
         LinearLayout buttonLayout = new LinearLayout(this);
         buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
         buttonLayout.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        buttonLayoutParams.topMargin = 16;
-        buttonLayout.setLayoutParams(buttonLayoutParams);
 
         Button btnSalvar = new Button(this);
         btnSalvar.setText("Salvar");
@@ -374,9 +403,8 @@ public class AccountsActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-            0, 56);
-        btnSalvarParams.weight = 1;
-        btnSalvarParams.rightMargin = 8;
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f); // WRAP_CONTENT e peso 1f
+        btnSalvarParams.rightMargin = dpPadding / 4;
         btnSalvar.setLayoutParams(btnSalvarParams);
 
         Button btnCancelar = new Button(this);
@@ -385,27 +413,28 @@ public class AccountsActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-            0, 56);
-        btnCancelarParams.weight = 1;
-        btnCancelarParams.leftMargin = 8;
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f); // WRAP_CONTENT e peso 1f
+        btnCancelarParams.leftMargin = dpPadding / 4;
         btnCancelar.setLayoutParams(btnCancelarParams);
 
         buttonLayout.addView(btnSalvar);
         buttonLayout.addView(btnCancelar);
         layout.addView(buttonLayout);
 
-        // Add the layout to ScrollView and then to FrameLayout
+        // Adiciona o layout ao ScrollView e ao FrameLayout
         scrollView.addView(layout);
         frameLayout.addView(scrollView);
         builder.setView(frameLayout);
 
+        // Fundo transparente para mostrar os cantos arredondados do modal
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        
+
+        // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
             String novoNome = inputNome.getText().toString().trim();
             String novoSaldoStr = inputSaldo.getText().toString().trim();
-            
+
             if (!novoNome.isEmpty()) {
                 conta.nome = novoNome;
                 if (!novoSaldoStr.isEmpty()) {
@@ -425,37 +454,39 @@ public class AccountsActivity extends AppCompatActivity {
             }
         });
 
+        // Listener do botão Cancelar
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
-        
+
         dialog.show();
     }
 
+    /**
+     * Exibe confirmação de exclusão de conta
+     */
     private void confirmarExclusaoConta(Conta conta) {
-        // Check if account has transactions
+        // Busca lançamentos da conta
         List<Lancamento> lancamentos = db.lancamentoDao().listarPorConta(conta.id);
-        
+
         String message = "Deseja excluir a conta '" + conta.nome + "'?";
         if (!lancamentos.isEmpty()) {
-            message += "\n\nATENÇÃO: Esta conta possui " + lancamentos.size() + 
-                      " transação(ões). Elas também serão excluídas.";
+            message += "\n\nATENÇÃO: Esta conta possui " + lancamentos.size() +
+                    " transação(ões). Elas também serão excluídas.";
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Excluir Conta");
         builder.setMessage(message);
-        
+
         builder.setPositiveButton("Sim, excluir", (dialog, which) -> {
-            // Delete all transactions first (due to foreign key constraints)
+            // Exclui todos os lançamentos antes da conta
             for (Lancamento lancamento : lancamentos) {
                 db.lancamentoDao().deletar(lancamento);
             }
-            
-            // Then delete the account
             db.contaDao().deletar(conta);
             updateAccounts();
             Toast.makeText(this, "Conta excluída!", Toast.LENGTH_SHORT).show();
         });
-        
+
         builder.setNegativeButton("Cancelar", null);
         builder.show();
     }

@@ -3,6 +3,7 @@ package com.example.finanza.ui;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -15,10 +16,9 @@ import android.widget.LinearLayout;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import android.widget.ScrollView;
-import android.text.Editable;
-import android.text.TextWatcher;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
+import android.view.ViewGroup;
 
 import com.example.finanza.R;
 import com.example.finanza.db.AppDatabase;
@@ -29,59 +29,52 @@ import com.example.finanza.MainActivity;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Activity para gerenciamento de categorias
+ */
 public class CategoriaActivity extends AppCompatActivity {
 
+    // Banco de dados Room
     private AppDatabase db;
+
+    // Views principais
     private LinearLayout categoriasList;
-    private EditText etNovaCategoria, etFiltroCategoria;
-    private Button btnAdicionarCategoria, btnLimparFiltro;
+    private EditText etNovaCategoria;
+    private Button btnAdicionarCategoria, btnMostrarReceitas, btnMostrarDespesas;
     private List<Categoria> todasCategorias;
-    private List<Categoria> categoriasFiltradas;
+    private List<Categoria> categoriasExibidas;
+    // Filtro de tipo ("", "receita" ou "despesa")
+    private String filtroTipo = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_categoria);
 
+        // Ajusta as cores da barra de status e navegação
         getWindow().setStatusBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
 
+        // Inicializa banco de dados Room
         db = Room.databaseBuilder(getApplicationContext(),
                         AppDatabase.class, "finanza-db")
                 .allowMainThreadQueries()
                 .build();
 
+        // Inicialização das views
         categoriasList = findViewById(R.id.categorias_list);
         etNovaCategoria = findViewById(R.id.etNovaCategoria);
-        etFiltroCategoria = findViewById(R.id.etFiltroCategoria);
         btnAdicionarCategoria = findViewById(R.id.btnAdicionarCategoria);
-        btnLimparFiltro = findViewById(R.id.btnLimparFiltro);
+        btnMostrarReceitas = findViewById(R.id.btnMostrarReceitas);
+        btnMostrarDespesas = findViewById(R.id.btnMostrarDespesas);
 
         todasCategorias = new ArrayList<>();
-        categoriasFiltradas = new ArrayList<>();
+        categoriasExibidas = new ArrayList<>();
 
-        // Navigation setup
+        // Configura navegação inferior
         setupNavigation();
 
-        // Filter functionality
-        etFiltroCategoria.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filtrarCategorias(s.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-
-        btnLimparFiltro.setOnClickListener(v -> {
-            etFiltroCategoria.setText("");
-            carregarCategorias();
-        });
-
+        // Adiciona nova categoria
         btnAdicionarCategoria.setOnClickListener(v -> {
             String nomeCategoria = etNovaCategoria.getText().toString().trim();
             if (!nomeCategoria.isEmpty()) {
@@ -91,9 +84,30 @@ public class CategoriaActivity extends AppCompatActivity {
             }
         });
 
+        // Filtro para receitas
+        btnMostrarReceitas.setOnClickListener(v -> {
+            filtroTipo = "receita";
+            atualizarCategoriasFiltradas();
+            btnMostrarReceitas.setBackground(getResources().getDrawable(R.drawable.button_blue));
+            btnMostrarDespesas.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        });
+
+        // Filtro para despesas
+        btnMostrarDespesas.setOnClickListener(v -> {
+            filtroTipo = "despesa";
+            atualizarCategoriasFiltradas();
+            btnMostrarReceitas.setBackground(getResources().getDrawable(R.drawable.button_gray));
+            btnMostrarDespesas.setBackground(getResources().getDrawable(R.drawable.button_blue));
+        });
+
+        // Inicialmente mostra todas categorias
+        filtroTipo = "";
         carregarCategorias();
     }
 
+    /**
+     * Configura os botões de navegação inferior
+     */
     private void setupNavigation() {
         ImageView navHome = findViewById(R.id.nav_home);
         ImageView navMenu = findViewById(R.id.nav_menu);
@@ -137,40 +151,47 @@ public class CategoriaActivity extends AppCompatActivity {
         }
     }
 
-    private void filtrarCategorias(String filtro) {
-        categoriasFiltradas.clear();
-        if (filtro.isEmpty()) {
-            categoriasFiltradas.addAll(todasCategorias);
+    /**
+     * Carrega todas as categorias do banco
+     */
+    private void carregarCategorias() {
+        todasCategorias.clear();
+        todasCategorias.addAll(db.categoriaDao().listarTodas());
+        atualizarCategoriasFiltradas();
+    }
+
+    /**
+     * Filtra as categorias exibidas de acordo com o tipo selecionado
+     */
+    private void atualizarCategoriasFiltradas() {
+        categoriasExibidas.clear();
+        if (filtroTipo.isEmpty()) {
+            categoriasExibidas.addAll(todasCategorias);
         } else {
             for (Categoria categoria : todasCategorias) {
-                if (categoria.nome.toLowerCase().contains(filtro.toLowerCase()) ||
-                        categoria.tipo.toLowerCase().contains(filtro.toLowerCase())) {
-                    categoriasFiltradas.add(categoria);
+                if (categoria.tipo.equals(filtroTipo)) {
+                    categoriasExibidas.add(categoria);
                 }
             }
         }
         atualizarListaCategorias();
     }
 
-    private void carregarCategorias() {
-        todasCategorias.clear();
-        todasCategorias.addAll(db.categoriaDao().listarTodas());
-        categoriasFiltradas.clear();
-        categoriasFiltradas.addAll(todasCategorias);
-        atualizarListaCategorias();
-    }
-
+    /**
+     * Atualiza a lista visual de categorias
+     */
     private void atualizarListaCategorias() {
         categoriasList.removeAllViews();
 
-        for (Categoria categoria : categoriasFiltradas) {
+        for (Categoria categoria : categoriasExibidas) {
+            // Cria um card para cada categoria
             LinearLayout item = new LinearLayout(this);
             item.setOrientation(LinearLayout.HORIZONTAL);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setPadding(12, 16, 12, 16);
             item.setBackground(getResources().getDrawable(R.drawable.bg_transaction_item));
 
-            // Icon with color based on type
+            // Ícone da categoria
             ImageView icon = new ImageView(this);
             LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(32, 32);
             iconParams.setMargins(0, 0, 10, 0);
@@ -186,6 +207,7 @@ public class CategoriaActivity extends AppCompatActivity {
             }
             icon.setPadding(4, 4, 4, 4);
 
+            // Informações da categoria
             LinearLayout infoBox = new LinearLayout(this);
             infoBox.setOrientation(LinearLayout.VERTICAL);
             infoBox.setPadding(10, 0, 0, 0);
@@ -213,11 +235,11 @@ public class CategoriaActivity extends AppCompatActivity {
             item.addView(icon);
             item.addView(infoBox);
 
-            // Add click listener for edit functionality
+            // Clique curto: editar categoria
             final Categoria finalCategoria = categoria;
             item.setOnClickListener(v -> editarCategoria(finalCategoria));
 
-            // Add long click listener for delete functionality
+            // Clique longo: excluir categoria
             item.setOnLongClickListener(v -> {
                 confirmarExclusaoCategoria(finalCategoria);
                 return true;
@@ -227,48 +249,60 @@ public class CategoriaActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Exibe o modal para adicionar nova categoria
+     * @param nomeInicial Nome sugerido no campo
+     */
     private void mostrarDialogoNovaCategoria(String nomeInicial) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Nova Categoria");
 
-        // Create a styled layout that matches the transaction launch panel with ScrollView
+        // FrameLayout para fundo arredondado e tamanho customizado
         FrameLayout frameLayout = new FrameLayout(this);
 
-        // Add ScrollView to ensure all content is accessible
+        // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
 
+        // LinearLayout principal do modal
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 32, 32, 32);
+        // Modal maior: padding 24dp e largura 340dp
+        int dpPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
 
-        // Title
+        // Título do modal
         TextView title = new TextView(this);
         title.setText("Nova Categoria");
         title.setTextSize(22);
         title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setGravity(android.view.Gravity.CENTER);
+        title.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        titleParams.bottomMargin = 16;
+        titleParams.bottomMargin = dpPadding / 2;
         title.setLayoutParams(titleParams);
         layout.addView(title);
 
-        // Input field
+        // Campo nome da categoria
         final EditText inputNome = new EditText(this);
         inputNome.setHint("Nome da categoria");
         inputNome.setText(nomeInicial);
         inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputNome.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
+        inputNome.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue));
         inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams.bottomMargin = 16;
+        inputParams.bottomMargin = dpPadding / 2;
         inputNome.setLayoutParams(inputParams);
         layout.addView(inputNome);
 
-        // Radio buttons for type
+        // Grupo dos radio buttons
         final RadioGroup tipoGroup = new RadioGroup(this);
         tipoGroup.setOrientation(RadioGroup.HORIZONTAL);
         tipoGroup.setGravity(Gravity.CENTER);
@@ -285,7 +319,7 @@ public class CategoriaActivity extends AppCompatActivity {
         radioDespesa.setId(2);
         LinearLayout.LayoutParams radioParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        radioParams.leftMargin = 24;
+        radioParams.leftMargin = dpPadding / 2;
         radioDespesa.setLayoutParams(radioParams);
 
         tipoGroup.addView(radioReceita);
@@ -293,14 +327,14 @@ public class CategoriaActivity extends AppCompatActivity {
 
         LinearLayout.LayoutParams tipoParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        tipoParams.bottomMargin = 16;
+        tipoParams.bottomMargin = dpPadding / 2;
         tipoGroup.setLayoutParams(tipoParams);
         layout.addView(tipoGroup);
 
-        // Styled buttons
+        // Botões "Salvar" e "Cancelar"
         LinearLayout buttonLayout = new LinearLayout(this);
         buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        buttonLayout.setGravity(android.view.Gravity.CENTER);
+        buttonLayout.setGravity(Gravity.CENTER);
 
         Button btnSalvar = new Button(this);
         btnSalvar.setText("Salvar");
@@ -308,9 +342,8 @@ public class CategoriaActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-                0, 56);
-        btnSalvarParams.weight = 1;
-        btnSalvarParams.rightMargin = 8;
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        btnSalvarParams.rightMargin = dpPadding / 4;
         btnSalvar.setLayoutParams(btnSalvarParams);
 
         Button btnCancelar = new Button(this);
@@ -319,27 +352,27 @@ public class CategoriaActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-                0, 56);
-        btnCancelarParams.weight = 1;
-        btnCancelarParams.leftMargin = 8;
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        btnCancelarParams.leftMargin = dpPadding / 4;
         btnCancelar.setLayoutParams(btnCancelarParams);
 
         buttonLayout.addView(btnSalvar);
         buttonLayout.addView(btnCancelar);
         layout.addView(buttonLayout);
 
-        // Add the layout to ScrollView and then to FrameLayout
+        // Adiciona o layout ao ScrollView e ao FrameLayout
         scrollView.addView(layout);
         frameLayout.addView(scrollView);
         builder.setView(frameLayout);
 
+        // Fundo transparente para mostrar os cantos arredondados do modal
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
+        // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
             String nome = inputNome.getText().toString().trim();
             String tipo = tipoGroup.getCheckedRadioButtonId() == 1 ? "receita" : "despesa";
-
             if (!nome.isEmpty()) {
                 Categoria categoria = new Categoria();
                 categoria.nome = nome;
@@ -355,53 +388,66 @@ public class CategoriaActivity extends AppCompatActivity {
             }
         });
 
+        // Listener do botão Cancelar
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }
 
+    /**
+     * Exibe o modal para editar categoria
+     * @param categoria Categoria a ser editada
+     */
     private void editarCategoria(Categoria categoria) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Editar Categoria");
 
-        // Create a styled layout that matches the transaction launch panel with ScrollView
+        // FrameLayout para fundo arredondado e tamanho customizado
         FrameLayout frameLayout = new FrameLayout(this);
 
-        // Add ScrollView to ensure all content is accessible
+        // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
 
+        // LinearLayout principal do modal
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 32, 32, 32);
+        // Modal maior: padding 24dp e largura 340dp
+        int dpPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
 
-        // Title
+        // Título do modal
         TextView title = new TextView(this);
         title.setText("Editar Categoria");
         title.setTextSize(22);
         title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setGravity(android.view.Gravity.CENTER);
+        title.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        titleParams.bottomMargin = 16;
+        titleParams.bottomMargin = dpPadding / 2;
         title.setLayoutParams(titleParams);
         layout.addView(title);
 
-        // Input field
+        // Campo nome da categoria
         final EditText inputNome = new EditText(this);
         inputNome.setHint("Nome da categoria");
         inputNome.setText(categoria.nome);
         inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputNome.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
+        inputNome.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue));
         inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams.bottomMargin = 16;
+        inputParams.bottomMargin = dpPadding / 2;
         inputNome.setLayoutParams(inputParams);
         layout.addView(inputNome);
 
-        // Radio buttons for type
+        // Grupo dos radio buttons
         final RadioGroup tipoGroup = new RadioGroup(this);
         tipoGroup.setOrientation(RadioGroup.HORIZONTAL);
         tipoGroup.setGravity(Gravity.CENTER);
@@ -417,7 +463,7 @@ public class CategoriaActivity extends AppCompatActivity {
         radioDespesa.setId(2);
         LinearLayout.LayoutParams radioParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        radioParams.leftMargin = 24;
+        radioParams.leftMargin = dpPadding / 2;
         radioDespesa.setLayoutParams(radioParams);
 
         tipoGroup.addView(radioReceita);
@@ -431,14 +477,14 @@ public class CategoriaActivity extends AppCompatActivity {
 
         LinearLayout.LayoutParams tipoParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        tipoParams.bottomMargin = 16;
+        tipoParams.bottomMargin = dpPadding / 2;
         tipoGroup.setLayoutParams(tipoParams);
         layout.addView(tipoGroup);
 
-        // Styled buttons
+        // Botões "Salvar" e "Cancelar"
         LinearLayout buttonLayout = new LinearLayout(this);
         buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        buttonLayout.setGravity(android.view.Gravity.CENTER);
+        buttonLayout.setGravity(Gravity.CENTER);
 
         Button btnSalvar = new Button(this);
         btnSalvar.setText("Salvar");
@@ -446,9 +492,8 @@ public class CategoriaActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-                0, 56);
-        btnSalvarParams.weight = 1;
-        btnSalvarParams.rightMargin = 8;
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        btnSalvarParams.rightMargin = dpPadding / 4;
         btnSalvar.setLayoutParams(btnSalvarParams);
 
         Button btnCancelar = new Button(this);
@@ -457,27 +502,27 @@ public class CategoriaActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-                0, 56);
-        btnCancelarParams.weight = 1;
-        btnCancelarParams.leftMargin = 8;
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        btnCancelarParams.leftMargin = dpPadding / 4;
         btnCancelar.setLayoutParams(btnCancelarParams);
 
         buttonLayout.addView(btnSalvar);
         buttonLayout.addView(btnCancelar);
         layout.addView(buttonLayout);
 
-        // Add the layout to ScrollView and then to FrameLayout
+        // Adiciona o layout ao ScrollView e ao FrameLayout
         scrollView.addView(layout);
         frameLayout.addView(scrollView);
         builder.setView(frameLayout);
 
+        // Fundo transparente para mostrar os cantos arredondados do modal
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
+        // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
             String novoNome = inputNome.getText().toString().trim();
             String novoTipo = tipoGroup.getCheckedRadioButtonId() == 1 ? "receita" : "despesa";
-
             if (!novoNome.isEmpty()) {
                 categoria.nome = novoNome;
                 categoria.tipo = novoTipo;
@@ -491,13 +536,17 @@ public class CategoriaActivity extends AppCompatActivity {
             }
         });
 
+        // Listener do botão Cancelar
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }
 
+    /**
+     * Exibe confirmação de exclusão de categoria
+     * @param categoria Categoria a excluir
+     */
     private void confirmarExclusaoCategoria(Categoria categoria) {
-        // Check if category has transactions
         List<Lancamento> lancamentos = db.lancamentoDao().listarPorCategoria(categoria.id);
 
         String message = "Deseja excluir a categoria '" + categoria.nome + "'?";
@@ -511,12 +560,9 @@ public class CategoriaActivity extends AppCompatActivity {
         builder.setMessage(message);
 
         builder.setPositiveButton("Sim, excluir", (dialog, which) -> {
-            // Delete all transactions first (due to foreign key constraints)
             for (Lancamento lancamento : lancamentos) {
                 db.lancamentoDao().deletar(lancamento);
             }
-
-            // Then delete the category
             db.categoriaDao().deletar(categoria);
             carregarCategorias();
             Toast.makeText(this, "Categoria excluída!", Toast.LENGTH_SHORT).show();

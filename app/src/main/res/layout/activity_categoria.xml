@@ -43,7 +43,7 @@
                 android:layout_marginBottom="12dp"
                 android:background="@color/white" />
 
-            <!-- Filtro -->
+            <!-- Botões de filtro Receita/Despesa -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -51,26 +51,27 @@
                 android:gravity="center"
                 android:layout_marginBottom="16dp">
 
-                <EditText
-                    android:id="@+id/etFiltroCategoria"
+                <Button
+                    android:id="@+id/btnMostrarReceitas"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="56dp"
                     android:layout_weight="1"
-                    android:hint="Filtrar categorias..."
-                    android:textColor="@color/primaryDarkBlue"
-                    android:textColorHint="@color/darkGray"
-                    android:background="@drawable/edittext_bg"
-                    android:padding="12dp"
+                    android:text="Receitas"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:background="@drawable/button_blue"
                     android:layout_marginEnd="8dp" />
 
                 <Button
-                    android:id="@+id/btnLimparFiltro"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/btnMostrarDespesas"
+                    android:layout_width="0dp"
                     android:layout_height="56dp"
-                    android:text="Limpar"
+                    android:layout_weight="1"
+                    android:text="Despesas"
                     android:textColor="@color/white"
                     android:textSize="14sp"
-                    android:background="@drawable/button_gray" />
+                    android:background="@drawable/button_gray"
+                    android:layout_marginStart="8dp" />
             </LinearLayout>
 
             <!-- Adicionar nova categoria -->

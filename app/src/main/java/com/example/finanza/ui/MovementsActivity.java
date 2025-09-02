@@ -4,6 +4,7 @@ import android.app.DatePickerDialog;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.ImageView;
@@ -37,6 +38,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Activity para gerenciamento de movimentações (transações)
+ */
 public class MovementsActivity extends AppCompatActivity {
 
     private AppDatabase db;
@@ -376,6 +380,9 @@ public class MovementsActivity extends AppCompatActivity {
         dataSelecionada = System.currentTimeMillis();
     }
 
+    /**
+     * Atualiza lista de movimentações do mês atual
+     */
     private void updateMovements() {
         SimpleDateFormat monthFormat = new SimpleDateFormat("MMMM", new Locale("pt", "BR"));
         txtMonth.setText(monthFormat.format(currentMonth.getTime()).toUpperCase());
@@ -440,7 +447,7 @@ public class MovementsActivity extends AppCompatActivity {
                 nome.setText(lanc.descricao + " • " + categoriaNome);
                 nome.setTextColor(getResources().getColor(R.color.white));
                 nome.setTextSize(17);
-                nome.setLayoutParams(new LinearLayout.LayoutParams(0, 
+                nome.setLayoutParams(new LinearLayout.LayoutParams(0,
                         LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
                 TextView valor = new TextView(this);
@@ -470,69 +477,86 @@ public class MovementsActivity extends AppCompatActivity {
         saldoMes.setText(String.format("R$ %.2f", saldoFinal));
     }
 
+    /**
+     * Modal para edição de movimentação (transação) com botões corrigidos e layout comentado
+     */
     private void editarLancamento(Lancamento lancamento) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Transação");
 
-        // Custom styled layout with ScrollView for better content handling
+        // FrameLayout para fundo arredondado e tamanho customizado
         FrameLayout frameLayout = new FrameLayout(this);
-        
-        // Add ScrollView to ensure all content is accessible
+
+        // ScrollView para garantir responsividade
         ScrollView scrollView = new ScrollView(this);
-        
+
+        // LinearLayout principal do modal
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 32, 32, 32);
+        // Modal maior: padding 24dp e largura 340dp
+        int dpPadding = (int) android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
         layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) android.util.TypedValue.applyDimension(
+                        android.util.TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
 
+        // Título do modal
         TextView title = new TextView(this);
         title.setText("Editar Transação");
         title.setTextSize(22);
         title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
         title.setTypeface(null, android.graphics.Typeface.BOLD);
-        title.setGravity(android.view.Gravity.CENTER);
+        title.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        titleParams.bottomMargin = 16;
+        titleParams.bottomMargin = dpPadding / 2;
         title.setLayoutParams(titleParams);
         layout.addView(title);
 
+        // Campo descrição
         final TextInputEditText inputDescricao = new TextInputEditText(this);
         inputDescricao.setHint("Descrição");
         inputDescricao.setText(lancamento.descricao);
         inputDescricao.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputDescricao.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
+        inputDescricao.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue));
         inputDescricao.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams1 = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams1.bottomMargin = 16;
+        inputParams1.bottomMargin = dpPadding / 2;
         inputDescricao.setLayoutParams(inputParams1);
         layout.addView(inputDescricao);
 
+        // Campo valor
         final TextInputEditText inputValor = new TextInputEditText(this);
         inputValor.setHint("Valor");
         inputValor.setText(String.valueOf(lancamento.valor));
         inputValor.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputValor.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
+        inputValor.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue));
         inputValor.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         inputValor.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         LinearLayout.LayoutParams inputParams2 = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams2.bottomMargin = 16;
+        inputParams2.bottomMargin = dpPadding / 2;
         inputValor.setLayoutParams(inputParams2);
         layout.addView(inputValor);
 
-        // Categoria selection with styled appearance
+        // Categoria selection
         final TextInputEditText inputCategoria = new TextInputEditText(this);
         inputCategoria.setHint("Categoria");
         inputCategoria.setFocusable(false);
         inputCategoria.setClickable(true);
         inputCategoria.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputCategoria.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue)); // CORRIGIDO!
+        inputCategoria.setHintTextColor(getResources().getColor(R.color.primaryDarkBlue));
         inputCategoria.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
         LinearLayout.LayoutParams inputParams3 = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams3.bottomMargin = 16;
+        inputParams3.bottomMargin = dpPadding / 2;
         inputCategoria.setLayoutParams(inputParams3);
 
         List<Categoria> categorias = db.categoriaDao().listarPorTipo(lancamento.tipo);
@@ -561,14 +585,10 @@ public class MovementsActivity extends AppCompatActivity {
         });
         layout.addView(inputCategoria);
 
-        // Styled buttons
+        // Botões "Salvar" e "Cancelar" com layout corrigido
         LinearLayout buttonLayout = new LinearLayout(this);
         buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        buttonLayout.setGravity(android.view.Gravity.CENTER);
-        LinearLayout.LayoutParams buttonLayoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        buttonLayoutParams.topMargin = 16;
-        buttonLayout.setLayoutParams(buttonLayoutParams);
+        buttonLayout.setGravity(Gravity.CENTER);
 
         Button btnSalvar = new Button(this);
         btnSalvar.setText("Salvar");
@@ -576,9 +596,8 @@ public class MovementsActivity extends AppCompatActivity {
         btnSalvar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-                0, 56);
-        btnSalvarParams.weight = 1;
-        btnSalvarParams.rightMargin = 8;
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f); // WRAP_CONTENT e peso 1f
+        btnSalvarParams.rightMargin = dpPadding / 4;
         btnSalvar.setLayoutParams(btnSalvarParams);
 
         Button btnCancelar = new Button(this);
@@ -587,23 +606,24 @@ public class MovementsActivity extends AppCompatActivity {
         btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
         btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
         LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-                0, 56);
-        btnCancelarParams.weight = 1;
-        btnCancelarParams.leftMargin = 8;
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f); // WRAP_CONTENT e peso 1f
+        btnCancelarParams.leftMargin = dpPadding / 4;
         btnCancelar.setLayoutParams(btnCancelarParams);
 
         buttonLayout.addView(btnSalvar);
         buttonLayout.addView(btnCancelar);
         layout.addView(buttonLayout);
 
-        // Add the layout to ScrollView and then to FrameLayout
+        // Adiciona o layout ao ScrollView e ao FrameLayout
         scrollView.addView(layout);
         frameLayout.addView(scrollView);
         builder.setView(frameLayout);
 
+        // Fundo transparente para mostrar os cantos arredondados do modal
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
+        // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
             String novaDescricao = inputDescricao.getText().toString().trim();
             String novoValorStr = inputValor.getText().toString().trim();
@@ -630,6 +650,7 @@ public class MovementsActivity extends AppCompatActivity {
             }
         });
 
+        // Listener do botão Cancelar
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();

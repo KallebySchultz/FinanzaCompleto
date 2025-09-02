@@ -57,8 +57,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:hint="Filtrar categorias..."
-                    android:textColor="@color/white"
-                    android:textColorHint="@color/gray"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:textColorHint="@color/darkGray"
                     android:background="@drawable/edittext_bg"
                     android:padding="12dp"
                     android:layout_marginEnd="8dp" />
@@ -88,8 +88,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:hint="Nova categoria"
-                    android:textColor="@color/white"
-                    android:textColorHint="@color/white"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:textColorHint="@color/darkGray"
                     android:background="@drawable/edittext_bg"
                     android:padding="12dp"
                     android:layout_marginEnd="8dp" />

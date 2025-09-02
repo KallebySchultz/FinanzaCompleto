@@ -862,6 +862,7 @@ public class MovementsActivity extends AppCompatActivity {
      * Formata valor monetário para exibição
      */
     private String formatarMoeda(double valor) {
-        return String.format("R$ %.2f", valor);
+        java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
+        return formatter.format(valor);
     }
 }

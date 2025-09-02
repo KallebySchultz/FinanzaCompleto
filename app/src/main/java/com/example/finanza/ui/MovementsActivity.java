@@ -34,9 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Activity para gerenciamento de movimentações (transações)
- */
 public class MovementsActivity extends AppCompatActivity {
 
     private AppDatabase db;
@@ -49,12 +46,9 @@ public class MovementsActivity extends AppCompatActivity {
     private ImageView btnPrevMonth, btnNextMonth;
     private LinearLayout transactionsList;
 
-    // Painel customizado
-    private FrameLayout addPanel, addTransactionPanel;
+    private FrameLayout addPanel;
     private LinearLayout btnReceita, btnDespesa;
     private ImageButton navAdd;
-    private Button btnSalvarLancamento;
-    private TextInputEditText inputNome, inputConta, inputData, inputCategoria, inputValor;
 
     // Para lançamento
     private Conta contaSelecionada;
@@ -85,13 +79,6 @@ public class MovementsActivity extends AppCompatActivity {
         addPanel = findViewById(R.id.add_panel);
         btnReceita = findViewById(R.id.btnReceita);
         btnDespesa = findViewById(R.id.btnDespesa);
-        addTransactionPanel = findViewById(R.id.add_transaction_panel);
-        btnSalvarLancamento = findViewById(R.id.btn_salvar_lancamento);
-        inputNome = findViewById(R.id.input_nome);
-        inputConta = findViewById(R.id.input_conta);
-        inputData = findViewById(R.id.input_data);
-        inputCategoria = findViewById(R.id.input_categoria);
-        inputValor = findViewById(R.id.input_valor);
 
         currentMonth = Calendar.getInstance();
         currentMonth.set(Calendar.DAY_OF_MONTH, 1);
@@ -190,12 +177,11 @@ public class MovementsActivity extends AppCompatActivity {
         navMenu.setColorFilter(getResources().getColor(R.color.white));
 
         navAdd.setOnClickListener(v -> {
-            if (addPanel.getVisibility() == View.GONE && addTransactionPanel.getVisibility() == View.GONE) {
+            if (addPanel.getVisibility() == View.GONE) {
                 addPanel.setVisibility(View.VISIBLE);
                 navAdd.setImageResource(R.drawable.ic_close);
             } else {
                 addPanel.setVisibility(View.GONE);
-                addTransactionPanel.setVisibility(View.GONE);
                 navAdd.setImageResource(R.drawable.ic_add);
             }
         });
@@ -207,43 +193,62 @@ public class MovementsActivity extends AppCompatActivity {
 
         btnReceita.setOnClickListener(v -> {
             addPanel.setVisibility(View.GONE);
-            addTransactionPanel.setVisibility(View.VISIBLE);
-            navAdd.setImageResource(R.drawable.ic_close);
-            isReceitaPanel = true;
-            inicializarCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor, true);
+            navAdd.setImageResource(R.drawable.ic_add);
+            showAddTransactionDialog(true);
         });
 
         btnDespesa.setOnClickListener(v -> {
             addPanel.setVisibility(View.GONE);
-            addTransactionPanel.setVisibility(View.VISIBLE);
-            navAdd.setImageResource(R.drawable.ic_close);
-            isReceitaPanel = false;
-            inicializarCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor, false);
+            navAdd.setImageResource(R.drawable.ic_add);
+            showAddTransactionDialog(false);
         });
 
+        updateMovements();
+    }
+
+    private void showAddTransactionDialog(boolean isReceitaPanel) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_transaction, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create();
+
+        TextInputEditText inputNome = dialogView.findViewById(R.id.input_nome);
+        TextInputEditText inputConta = dialogView.findViewById(R.id.input_conta);
+        TextInputEditText inputData = dialogView.findViewById(R.id.input_data);
+        TextInputEditText inputCategoria = dialogView.findViewById(R.id.input_categoria);
+        TextInputEditText inputValor = dialogView.findViewById(R.id.input_valor);
+        Button btnSalvar = dialogView.findViewById(R.id.btn_salvar);
+        Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar);
+
+        inputNome.setText("");
+        inputConta.setText("");
+        inputData.setText(new SimpleDateFormat("dd/MM/yyyy", new Locale("pt", "BR")).format(new java.util.Date(System.currentTimeMillis())));
+        inputCategoria.setText("");
+        inputValor.setText("");
+
+        final Conta[] contaSelecionadaDialog = {null};
         inputConta.setOnClickListener(v -> {
             List<Conta> contasList = db.contaDao().listarPorUsuario(usuarioIdAtual);
             String[] contasArray = new String[contasList.size()];
-            for (int i = 0; i < contasList.size(); i++) {
-                contasArray[i] = contasList.get(i).nome;
-            }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecionar conta");
-            builder.setItems(contasArray, (dialog, which) -> {
-                contaSelecionada = contasList.get(which);
-                inputConta.setText(contaSelecionada.nome);
-            });
-            builder.show();
+            for (int i = 0; i < contasList.size(); i++) contasArray[i] = contasList.get(i).nome;
+            new AlertDialog.Builder(this)
+                    .setTitle("Selecionar conta")
+                    .setItems(contasArray, (dialog2, which) -> {
+                        contaSelecionadaDialog[0] = contasList.get(which);
+                        inputConta.setText(contaSelecionadaDialog[0].nome);
+                    }).show();
         });
 
+        final long[] dataSelecionadaDialog = {System.currentTimeMillis()};
         inputData.setOnClickListener(v -> {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(dataSelecionada);
+            calendar.setTimeInMillis(dataSelecionadaDialog[0]);
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                     (view, year, month, dayOfMonth) -> {
                         Calendar chosen = Calendar.getInstance();
                         chosen.set(year, month, dayOfMonth);
-                        dataSelecionada = chosen.getTimeInMillis();
+                        dataSelecionadaDialog[0] = chosen.getTimeInMillis();
                         inputData.setText(String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year));
                     },
                     calendar.get(Calendar.YEAR),
@@ -252,23 +257,21 @@ public class MovementsActivity extends AppCompatActivity {
             datePickerDialog.show();
         });
 
+        final Categoria[] categoriaSelecionadaDialog = {null};
         inputCategoria.setOnClickListener(v -> {
             String tipo = isReceitaPanel ? "receita" : "despesa";
             List<Categoria> categoriasList = db.categoriaDao().listarPorTipo(tipo);
             String[] categoriasArray = new String[categoriasList.size()];
-            for (int i = 0; i < categoriasList.size(); i++) {
-                categoriasArray[i] = categoriasList.get(i).nome;
-            }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecionar categoria");
-            builder.setItems(categoriasArray, (dialog, which) -> {
-                categoriaSelecionada = categoriasList.get(which);
-                inputCategoria.setText(categoriaSelecionada.nome);
-            });
-            builder.show();
+            for (int i = 0; i < categoriasList.size(); i++) categoriasArray[i] = categoriasList.get(i).nome;
+            new AlertDialog.Builder(this)
+                    .setTitle("Selecionar categoria")
+                    .setItems(categoriasArray, (dialog2, which) -> {
+                        categoriaSelecionadaDialog[0] = categoriasList.get(which);
+                        inputCategoria.setText(categoriaSelecionadaDialog[0].nome);
+                    }).show();
         });
 
-        btnSalvarLancamento.setOnClickListener(v -> {
+        btnSalvar.setOnClickListener(v -> {
             String nome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
             String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".").trim() : "";
 
@@ -279,12 +282,11 @@ public class MovementsActivity extends AppCompatActivity {
             inputValor.setError(null);
 
             boolean hasError = false;
-
-            if (contaSelecionada == null) {
+            if (contaSelecionadaDialog[0] == null) {
                 inputConta.setError("Selecione a conta");
                 hasError = true;
             }
-            if (categoriaSelecionada == null) {
+            if (categoriaSelecionadaDialog[0] == null) {
                 inputCategoria.setError("Selecione a categoria");
                 hasError = true;
             }
@@ -292,29 +294,24 @@ public class MovementsActivity extends AppCompatActivity {
                 inputValor.setError("Digite o valor");
                 hasError = true;
             }
-
             if (!hasError) {
                 try {
                     double valor = Double.parseDouble(valorStr);
-
                     if (valor <= 0) {
                         inputValor.setError("O valor deve ser maior que zero");
                         return;
                     }
-
                     Lancamento lancamento = new Lancamento();
                     lancamento.valor = valor;
-                    lancamento.data = dataSelecionada;
+                    lancamento.data = dataSelecionadaDialog[0];
                     lancamento.descricao = nome.isEmpty() ? (isReceitaPanel ? "Receita" : "Despesa") : nome;
-                    lancamento.contaId = contaSelecionada.id;
-                    lancamento.categoriaId = categoriaSelecionada.id;
+                    lancamento.contaId = contaSelecionadaDialog[0].id;
+                    lancamento.categoriaId = categoriaSelecionadaDialog[0].id;
                     lancamento.usuarioId = usuarioIdAtual;
                     lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
                     db.lancamentoDao().inserir(lancamento);
                     updateMovements();
-                    addTransactionPanel.setVisibility(View.GONE);
-                    navAdd.setImageResource(R.drawable.ic_add);
-                    limparCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor);
+                    dialog.dismiss();
                     Toast.makeText(this, "Transação salva!", Toast.LENGTH_SHORT).show();
                 } catch (NumberFormatException e) {
                     inputValor.setError("Valor inválido! Use apenas números e ponto para decimais.");
@@ -322,37 +319,9 @@ public class MovementsActivity extends AppCompatActivity {
             }
         });
 
-        updateMovements();
-    }
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
 
-    private void inicializarCamposPainel(TextInputEditText inputNome,
-                                         TextInputEditText inputConta,
-                                         TextInputEditText inputData,
-                                         TextInputEditText inputCategoria,
-                                         TextInputEditText inputValor,
-                                         boolean isReceita) {
-        inputNome.setText("");
-        inputConta.setText(contaSelecionada != null ? contaSelecionada.nome : "");
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(dataSelecionada);
-        inputData.setText(String.format("%02d/%02d/%04d", calendar.get(Calendar.DAY_OF_MONTH),
-                calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR)));
-        inputCategoria.setText(categoriaSelecionada != null ? categoriaSelecionada.nome : "");
-        inputValor.setText("");
-    }
-
-    private void limparCamposPainel(TextInputEditText inputNome,
-                                    TextInputEditText inputConta,
-                                    TextInputEditText inputData,
-                                    TextInputEditText inputCategoria,
-                                    TextInputEditText inputValor) {
-        inputNome.setText("");
-        inputConta.setText("");
-        inputData.setText("");
-        inputCategoria.setText("");
-        inputValor.setText("");
-        categoriaSelecionada = null;
-        dataSelecionada = System.currentTimeMillis();
+        dialog.show();
     }
 
     private void updateMovements() {

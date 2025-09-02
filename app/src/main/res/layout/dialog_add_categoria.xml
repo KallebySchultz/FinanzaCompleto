@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="32dp"
+    android:background="@drawable/bg_modal_white"
+    android:elevation="24dp">
+
+    <TextView
+        android:id="@+id/modal_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nova Categoria"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/primaryDarkBlue"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/input_nome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Nome da categoria"
+        android:textColor="@color/primaryDarkBlue"
+        android:textColorHint="@color/primaryDarkBlue"
+        android:background="@drawable/edittext_bg"
+        android:layout_marginBottom="16dp"/>
+
+    <RadioGroup
+        android:id="@+id/tipo_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp">
+
+        <RadioButton
+            android:id="@+id/radio_receita"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Receita"
+            android:textColor="@color/primaryDarkBlue"
+            android:checked="true"/>
+
+        <RadioButton
+            android:id="@+id/radio_despesa"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Despesa"
+            android:textColor="@color/primaryDarkBlue"
+            android:layout_marginLeft="16dp"/>
+    </RadioGroup>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btn_salvar"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:text="Salvar"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:background="@drawable/button_blue"
+            android:elevation="2dp"
+            android:layout_marginRight="8dp"/>
+        <Button
+            android:id="@+id/btn_cancelar"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:text="Cancelar"
+            android:textColor="@color/primaryDarkBlue"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:background="@drawable/button_gray"
+            android:elevation="2dp"
+            android:layout_marginLeft="8dp"/>
+    </LinearLayout>
+</LinearLayout>

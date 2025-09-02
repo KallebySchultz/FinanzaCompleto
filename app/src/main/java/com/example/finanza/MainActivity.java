@@ -4,7 +4,6 @@ import android.app.DatePickerDialog;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.TextView;
@@ -13,6 +12,7 @@ import android.widget.ImageButton;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Button;
+
 import com.example.finanza.R;
 import com.example.finanza.ui.AccountsActivity;
 import com.google.android.material.textfield.TextInputEditText;
@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private int categoriaReceitaId;
     private int categoriaDespesaId;
 
-    // Para painel customizado
+    // Painel customizado
     private Conta contaSelecionada;
     private Categoria categoriaSelecionada;
     private long dataSelecionada = System.currentTimeMillis();
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
                 .allowMainThreadQueries()
                 .build();
 
-        // Busca ou cria usuário padrão
+        // Busca/cria usuário padrão
         Usuario usuario;
         List<Usuario> usuarios = db.usuarioDao().listarTodos();
         if (usuarios.size() == 0) {
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         }
         usuarioIdAtual = usuario.id;
 
-        // Busca ou cria conta padrão
+        // Busca/cria conta padrão
         Conta contaPadrao;
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
         if (contas.size() == 0) {
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         contaPadraoId = contaPadrao.id;
         contaSelecionada = contaPadrao;
 
-        // Busca ou cria categorias padrão de receita
+        // Categorias padrão receita
         String[][] categoriasReceitaPadrao = {
                 {"Receita", "#22BB33"},
                 {"Salário", "#22BB33"},
@@ -100,7 +100,6 @@ public class MainActivity extends AppCompatActivity {
                 {"Recebimento de aluguel", "#22BB33"},
                 {"Reajuste de saldo", "#22BB33"}
         };
-
         List<Categoria> receitasCats = db.categoriaDao().listarPorTipo("receita");
         for (String[] catPadrao : categoriasReceitaPadrao) {
             boolean existe = false;
@@ -131,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
         }
         categoriaReceitaId = catReceita != null ? catReceita.id : -1;
 
-        // Busca ou cria categorias padrão de despesa
+        // Categorias padrão despesa
         String[][] categoriasDespesaPadrao = {
                 {"Despesa", "#FF2222"},
                 {"Alimentação", "#FF2222"},
@@ -147,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
                 {"Cartão de crédito", "#FF2222"},
                 {"Viagem", "#FF2222"}
         };
-
         List<Categoria> despesaCats = db.categoriaDao().listarPorTipo("despesa");
         for (String[] catPadrao : categoriasDespesaPadrao) {
             boolean existe = false;
@@ -188,12 +186,7 @@ public class MainActivity extends AppCompatActivity {
 
         imgEye.setOnClickListener(v -> {
             saldoVisivel = !saldoVisivel;
-            if (saldoVisivel) {
-                imgEye.setImageResource(R.drawable.ic_eye_open);
-            } else {
-                imgEye.setImageResource(R.drawable.ic_eye_closed);
-            }
-            // Atualiza todos os valores da tela
+            imgEye.setImageResource(saldoVisivel ? R.drawable.ic_eye_open : R.drawable.ic_eye_closed);
             atualizarValores(tvSaldo, tvReceita, tvDespesa);
             updateHomeContent();
         });
@@ -221,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                 navHome.setColorFilter(getResources().getColor(R.color.white));
                 navMenu.setColorFilter(getResources().getColor(R.color.white));
                 navAccounts.setColorFilter(getResources().getColor(R.color.accentBlue));
-                Intent intent = new Intent(this, com.example.finanza.ui.AccountsActivity.class);
+                Intent intent = new Intent(this, AccountsActivity.class);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
                 finish();
@@ -246,24 +239,13 @@ public class MainActivity extends AppCompatActivity {
         final LinearLayout btnReceita = findViewById(R.id.btnReceita);
         final LinearLayout btnDespesa = findViewById(R.id.btnDespesa);
 
-        // Painel customizado
-        final FrameLayout addTransactionPanel = findViewById(R.id.add_transaction_panel);
-        final Button btnSalvarLancamento = findViewById(R.id.btn_salvar_lancamento);
-
-        final TextInputEditText inputNome = findViewById(R.id.input_nome);
-        final TextInputEditText inputConta = findViewById(R.id.input_conta);
-        final TextInputEditText inputData = findViewById(R.id.input_data);
-        final TextInputEditText inputCategoria = findViewById(R.id.input_categoria);
-        final TextInputEditText inputValor = findViewById(R.id.input_valor);
-
         navAdd.setOnClickListener(v -> {
-            if (addPanel.getVisibility() == View.GONE && addTransactionPanel.getVisibility() == View.GONE) {
+            if (addPanel.getVisibility() == View.VISIBLE) {
+                addPanel.setVisibility(View.GONE);
+                navAdd.setImageResource(R.drawable.ic_add);
+            } else {
                 addPanel.setVisibility(View.VISIBLE);
                 navAdd.setImageResource(R.drawable.ic_close);
-            } else {
-                addPanel.setVisibility(View.GONE);
-                addTransactionPanel.setVisibility(View.GONE);
-                navAdd.setImageResource(R.drawable.ic_add);
             }
         });
 
@@ -274,45 +256,62 @@ public class MainActivity extends AppCompatActivity {
 
         btnReceita.setOnClickListener(v -> {
             addPanel.setVisibility(View.GONE);
-            addTransactionPanel.setVisibility(View.VISIBLE);
-            navAdd.setImageResource(R.drawable.ic_close);
-            isReceitaPanel = true;
-            inicializarCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor, true);
+            navAdd.setImageResource(R.drawable.ic_add);
+            showAddTransactionDialog(true);
         });
 
         btnDespesa.setOnClickListener(v -> {
             addPanel.setVisibility(View.GONE);
-            addTransactionPanel.setVisibility(View.VISIBLE);
-            navAdd.setImageResource(R.drawable.ic_close);
-            isReceitaPanel = false;
-            inicializarCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor, false);
+            navAdd.setImageResource(R.drawable.ic_add);
+            showAddTransactionDialog(false);
         });
+    }
 
-        // Campo Conta (dialogo de seleção)
+    // Mostra o modal de adicionar transação
+    private void showAddTransactionDialog(boolean isReceitaPanel) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_transaction, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(false)
+                .create();
+
+        TextInputEditText inputNome = dialogView.findViewById(R.id.input_nome);
+        TextInputEditText inputConta = dialogView.findViewById(R.id.input_conta);
+        TextInputEditText inputData = dialogView.findViewById(R.id.input_data);
+        TextInputEditText inputCategoria = dialogView.findViewById(R.id.input_categoria);
+        TextInputEditText inputValor = dialogView.findViewById(R.id.input_valor);
+
+        Button btnSalvar = dialogView.findViewById(R.id.btn_salvar);
+        Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar);
+
+        // Inicializa conta padrão
+        List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
+        final Conta[] contaSelecionada = {contas.isEmpty() ? null : contas.get(0)};
+        if (contaSelecionada[0] != null) inputConta.setText(contaSelecionada[0].nome);
+
         inputConta.setOnClickListener(v -> {
             List<Conta> contasList = db.contaDao().listarPorUsuario(usuarioIdAtual);
             String[] contasArray = new String[contasList.size()];
             for (int i = 0; i < contasList.size(); i++) {
                 contasArray[i] = contasList.get(i).nome;
             }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecionar conta");
-            builder.setItems(contasArray, (dialog, which) -> {
-                contaSelecionada = contasList.get(which);
-                inputConta.setText(contaSelecionada.nome);
-            });
-            builder.show();
+            new AlertDialog.Builder(this)
+                    .setTitle("Selecionar conta")
+                    .setItems(contasArray, (d, which) -> {
+                        contaSelecionada[0] = contasList.get(which);
+                        inputConta.setText(contaSelecionada[0].nome);
+                    }).show();
         });
 
-        // Campo Data (DatePicker)
+        final long[] dataSelecionada = {System.currentTimeMillis()};
         inputData.setOnClickListener(v -> {
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(dataSelecionada);
+            calendar.setTimeInMillis(dataSelecionada[0]);
             DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                     (view, year, month, dayOfMonth) -> {
                         Calendar chosen = Calendar.getInstance();
                         chosen.set(year, month, dayOfMonth);
-                        dataSelecionada = chosen.getTimeInMillis();
+                        dataSelecionada[0] = chosen.getTimeInMillis();
                         inputData.setText(String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year));
                     },
                     calendar.get(Calendar.YEAR),
@@ -321,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
             datePickerDialog.show();
         });
 
-        // Campo Categoria (dialogo de seleção)
+        final Categoria[] categoriaSelecionada = {null};
         inputCategoria.setOnClickListener(v -> {
             String tipo = isReceitaPanel ? "receita" : "despesa";
             List<Categoria> categoriasList = db.categoriaDao().listarPorTipo(tipo);
@@ -329,20 +328,18 @@ public class MainActivity extends AppCompatActivity {
             for (int i = 0; i < categoriasList.size(); i++) {
                 categoriasArray[i] = categoriasList.get(i).nome;
             }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecionar categoria");
-            builder.setItems(categoriasArray, (dialog, which) -> {
-                categoriaSelecionada = categoriasList.get(which);
-                inputCategoria.setText(categoriaSelecionada.nome);
-            });
-            builder.show();
+            new AlertDialog.Builder(this)
+                    .setTitle("Selecionar categoria")
+                    .setItems(categoriasArray, (d, which) -> {
+                        categoriaSelecionada[0] = categoriasList.get(which);
+                        inputCategoria.setText(categoriaSelecionada[0].nome);
+                    }).show();
         });
 
-        btnSalvarLancamento.setOnClickListener(v -> {
+        btnSalvar.setOnClickListener(v -> {
             String nome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
             String valorStr = inputValor.getText() != null ? inputValor.getText().toString().replace(",", ".").trim() : "";
 
-            // Clear previous errors
             inputNome.setError(null);
             inputConta.setError(null);
             inputData.setError(null);
@@ -350,12 +347,11 @@ public class MainActivity extends AppCompatActivity {
             inputValor.setError(null);
 
             boolean hasError = false;
-
-            if (contaSelecionada == null) {
+            if (contaSelecionada[0] == null) {
                 inputConta.setError("Selecione a conta");
                 hasError = true;
             }
-            if (categoriaSelecionada == null) {
+            if (categoriaSelecionada[0] == null) {
                 inputCategoria.setError("Selecione a categoria");
                 hasError = true;
             }
@@ -363,80 +359,44 @@ public class MainActivity extends AppCompatActivity {
                 inputValor.setError("Digite o valor");
                 hasError = true;
             }
-
             if (!hasError) {
                 try {
                     double valor = Double.parseDouble(valorStr);
-
-                    // Validate positive value
                     if (valor <= 0) {
                         inputValor.setError("O valor deve ser maior que zero");
                         return;
                     }
-
-                    // Create transaction
                     Lancamento lancamento = new Lancamento();
                     lancamento.valor = valor;
-                    lancamento.data = dataSelecionada;
+                    lancamento.data = dataSelecionada[0];
                     lancamento.descricao = nome.isEmpty() ? (isReceitaPanel ? "Receita" : "Despesa") : nome;
-                    lancamento.contaId = contaSelecionada.id;
-                    lancamento.categoriaId = categoriaSelecionada.id;
+                    lancamento.contaId = contaSelecionada[0].id;
+                    lancamento.categoriaId = categoriaSelecionada[0].id;
                     lancamento.usuarioId = usuarioIdAtual;
                     lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
-
                     db.lancamentoDao().inserir(lancamento);
-                    atualizarValores(tvSaldo, tvReceita, tvDespesa);
+                    atualizarValores(findViewById(R.id.tvSaldo), findViewById(R.id.tvReceita), findViewById(R.id.tvDespesa));
                     updateHomeContent();
-                    addTransactionPanel.setVisibility(View.GONE);
-                    navAdd.setImageResource(R.drawable.ic_add);
-                    limparCamposPainel(inputNome, inputConta, inputData, inputCategoria, inputValor);
-
+                    dialog.dismiss();
                 } catch (NumberFormatException e) {
                     inputValor.setError("Valor inválido! Use apenas números e ponto para decimais.");
                 }
             }
         });
+
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh home content when returning to MainActivity
         final TextView tvSaldo = findViewById(R.id.tvSaldo);
         final TextView tvReceita = findViewById(R.id.tvReceita);
         final TextView tvDespesa = findViewById(R.id.tvDespesa);
         atualizarValores(tvSaldo, tvReceita, tvDespesa);
         updateHomeContent();
-    }
-
-    private void inicializarCamposPainel(TextInputEditText inputNome,
-                                         TextInputEditText inputConta,
-                                         TextInputEditText inputData,
-                                         TextInputEditText inputCategoria,
-                                         TextInputEditText inputValor,
-                                         boolean isReceita) {
-        inputNome.setText("");
-        inputConta.setText(contaSelecionada != null ? contaSelecionada.nome : "");
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(dataSelecionada);
-        inputData.setText(String.format("%02d/%02d/%04d", calendar.get(Calendar.DAY_OF_MONTH),
-                calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR)));
-        inputCategoria.setText(categoriaSelecionada != null ? categoriaSelecionada.nome : "");
-        inputValor.setText("");
-    }
-
-    private void limparCamposPainel(TextInputEditText inputNome,
-                                    TextInputEditText inputConta,
-                                    TextInputEditText inputData,
-                                    TextInputEditText inputCategoria,
-                                    TextInputEditText inputValor) {
-        inputNome.setText("");
-        inputConta.setText("");
-        inputData.setText("");
-        inputCategoria.setText("");
-        inputValor.setText("");
-        categoriaSelecionada = null;
-        dataSelecionada = System.currentTimeMillis();
     }
 
     private void atualizarValores(TextView tvSaldo, TextView tvReceita, TextView tvDespesa) {
@@ -468,56 +428,44 @@ public class MainActivity extends AppCompatActivity {
         return consultarReceitas() - consultarDespesas();
     }
 
-    /**
-     * Formata valor monetário para exibição
-     */
     private String formatarMoeda(double valor) {
         return String.format("R$ %.2f", valor);
     }
 
-    /**
-     * Atualiza o conteúdo da tela inicial com resumos e informações úteis
-     */
     private void updateHomeContent() {
         updateAccountsSummary();
         updateCategoriesSummary();
         updateRecentTransactions();
     }
 
-    /**
-     * Atualiza o resumo de contas na tela inicial
-     */
     private void updateAccountsSummary() {
         LinearLayout container = findViewById(R.id.accounts_summary_container);
         container.removeAllViews();
 
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
-        
         for (Conta conta : contas) {
             LinearLayout itemConta = new LinearLayout(this);
             itemConta.setOrientation(LinearLayout.HORIZONTAL);
             itemConta.setPadding(16, 12, 16, 12);
             itemConta.setClickable(true);
             itemConta.setFocusable(true);
-            
-            // Adiciona click listener para abrir tela de contas
+
             itemConta.setOnClickListener(v -> {
                 Intent intent = new Intent(MainActivity.this, AccountsActivity.class);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
             });
-            
-            // Informações da conta (sem ícone)
+
             LinearLayout infoContainer = new LinearLayout(this);
             infoContainer.setOrientation(LinearLayout.VERTICAL);
             infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-            
+
             TextView nomeConta = new TextView(this);
             nomeConta.setText(conta.nome);
             nomeConta.setTextColor(getResources().getColor(R.color.white));
             nomeConta.setTextSize(16);
             nomeConta.setTypeface(null, android.graphics.Typeface.BOLD);
-            
+
             TextView saldoConta = new TextView(this);
             double saldoAtual = consultarSaldoConta(conta);
             if (saldoVisivel) {
@@ -528,58 +476,49 @@ public class MainActivity extends AppCompatActivity {
                 saldoConta.setTextColor(getResources().getColor(R.color.white));
             }
             saldoConta.setTextSize(14);
-            
+
             infoContainer.addView(nomeConta);
             infoContainer.addView(saldoConta);
-            
+
             itemConta.addView(infoContainer);
-            
+
             container.addView(itemConta);
         }
     }
 
-    /**
-     * Atualiza o gráfico de gastos por categoria
-     */
     private void updateCategoriesSummary() {
         LinearLayout container = findViewById(R.id.categories_summary_container);
         container.removeAllViews();
 
         List<Categoria> categoriasDespesa = db.categoriaDao().listarPorTipo("despesa");
-        
-        // Cria lista de categorias com valores de gasto
+
         java.util.List<CategoryExpense> categoryExpenses = new java.util.ArrayList<>();
-        
         for (Categoria categoria : categoriasDespesa) {
             Double totalGasto = db.lancamentoDao().somaPorCategoria(categoria.id, usuarioIdAtual);
             if (totalGasto != null && totalGasto > 0) {
                 categoryExpenses.add(new CategoryExpense(categoria, totalGasto));
             }
         }
-        
-        // Ordena por valor decrescente
         java.util.Collections.sort(categoryExpenses, (a, b) -> Double.compare(b.totalGasto, a.totalGasto));
-        
-        // Mostra as 5 categorias com maior gasto
+
         int maxCategorias = Math.min(5, categoryExpenses.size());
         for (int i = 0; i < maxCategorias; i++) {
             CategoryExpense categoryExpense = categoryExpenses.get(i);
-            
+
             LinearLayout itemCategoria = new LinearLayout(this);
             itemCategoria.setOrientation(LinearLayout.HORIZONTAL);
             itemCategoria.setPadding(16, 12, 16, 12);
-            
-            // Informações da categoria
+
             LinearLayout infoContainer = new LinearLayout(this);
             infoContainer.setOrientation(LinearLayout.VERTICAL);
             infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-            
+
             TextView nomeCategoria = new TextView(this);
             nomeCategoria.setText(categoryExpense.categoria.nome);
             nomeCategoria.setTextColor(getResources().getColor(R.color.white));
             nomeCategoria.setTextSize(16);
             nomeCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
-            
+
             TextView valorCategoria = new TextView(this);
             if (saldoVisivel) {
                 valorCategoria.setText(formatarMoeda(categoryExpense.totalGasto));
@@ -589,15 +528,15 @@ public class MainActivity extends AppCompatActivity {
                 valorCategoria.setTextColor(getResources().getColor(R.color.white));
             }
             valorCategoria.setTextSize(14);
-            
+
             infoContainer.addView(nomeCategoria);
             infoContainer.addView(valorCategoria);
-            
+
             itemCategoria.addView(infoContainer);
-            
+
             container.addView(itemCategoria);
         }
-        
+
         if (categoryExpenses.isEmpty()) {
             TextView noData = new TextView(this);
             noData.setText("Nenhuma despesa registrada");
@@ -607,93 +546,81 @@ public class MainActivity extends AppCompatActivity {
             container.addView(noData);
         }
     }
-    
-    // Classe auxiliar para armazenar categoria e total de gastos
+
     private static class CategoryExpense {
         Categoria categoria;
         double totalGasto;
-        
         CategoryExpense(Categoria categoria, double totalGasto) {
             this.categoria = categoria;
             this.totalGasto = totalGasto;
         }
     }
 
-    /**
-     * Atualiza as últimas transações na tela inicial
-     */
     private void updateRecentTransactions() {
         LinearLayout container = findViewById(R.id.recent_transactions_container);
         container.removeAllViews();
 
         List<Lancamento> transacoes = db.lancamentoDao().listarUltimasPorUsuario(usuarioIdAtual, 5);
-        
         for (Lancamento transacao : transacoes) {
             LinearLayout itemTransacao = new LinearLayout(this);
             itemTransacao.setOrientation(LinearLayout.HORIZONTAL);
             itemTransacao.setPadding(16, 12, 16, 12);
             itemTransacao.setClickable(true);
             itemTransacao.setFocusable(true);
-            
-            // Adiciona click listener para abrir tela de movimentações
+
             itemTransacao.setOnClickListener(v -> {
                 Intent intent = new Intent(MainActivity.this, MovementsActivity.class);
                 startActivity(intent);
                 overridePendingTransition(0, 0);
             });
-            
-            // Ícone da transação
+
             ImageView icon = new ImageView(this);
             icon.setImageResource(transacao.tipo.equals("receita") ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down);
             icon.setLayoutParams(new LinearLayout.LayoutParams(48, 48));
-            icon.setColorFilter(transacao.tipo.equals("receita") ? 
-                getResources().getColor(R.color.positiveGreen) : 
-                getResources().getColor(R.color.negativeRed));
-            
-            // Informações da transação
+            icon.setColorFilter(transacao.tipo.equals("receita") ?
+                    getResources().getColor(R.color.positiveGreen) :
+                    getResources().getColor(R.color.negativeRed));
+
             LinearLayout infoContainer = new LinearLayout(this);
             infoContainer.setOrientation(LinearLayout.VERTICAL);
             infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
             infoContainer.setPadding(16, 0, 0, 0);
-            
+
             TextView descricaoTransacao = new TextView(this);
             descricaoTransacao.setText(transacao.descricao);
             descricaoTransacao.setTextColor(getResources().getColor(R.color.white));
             descricaoTransacao.setTextSize(16);
             descricaoTransacao.setTypeface(null, android.graphics.Typeface.BOLD);
-            
+
             TextView valorTransacao = new TextView(this);
             if (saldoVisivel) {
                 valorTransacao.setText(formatarMoeda(transacao.valor));
-                valorTransacao.setTextColor(transacao.tipo.equals("receita") ? 
-                    getResources().getColor(R.color.positiveGreen) : 
-                    getResources().getColor(R.color.negativeRed));
+                valorTransacao.setTextColor(transacao.tipo.equals("receita") ?
+                        getResources().getColor(R.color.positiveGreen) :
+                        getResources().getColor(R.color.negativeRed));
             } else {
                 valorTransacao.setText("****");
                 valorTransacao.setTextColor(getResources().getColor(R.color.white));
             }
             valorTransacao.setTextSize(14);
-            
+
             infoContainer.addView(descricaoTransacao);
             infoContainer.addView(valorTransacao);
-            
+
             itemTransacao.addView(icon);
             itemTransacao.addView(infoContainer);
-            
+
             container.addView(itemTransacao);
         }
     }
 
-    /**
-     * Consulta o saldo atual de uma conta específica
-     */
     private double consultarSaldoConta(Conta conta) {
         Double receitas = db.lancamentoDao().somaPorContaETipo(conta.id, "receita");
         Double despesas = db.lancamentoDao().somaPorContaETipo(conta.id, "despesa");
-        
+
         double totalReceitas = receitas != null ? receitas : 0.0;
         double totalDespesas = despesas != null ? despesas : 0.0;
-        
+
         return conta.saldoInicial + totalReceitas - totalDespesas;
     }
 }

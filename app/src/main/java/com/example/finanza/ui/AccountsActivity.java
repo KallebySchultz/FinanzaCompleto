@@ -55,22 +55,18 @@ public class AccountsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_accounts);
 
-        // Ajusta as cores da barra de status e navegação
         getWindow().setStatusBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().getDecorView().setSystemUiVisibility(0);
 
-        // Inicializa banco de dados Room
         db = Room.databaseBuilder(getApplicationContext(),
                         AppDatabase.class, "finanza-db")
                 .allowMainThreadQueries()
                 .build();
 
-        // Busca usuário atual
         List<Usuario> usuarios = db.usuarioDao().listarTodos();
         usuarioIdAtual = usuarios.size() > 0 ? usuarios.get(0).id : 0;
 
-        // Inicialização das views
         txtSaldoAtual = findViewById(R.id.txt_saldo_atual);
         defaultAccountName = findViewById(R.id.default_account_name);
         defaultAccountSaldo = findViewById(R.id.default_account_saldo);
@@ -85,7 +81,6 @@ public class AccountsActivity extends AppCompatActivity {
 
         navAdd = findViewById(R.id.nav_add);
 
-        // Botão para mostrar/ocultar painel de cadastro de conta
         navAdd.setOnClickListener(v -> {
             if (contasPanel.getVisibility() == View.GONE) {
                 contasPanel.setVisibility(View.VISIBLE);
@@ -98,19 +93,16 @@ public class AccountsActivity extends AppCompatActivity {
             }
         });
 
-        // Fecha painel ao clicar fora do balão/modal
         contasPanel.setOnClickListener(v -> {
             contasPanel.setVisibility(View.GONE);
             navAdd.setImageResource(R.drawable.ic_add);
             inputNomeConta.setText("");
             inputSaldoInicial.setText("");
         });
-        // Evita fechar ao clicar dentro do painel
         contasPanel.findViewById(R.id.input_nome_conta).setOnClickListener(v -> {});
         contasPanel.findViewById(R.id.input_saldo_inicial).setOnClickListener(v -> {});
         contasPanel.findViewById(R.id.btn_salvar_conta).setOnClickListener(v -> {});
 
-        // Salvar nova conta
         btnSalvarConta.setOnClickListener(v -> {
             String nomeConta = inputNomeConta.getText() != null ? inputNomeConta.getText().toString().trim() : "";
             String saldoStr = inputSaldoInicial.getText() != null ? inputSaldoInicial.getText().toString().trim() : "";
@@ -140,7 +132,6 @@ public class AccountsActivity extends AppCompatActivity {
             Toast.makeText(this, "Conta cadastrada!", Toast.LENGTH_SHORT).show();
         });
 
-        // Navegação inferior
         final ImageView navHome = findViewById(R.id.nav_home);
         final ImageView navMenu = findViewById(R.id.nav_menu);
         final ImageView navAccounts = findViewById(R.id.nav_accounts);
@@ -194,9 +185,6 @@ public class AccountsActivity extends AppCompatActivity {
         updateAccounts();
     }
 
-    /**
-     * Atualiza a lista de contas exibida
-     */
     private void updateAccounts() {
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
 
@@ -205,23 +193,18 @@ public class AccountsActivity extends AppCompatActivity {
         double saldoTotal = consultarSaldoGeral();
         txtSaldoAtual.setText(formatarMoeda(saldoTotal));
 
-        // Remove o tratamento especial da conta padrão - todas as contas são tratadas igualmente
         for (Conta conta : contas) {
             LinearLayout item = new LinearLayout(this);
             item.setOrientation(LinearLayout.HORIZONTAL);
             item.setGravity(Gravity.CENTER_VERTICAL);
             item.setPadding(16, 20, 16, 20);
 
-            // Fundo estilizado
             item.setBackground(getResources().getDrawable(R.drawable.bg_transaction_item));
-
-            // Margem inferior para distanciamento
             LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             itemParams.bottomMargin = 12;
             item.setLayoutParams(itemParams);
 
-            // Informações da conta (sem ícones)
             LinearLayout infoBox = new LinearLayout(this);
             infoBox.setOrientation(LinearLayout.VERTICAL);
             infoBox.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -244,11 +227,8 @@ public class AccountsActivity extends AppCompatActivity {
 
             item.addView(infoBox);
 
-            // Clique curto: editar conta
             final Conta finalConta = conta;
             item.setOnClickListener(v -> editarConta(finalConta));
-
-            // Clique longo: excluir conta
             item.setOnLongClickListener(v -> {
                 confirmarExclusaoConta(finalConta);
                 return true;
@@ -256,16 +236,11 @@ public class AccountsActivity extends AppCompatActivity {
 
             accountsList.addView(item);
         }
-        
-        // Esconde a seção da conta padrão que estava sendo exibida separadamente
         if (defaultAccountBox != null) {
             defaultAccountBox.setVisibility(View.GONE);
         }
     }
 
-    /**
-     * Retorna saldo atual de uma conta
-     */
     private double consultarSaldoConta(Conta conta) {
         Double receitas = db.lancamentoDao().somaPorTipoConta("receita", usuarioIdAtual, conta.id);
         Double despesas = db.lancamentoDao().somaPorTipoConta("despesa", usuarioIdAtual, conta.id);
@@ -274,9 +249,6 @@ public class AccountsActivity extends AppCompatActivity {
         return conta.saldoInicial + receitas - despesas;
     }
 
-    /**
-     * Retorna saldo geral somando todas as contas
-     */
     private double consultarSaldoGeral() {
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
         double saldoTotal = 0.0;
@@ -286,123 +258,24 @@ public class AccountsActivity extends AppCompatActivity {
         return saldoTotal;
     }
 
-    /**
-     * Modal para edição de conta com botões corrigidos e layout comentado
-     */
+    // Modal personalizado para editar conta
     private void editarConta(Conta conta) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_edit_account, null);
 
-        // FrameLayout centralizado
-        FrameLayout frameLayout = new FrameLayout(this);
-        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
-        );
-        frameLayout.setLayoutParams(frameParams);
+        EditText inputNome = dialogView.findViewById(R.id.input_nome_conta);
+        EditText inputSaldo = dialogView.findViewById(R.id.input_saldo_inicial);
+        Button btnSalvar = dialogView.findViewById(R.id.btn_salvar_conta);
+        Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar);
 
-        // ScrollView para garantir responsividade
-        ScrollView scrollView = new ScrollView(this);
-
-        // LinearLayout principal do modal
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        // Modal maior: padding 24dp e largura 340dp
-        int dpPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
-        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
-        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
-        layout.setElevation(16f); // Add high elevation to ensure modal appears above everything
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
-        layout.setLayoutParams(layoutParams);
-
-        // Título do modal
-        TextView title = new TextView(this);
-        title.setText("Editar Conta");
-        title.setTextSize(22);
-        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        titleParams.bottomMargin = dpPadding / 2;
-        title.setLayoutParams(titleParams);
-        layout.addView(title);
-
-        // Campo nome da conta
-        final EditText inputNome = new EditText(this);
-        inputNome.setHint("Nome da conta");
         inputNome.setText(conta.nome);
-        inputNome.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputNome.setHintTextColor(getResources().getColor(R.color.darkGray));
-        inputNome.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
-        LinearLayout.LayoutParams inputParams1 = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams1.bottomMargin = dpPadding / 2;
-        inputNome.setLayoutParams(inputParams1);
-        layout.addView(inputNome);
-
-        // Campo saldo inicial
-        final EditText inputSaldo = new EditText(this);
-        inputSaldo.setHint("Saldo inicial");
         inputSaldo.setText(String.valueOf(conta.saldoInicial));
-        inputSaldo.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        inputSaldo.setHintTextColor(getResources().getColor(R.color.darkGray));
-        inputSaldo.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
-        inputSaldo.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        LinearLayout.LayoutParams inputParams2 = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        inputParams2.bottomMargin = dpPadding / 2;
-        inputSaldo.setLayoutParams(inputParams2);
-        layout.addView(inputSaldo);
 
-        // Botões "Salvar" e "Cancelar" com layout corrigido
-        LinearLayout buttonLayout = new LinearLayout(this);
-        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        buttonLayout.setGravity(Gravity.CENTER);
-
-        Button btnSalvar = new Button(this);
-        btnSalvar.setText("Salvar");
-        btnSalvar.setTextColor(getResources().getColor(R.color.white));
-        btnSalvar.setTypeface(null, Typeface.BOLD);
-        btnSalvar.setBackground(getResources().getDrawable(R.drawable.button_blue));
-        LinearLayout.LayoutParams btnSalvarParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f); // WRAP_CONTENT e peso 1f
-        btnSalvarParams.rightMargin = dpPadding / 4;
-        btnSalvar.setLayoutParams(btnSalvarParams);
-
-        Button btnCancelar = new Button(this);
-        btnCancelar.setText("Cancelar");
-        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        btnCancelar.setTypeface(null, Typeface.BOLD);
-        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
-        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f); // WRAP_CONTENT e peso 1f
-        btnCancelarParams.leftMargin = dpPadding / 4;
-        btnCancelar.setLayoutParams(btnCancelarParams);
-
-        buttonLayout.addView(btnSalvar);
-        buttonLayout.addView(btnCancelar);
-        layout.addView(buttonLayout);
-
-        // Adiciona o layout ao ScrollView e ao FrameLayout
-        scrollView.addView(layout);
-        frameLayout.addView(scrollView);
-        builder.setView(frameLayout);
-
-        // Fundo transparente para mostrar os cantos arredondados do modal
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dialogView);
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        
-        // Force center the dialog window
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setGravity(Gravity.CENTER);
-        }
+        dialog.show();
 
-        // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
             String novoNome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
             String novoSaldoStr = inputSaldo.getText() != null ? inputSaldo.getText().toString().trim() : "";
@@ -426,124 +299,33 @@ public class AccountsActivity extends AppCompatActivity {
             }
         });
 
-        // Listener do botão Cancelar
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
-
-        dialog.show();
     }
 
-    /**
-     * Exibe confirmação de exclusão de conta com modal consistente
-     */
+    // Modal personalizado para excluir conta
     private void confirmarExclusaoConta(Conta conta) {
-        // Busca lançamentos da conta
         List<Lancamento> lancamentos = db.lancamentoDao().listarPorConta(conta.id);
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_delete_account, null);
+
+        TextView deleteMessage = dialogView.findViewById(R.id.delete_message);
+        Button btnExcluir = dialogView.findViewById(R.id.btn_excluir);
+        Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar);
 
         String message = "Deseja excluir a conta '" + conta.nome + "'?";
         if (!lancamentos.isEmpty()) {
             message += "\n\nATENÇÃO: Esta conta possui " + lancamentos.size() +
                     " transação(ões). Elas também serão excluídas.";
         }
+        deleteMessage.setText(message);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-        // FrameLayout centralizado
-        FrameLayout frameLayout = new FrameLayout(this);
-        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                Gravity.CENTER // CENTRALIZA O MODAL NA TELA!
-        );
-        frameLayout.setLayoutParams(frameParams);
-
-        // ScrollView para garantir responsividade
-        ScrollView scrollView = new ScrollView(this);
-
-        // LinearLayout principal do modal
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        int dpPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
-        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
-        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
-        layout.setElevation(16f);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
-        layout.setLayoutParams(layoutParams);
-
-        // Título do modal
-        TextView title = new TextView(this);
-        title.setText("Excluir Conta");
-        title.setTextSize(22);
-        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        title.setTypeface(null, Typeface.BOLD);
-        title.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        titleParams.bottomMargin = dpPadding / 2;
-        title.setLayoutParams(titleParams);
-        layout.addView(title);
-
-        // Mensagem de confirmação
-        TextView messageText = new TextView(this);
-        messageText.setText(message);
-        messageText.setTextSize(16);
-        messageText.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        messageText.setGravity(Gravity.CENTER);
-        LinearLayout.LayoutParams messageParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        messageParams.bottomMargin = dpPadding;
-        messageText.setLayoutParams(messageParams);
-        layout.addView(messageText);
-
-        // Botões "Excluir" e "Cancelar" com layout consistente
-        LinearLayout buttonLayout = new LinearLayout(this);
-        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
-        buttonLayout.setGravity(Gravity.CENTER);
-
-        Button btnExcluir = new Button(this);
-        btnExcluir.setText("Sim, excluir");
-        btnExcluir.setTextColor(getResources().getColor(R.color.white));
-        btnExcluir.setTypeface(null, Typeface.BOLD);
-        btnExcluir.setBackground(getResources().getDrawable(R.drawable.button_blue));
-        LinearLayout.LayoutParams btnExcluirParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        btnExcluirParams.rightMargin = dpPadding / 4;
-        btnExcluir.setLayoutParams(btnExcluirParams);
-
-        Button btnCancelar = new Button(this);
-        btnCancelar.setText("Cancelar");
-        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
-        btnCancelar.setTypeface(null, Typeface.BOLD);
-        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
-        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        btnCancelarParams.leftMargin = dpPadding / 4;
-        btnCancelar.setLayoutParams(btnCancelarParams);
-
-        buttonLayout.addView(btnExcluir);
-        buttonLayout.addView(btnCancelar);
-        layout.addView(buttonLayout);
-
-        // Adiciona o layout ao ScrollView e ao FrameLayout
-        scrollView.addView(layout);
-        frameLayout.addView(scrollView);
-        builder.setView(frameLayout);
-
-        // Fundo transparente para mostrar os cantos arredondados do modal
+        builder.setView(dialogView);
         AlertDialog dialog = builder.create();
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        
-        // Force center the dialog window
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setGravity(Gravity.CENTER);
-        }
+        dialog.show();
 
-        // Listener do botão Excluir
         btnExcluir.setOnClickListener(v -> {
-            // Exclui todos os lançamentos antes da conta
             for (Lancamento lancamento : lancamentos) {
                 db.lancamentoDao().deletar(lancamento);
             }
@@ -553,15 +335,9 @@ public class AccountsActivity extends AppCompatActivity {
             Toast.makeText(this, "Conta excluída!", Toast.LENGTH_SHORT).show();
         });
 
-        // Listener do botão Cancelar
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
-
-        dialog.show();
     }
 
-    /**
-     * Formata valor monetário para exibição
-     */
     private String formatarMoeda(double valor) {
         java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
         return formatter.format(valor);

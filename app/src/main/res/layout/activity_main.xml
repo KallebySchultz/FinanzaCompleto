@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -247,10 +248,8 @@
                         android:orientation="vertical" />
 
                 </LinearLayout>
-
             </LinearLayout>
         </ScrollView>
-
     </LinearLayout>
 
     <!-- Bottom Navigation fixo -->
@@ -322,26 +321,7 @@
             android:tint="@color/white" />
     </LinearLayout>
 
-    <!-- Botão central de adicionar -->
-    <ImageButton
-        android:id="@+id/nav_add"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="56dp"
-        android:background="@drawable/circle_blue"
-        android:clickable="true"
-        android:contentDescription="Adicionar"
-        android:elevation="12dp"
-        android:focusable="true"
-        android:padding="40dp"
-        android:scaleType="center"
-        android:src="@drawable/ic_add"
-        android:tint="@color/white"
-        app:layout_anchor="@+id/bottom_nav"
-        app:layout_anchorGravity="top|center" />
-
-    <!-- Painel antigo de adicionar receita/despesa -->
+    <!-- Painel adicionar receita/despesa -->
     <FrameLayout
         android:id="@+id/add_panel"
         android:layout_width="match_parent"
@@ -418,7 +398,7 @@
         </LinearLayout>
     </FrameLayout>
 
-    <!-- PAINEL MATERIAL DESIGN DE ADICIONAR LANÇAMENTO (NOVO/APRIMORADO) -->
+    <!-- Painel adicionar transação - NOVO PADRÃO -->
     <FrameLayout
         android:id="@+id/add_transaction_panel"
         android:layout_width="match_parent"
@@ -444,6 +424,7 @@
             android:elevation="16dp">
 
             <TextView
+                android:id="@+id/modal_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Adicionar Transação"
@@ -534,18 +515,57 @@
                     android:inputType="numberDecimal"/>
             </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
-                android:id="@+id/btn_salvar_lancamento"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:text="Salvar"
-                android:textColor="@color/white"
-                android:textStyle="bold"
-                android:background="@drawable/button_blue"
-                android:elevation="2dp"/>
-        </LinearLayout>
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
 
-        <!-- Botão X para fechar - REMOVIDO para evitar conflito com nav_add -->
-        <!-- O botão nav_add agora funciona como botão de fechar quando o painel está aberto -->
+                <Button
+                    android:id="@+id/btn_salvar_lancamento"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="Salvar"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:background="@drawable/button_blue"
+                    android:elevation="2dp"
+                    android:layout_marginRight="8dp"/>
+                <Button
+                    android:id="@+id/btn_cancelar_lancamento"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="Cancelar"
+                    android:textColor="@color/primaryDarkBlue"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:background="@drawable/button_gray"
+                    android:elevation="2dp"
+                    android:layout_marginLeft="8dp"/>
+            </LinearLayout>
+        </LinearLayout>
     </FrameLayout>
+
+    <!-- Botão central de adicionar -->
+    <ImageButton
+        android:id="@+id/nav_add"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="56dp"
+        android:background="@drawable/circle_blue"
+        android:clickable="true"
+        android:contentDescription="Adicionar"
+        android:elevation="12dp"
+        android:focusable="true"
+        android:padding="40dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_add"
+        android:tint="@color/white"
+        app:layout_anchor="@+id/bottom_nav"
+        app:layout_anchorGravity="top|center" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -409,6 +409,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh home content when returning to MainActivity
+        final TextView tvSaldo = findViewById(R.id.tvSaldo);
+        final TextView tvReceita = findViewById(R.id.tvReceita);
+        final TextView tvDespesa = findViewById(R.id.tvDespesa);
+        atualizarValores(tvSaldo, tvReceita, tvDespesa);
+        updateHomeContent();
+    }
+
     private void inicializarCamposPainel(TextInputEditText inputNome,
                                          TextInputEditText inputConta,
                                          TextInputEditText inputData,

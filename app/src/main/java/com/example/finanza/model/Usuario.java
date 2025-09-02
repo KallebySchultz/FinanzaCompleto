@@ -9,5 +9,6 @@ public class Usuario {
     public int id;
     public String nome;
     public String email;
-    // Você pode expandir para autenticação real depois
+    public String senha; // Adicionado para autenticação
+    public long dataCriacao; // Data de criação da conta
 }

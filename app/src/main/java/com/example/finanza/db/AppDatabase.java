@@ -6,7 +6,7 @@ import com.example.finanza.model.*;
 
 @Database(
         entities = {Usuario.class, Conta.class, Categoria.class, Lancamento.class},
-        version = 1
+        version = 2
 )
 public abstract class AppDatabase extends RoomDatabase {
     public abstract UsuarioDao usuarioDao();

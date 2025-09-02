@@ -2,6 +2,7 @@ package com.example.finanza.ui;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -146,6 +147,12 @@ public class MenuActivity extends AppCompatActivity {
                 overridePendingTransition(0, 0);
                 finish();
             });
+        }
+
+        // Logout functionality
+        TextView btnLogout = findViewById(R.id.btnLogout);
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> realizarLogout());
         }
     }
 
@@ -362,5 +369,24 @@ public class MenuActivity extends AppCompatActivity {
              java.io.OutputStreamWriter writer = new java.io.OutputStreamWriter(outputStream)) {
             writer.write(content);
         }
+    }
+
+    private void realizarLogout() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Sair");
+        builder.setMessage("Tem certeza que deseja sair?");
+        builder.setPositiveButton("Sim", (dialog, which) -> {
+            // Limpar dados de autenticação
+            SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
+            prefs.edit().clear().apply();
+
+            // Voltar para a tela de login
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+        });
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
     }
 }

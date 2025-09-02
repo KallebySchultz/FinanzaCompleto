@@ -157,12 +157,21 @@ public class MenuActivity extends AppCompatActivity {
     private StringBuilder pendingReportData;
 
     private void exportarDados() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Exportar Dados");
-        builder.setMessage("Escolha o formato para exportar seus dados financeiros:");
-        
-        builder.setPositiveButton("Exportar CSV", (dialog, which) -> {
-            try {
+        String[] options = {"Exportar CSV", "Exportar Relatório"};
+        showSelectionDialog("Exportar Dados", 
+            "Escolha o formato para exportar seus dados financeiros:", 
+            options, 
+            (selectedIndex) -> {
+                if (selectedIndex == 0) {
+                    exportCsvData();
+                } else if (selectedIndex == 1) {
+                    exportReportData();
+                }
+            });
+    }
+
+    private void exportCsvData() {
+        try {
                 // Create CSV data
                 StringBuilder csvData = new StringBuilder();
                 csvData.append("Tipo,Descrição,Valor,Data,Categoria,Conta\n");
@@ -188,13 +197,13 @@ public class MenuActivity extends AppCompatActivity {
                 // Launch file picker
                 createCsvFile();
                 
-            } catch (Exception e) {
-                showErrorDialog("Erro na Exportação", "Ocorreu um erro ao exportar os dados:\n" + e.getMessage());
-            }
-        });
-        
-        builder.setNeutralButton("Exportar Relatório", (dialog, which) -> {
-            try {
+        } catch (Exception e) {
+            showErrorDialog("Erro na Exportação", "Ocorreu um erro ao exportar os dados:\n" + e.getMessage());
+        }
+    }
+
+    private void exportReportData() {
+        try {
                 // Create summary report
                 StringBuilder reportData = new StringBuilder();
                 reportData.append("=== RELATÓRIO FINANCEIRO FINANZA ===\n");
@@ -237,13 +246,9 @@ public class MenuActivity extends AppCompatActivity {
                 // Launch file picker
                 createReportFile();
                 
-            } catch (Exception e) {
-                showErrorDialog("Erro na Geração do Relatório", "Ocorreu um erro ao gerar o relatório:\n" + e.getMessage());
-            }
-        });
-        
-        builder.setNegativeButton("Cancelar", null);
-        builder.show();
+        } catch (Exception e) {
+            showErrorDialog("Erro na Geração do Relatório", "Ocorreu um erro ao gerar o relatório:\n" + e.getMessage());
+        }
     }
 
     private void highlightBottomNav() {
@@ -627,5 +632,136 @@ public class MenuActivity extends AppCompatActivity {
         btnOk.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
+    }
+
+    /**
+     * Helper method to show standardized selection dialogs with message
+     */
+    private void showSelectionDialog(String title, String message, String[] options, SelectionCallback callback) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // FrameLayout centralizado
+        FrameLayout frameLayout = new FrameLayout(this);
+        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+        );
+        frameLayout.setLayoutParams(frameParams);
+
+        // ScrollView para garantir responsividade
+        ScrollView scrollView = new ScrollView(this);
+
+        // LinearLayout principal do modal
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int dpPadding = (int) android.util.TypedValue.applyDimension(
+                android.util.TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
+        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        layout.setElevation(16f);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) android.util.TypedValue.applyDimension(
+                        android.util.TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+        layout.setLayoutParams(layoutParams);
+
+        // Título do modal
+        TextView titleView = new TextView(this);
+        titleView.setText(title);
+        titleView.setTextSize(22);
+        titleView.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        titleView.setTypeface(null, android.graphics.Typeface.BOLD);
+        titleView.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = dpPadding / 2;
+        titleView.setLayoutParams(titleParams);
+        layout.addView(titleView);
+
+        // Mensagem (se fornecida)
+        if (message != null && !message.isEmpty()) {
+            TextView messageView = new TextView(this);
+            messageView.setText(message);
+            messageView.setTextSize(16);
+            messageView.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+            messageView.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams messageParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            messageParams.bottomMargin = dpPadding;
+            messageView.setLayoutParams(messageParams);
+            layout.addView(messageView);
+        }
+
+        // Container para os itens
+        LinearLayout itemsContainer = new LinearLayout(this);
+        itemsContainer.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams itemsContainerParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        itemsContainerParams.bottomMargin = dpPadding;
+        itemsContainer.setLayoutParams(itemsContainerParams);
+
+        // Criar botões para cada opção
+        for (int i = 0; i < options.length; i++) {
+            final int index = i;
+            Button optionButton = new Button(this);
+            optionButton.setText(options[i]);
+            optionButton.setTextColor(getResources().getColor(R.color.white));
+            optionButton.setTextSize(16);
+            optionButton.setBackground(getResources().getDrawable(R.drawable.button_blue));
+            optionButton.setTypeface(null, android.graphics.Typeface.BOLD);
+            
+            LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            buttonParams.bottomMargin = dpPadding / 4;
+            optionButton.setLayoutParams(buttonParams);
+
+            optionButton.setOnClickListener(v -> {
+                if (callback != null) {
+                    callback.onSelected(index);
+                }
+            });
+
+            itemsContainer.addView(optionButton);
+        }
+
+        layout.addView(itemsContainer);
+
+        // Botão Cancelar
+        Button btnCancelar = new Button(this);
+        btnCancelar.setText("Cancelar");
+        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        btnCancelar.setLayoutParams(btnCancelarParams);
+        layout.addView(btnCancelar);
+
+        // Adiciona o layout ao ScrollView e ao FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
+        builder.setView(frameLayout);
+
+        // Fundo transparente para mostrar os cantos arredondados do modal
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setGravity(Gravity.CENTER);
+        }
+
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
+    }
+
+    /**
+     * Callback interface for selection dialogs
+     */
+    private interface SelectionCallback {
+        void onSelected(int index);
     }
 }

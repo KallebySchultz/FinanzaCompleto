@@ -112,8 +112,8 @@ public class AccountsActivity extends AppCompatActivity {
 
         // Salvar nova conta
         btnSalvarConta.setOnClickListener(v -> {
-            String nomeConta = inputNomeConta.getText().toString().trim();
-            String saldoStr = inputSaldoInicial.getText().toString().trim();
+            String nomeConta = inputNomeConta.getText() != null ? inputNomeConta.getText().toString().trim() : "";
+            String saldoStr = inputSaldoInicial.getText() != null ? inputSaldoInicial.getText().toString().trim() : "";
             double saldoInicial = 0.0;
             if (!saldoStr.isEmpty()) {
                 try {
@@ -393,8 +393,8 @@ public class AccountsActivity extends AppCompatActivity {
 
         // Listener do botão Salvar
         btnSalvar.setOnClickListener(v -> {
-            String novoNome = inputNome.getText().toString().trim();
-            String novoSaldoStr = inputSaldo.getText().toString().trim();
+            String novoNome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
+            String novoSaldoStr = inputSaldo.getText() != null ? inputSaldo.getText().toString().trim() : "";
 
             if (!novoNome.isEmpty()) {
                 conta.nome = novoNome;
@@ -490,7 +490,7 @@ public class AccountsActivity extends AppCompatActivity {
         btnExcluir.setText("Sim, excluir");
         btnExcluir.setTextColor(getResources().getColor(R.color.white));
         btnExcluir.setTypeface(null, Typeface.BOLD);
-        btnExcluir.setBackground(getResources().getDrawable(R.drawable.button_red)); // Assuming red button for delete
+        btnExcluir.setBackground(getResources().getDrawable(R.drawable.button_blue));
         LinearLayout.LayoutParams btnExcluirParams = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
         btnExcluirParams.rightMargin = dpPadding / 4;

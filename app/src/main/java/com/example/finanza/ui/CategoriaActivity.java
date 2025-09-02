@@ -14,6 +14,7 @@ import android.widget.RadioButton;
 import android.widget.LinearLayout;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+import android.widget.ScrollView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import androidx.appcompat.app.AppCompatActivity;
@@ -230,8 +231,11 @@ public class CategoriaActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Nova Categoria");
 
-        // Create a styled layout that matches the transaction launch panel
+        // Create a styled layout that matches the transaction launch panel with ScrollView
         FrameLayout frameLayout = new FrameLayout(this);
+
+        // Add ScrollView to ensure all content is accessible
+        ScrollView scrollView = new ScrollView(this);
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -324,7 +328,9 @@ public class CategoriaActivity extends AppCompatActivity {
         buttonLayout.addView(btnCancelar);
         layout.addView(buttonLayout);
 
-        frameLayout.addView(layout);
+        // Add the layout to ScrollView and then to FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
         builder.setView(frameLayout);
 
         AlertDialog dialog = builder.create();
@@ -358,8 +364,11 @@ public class CategoriaActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Editar Categoria");
 
-        // Create a styled layout that matches the transaction launch panel
+        // Create a styled layout that matches the transaction launch panel with ScrollView
         FrameLayout frameLayout = new FrameLayout(this);
+
+        // Add ScrollView to ensure all content is accessible
+        ScrollView scrollView = new ScrollView(this);
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -457,7 +466,9 @@ public class CategoriaActivity extends AppCompatActivity {
         buttonLayout.addView(btnCancelar);
         layout.addView(buttonLayout);
 
-        frameLayout.addView(layout);
+        // Add the layout to ScrollView and then to FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
         builder.setView(frameLayout);
 
         AlertDialog dialog = builder.create();

@@ -556,19 +556,105 @@ public class CategoriaActivity extends AppCompatActivity {
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Excluir Categoria");
-        builder.setMessage(message);
 
-        builder.setPositiveButton("Sim, excluir", (dialog, which) -> {
+        // FrameLayout para fundo arredondado e tamanho customizado
+        FrameLayout frameLayout = new FrameLayout(this);
+
+        // ScrollView para garantir responsividade
+        ScrollView scrollView = new ScrollView(this);
+
+        // LinearLayout principal do modal
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int dpPadding = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP, 24, getResources().getDisplayMetrics());
+        layout.setPadding(dpPadding, dpPadding, dpPadding, dpPadding);
+        layout.setBackground(getResources().getDrawable(R.drawable.bg_modal_white));
+        layout.setElevation(16f);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                (int) TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP, 340, getResources().getDisplayMetrics()),
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        layoutParams.gravity = Gravity.CENTER;
+        frameLayout.setLayoutParams(layoutParams);
+
+        // Título do modal
+        TextView title = new TextView(this);
+        title.setText("Excluir Categoria");
+        title.setTextSize(22);
+        title.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        title.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        titleParams.bottomMargin = dpPadding / 2;
+        title.setLayoutParams(titleParams);
+        layout.addView(title);
+
+        // Mensagem de confirmação
+        TextView messageText = new TextView(this);
+        messageText.setText(message);
+        messageText.setTextSize(16);
+        messageText.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        messageText.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams messageParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        messageParams.bottomMargin = dpPadding;
+        messageText.setLayoutParams(messageParams);
+        layout.addView(messageText);
+
+        // Botões "Excluir" e "Cancelar" com layout consistente
+        LinearLayout buttonLayout = new LinearLayout(this);
+        buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+        buttonLayout.setGravity(Gravity.CENTER);
+
+        Button btnExcluir = new Button(this);
+        btnExcluir.setText("Sim, excluir");
+        btnExcluir.setTextColor(getResources().getColor(R.color.white));
+        btnExcluir.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnExcluir.setBackground(getResources().getDrawable(R.drawable.button_red));
+        LinearLayout.LayoutParams btnExcluirParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        btnExcluirParams.rightMargin = dpPadding / 4;
+        btnExcluir.setLayoutParams(btnExcluirParams);
+
+        Button btnCancelar = new Button(this);
+        btnCancelar.setText("Cancelar");
+        btnCancelar.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+        btnCancelar.setTypeface(null, android.graphics.Typeface.BOLD);
+        btnCancelar.setBackground(getResources().getDrawable(R.drawable.button_gray));
+        LinearLayout.LayoutParams btnCancelarParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        btnCancelarParams.leftMargin = dpPadding / 4;
+        btnCancelar.setLayoutParams(btnCancelarParams);
+
+        buttonLayout.addView(btnExcluir);
+        buttonLayout.addView(btnCancelar);
+        layout.addView(buttonLayout);
+
+        // Adiciona o layout ao ScrollView e ao FrameLayout
+        scrollView.addView(layout);
+        frameLayout.addView(scrollView);
+        builder.setView(frameLayout);
+
+        // Fundo transparente para mostrar os cantos arredondados do modal
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+        // Listener do botão Excluir
+        btnExcluir.setOnClickListener(v -> {
             for (Lancamento lancamento : lancamentos) {
                 db.lancamentoDao().deletar(lancamento);
             }
             db.categoriaDao().deletar(categoria);
             carregarCategorias();
+            dialog.dismiss();
             Toast.makeText(this, "Categoria excluída!", Toast.LENGTH_SHORT).show();
         });
 
-        builder.setNegativeButton("Cancelar", null);
-        builder.show();
+        // Listener do botão Cancelar
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+
+        dialog.show();
     }
 }

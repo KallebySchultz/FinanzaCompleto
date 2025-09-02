@@ -125,10 +125,8 @@ public class CategoriaActivity extends AppCompatActivity {
 
         if (navMenu != null) {
             navMenu.setOnClickListener(v -> {
-                Intent intent = new Intent(this, MenuActivity.class);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
-                finish();
+                // Smart back navigation - nav_menu acts as back button
+                finish(); // Returns to previous activity
             });
         }
 

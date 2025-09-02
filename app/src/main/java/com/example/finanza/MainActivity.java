@@ -13,6 +13,7 @@ import android.widget.ImageButton;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Button;
+import android.widget.Toast;
 import com.example.finanza.R;
 import com.example.finanza.ui.AccountsActivity;
 import com.google.android.material.textfield.TextInputEditText;
@@ -291,17 +292,10 @@ public class MainActivity extends AppCompatActivity {
         // Campo Conta (dialogo de seleção)
         inputConta.setOnClickListener(v -> {
             List<Conta> contasList = db.contaDao().listarPorUsuario(usuarioIdAtual);
-            String[] contasArray = new String[contasList.size()];
-            for (int i = 0; i < contasList.size(); i++) {
-                contasArray[i] = contasList.get(i).nome;
-            }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecionar conta");
-            builder.setItems(contasArray, (dialog, which) -> {
-                contaSelecionada = contasList.get(which);
-                inputConta.setText(contaSelecionada.nome);
+            showSelectAccountDialog(contasList, conta -> {
+                contaSelecionada = conta;
+                inputConta.setText(conta.nome);
             });
-            builder.show();
         });
 
         // Campo Data (DatePicker)
@@ -325,17 +319,10 @@ public class MainActivity extends AppCompatActivity {
         inputCategoria.setOnClickListener(v -> {
             String tipo = isReceitaPanel ? "receita" : "despesa";
             List<Categoria> categoriasList = db.categoriaDao().listarPorTipo(tipo);
-            String[] categoriasArray = new String[categoriasList.size()];
-            for (int i = 0; i < categoriasList.size(); i++) {
-                categoriasArray[i] = categoriasList.get(i).nome;
-            }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Selecionar categoria");
-            builder.setItems(categoriasArray, (dialog, which) -> {
-                categoriaSelecionada = categoriasList.get(which);
-                inputCategoria.setText(categoriaSelecionada.nome);
+            showSelectCategoryDialog(categoriasList, categoria -> {
+                categoriaSelecionada = categoria;
+                inputCategoria.setText(categoria.nome);
             });
-            builder.show();
         });
 
         btnSalvarLancamento.setOnClickListener(v -> {
@@ -695,5 +682,105 @@ public class MainActivity extends AppCompatActivity {
         double totalDespesas = despesas != null ? despesas : 0.0;
         
         return conta.saldoInicial + totalReceitas - totalDespesas;
+    }
+
+    /**
+     * Interface para callback da seleção de conta
+     */
+    interface OnAccountSelectedListener {
+        void onAccountSelected(Conta conta);
+    }
+
+    /**
+     * Interface para callback da seleção de categoria
+     */
+    interface OnCategorySelectedListener {
+        void onCategorySelected(Categoria categoria);
+    }
+
+    /**
+     * Exibe dialog customizado para seleção de conta
+     */
+    private void showSelectAccountDialog(List<Conta> contasList, OnAccountSelectedListener listener) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_account, null);
+        
+        LinearLayout accountsList = dialogView.findViewById(R.id.accounts_list);
+        Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar);
+
+        // Cria botões para cada conta
+        for (Conta conta : contasList) {
+            Button btnConta = new Button(this);
+            btnConta.setText(conta.nome);
+            btnConta.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+            btnConta.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
+            btnConta.setPadding(24, 16, 24, 16);
+            
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.bottomMargin = 8;
+            btnConta.setLayoutParams(params);
+            
+            btnConta.setOnClickListener(v -> {
+                listener.onAccountSelected(conta);
+                ((AlertDialog) dialogView.getTag()).dismiss();
+            });
+            
+            accountsList.addView(btnConta);
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialogView.setTag(dialog); // Store dialog reference for button clicks
+        
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    /**
+     * Exibe dialog customizado para seleção de categoria
+     */
+    private void showSelectCategoryDialog(List<Categoria> categoriasList, OnCategorySelectedListener listener) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_select_category, null);
+        
+        LinearLayout categoriesList = dialogView.findViewById(R.id.categories_list);
+        Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar);
+
+        // Cria botões para cada categoria
+        for (Categoria categoria : categoriasList) {
+            Button btnCategoria = new Button(this);
+            btnCategoria.setText(categoria.nome);
+            btnCategoria.setTextColor(getResources().getColor(R.color.primaryDarkBlue));
+            btnCategoria.setBackground(getResources().getDrawable(R.drawable.edittext_bg));
+            btnCategoria.setPadding(24, 16, 24, 16);
+            
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.bottomMargin = 8;
+            btnCategoria.setLayoutParams(params);
+            
+            btnCategoria.setOnClickListener(v -> {
+                listener.onCategorySelected(categoria);
+                ((AlertDialog) dialogView.getTag()).dismiss();
+            });
+            
+            categoriesList.addView(btnCategoria);
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(dialogView);
+        
+        AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialogView.setTag(dialog); // Store dialog reference for button clicks
+        
+        btnCancelar.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
     }
 }

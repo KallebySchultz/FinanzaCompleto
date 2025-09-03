@@ -125,6 +125,18 @@
         </java>
     </target>
 
+    <!-- Run demo application -->
+    <target name="demo" depends="jar" description="Run the simple demo desktop application">
+        <echo message="Starting Finanza Desktop Demo Application..."/>
+        <java classname="ui.SimpleDesktopApp" 
+              classpathref="classpath"
+              classpath="${dist.dir}/${jar.name}"
+              fork="true"
+              failonerror="true">
+            <jvmarg value="-Dfile.encoding=UTF-8"/>
+        </java>
+    </target>
+
     <!-- Clean build artifacts -->
     <target name="clean" description="Clean build artifacts">
         <echo message="Cleaning build artifacts..."/>
@@ -141,14 +153,14 @@
     </target>
 
     <!-- Test -->
-    <target name="test" depends="compile" description="Test database connectivity">
-        <echo message="Testing database connectivity..."/>
-        <java classname="database.DatabaseManager" 
+    <target name="test" depends="compile" description="Run integration tests">
+        <echo message="Running Finanza integration tests..."/>
+        <java classname="util.IntegrationTest" 
               classpathref="classpath"
               classpath="${classes.dir}"
               fork="true"
               failonerror="false">
-            <arg value="test"/>
+            <jvmarg value="-Dfile.encoding=UTF-8"/>
         </java>
     </target>
 

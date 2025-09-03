@@ -29,11 +29,3 @@ finanza.db
 server-java/target/
 server-java/*.jar
 /Desktop Version/desktop-client/target/
-
-# Ant build artifacts
-finanzadesktop/build/
-finanzadesktop/dist/
-finanzadesktop/lib/
-server-java/build/
-server-java/dist/
-server-java/lib/

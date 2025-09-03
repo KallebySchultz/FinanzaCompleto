@@ -63,13 +63,20 @@ sudo ufw allow 8080
 
 ### 1. Executar o Servidor Java
 
-#### Usando NetBeans:
-1. Abra o NetBeans IDE
-2. Importe o projeto do diretório `server-java`
-3. Clique com botão direito no projeto > "Run"
-4. O servidor iniciará na porta 8080
+#### Usando NetBeans (Recomendado):
+1. **Abra o NetBeans IDE**
+2. **File > Open Project**
+3. **Navegue até `server-java` e abra o projeto**
+4. **Clique com botão direito no projeto > "Run"**
+5. O servidor iniciará na porta 8080
 
-#### Usando linha de comando:
+#### Usando Maven (linha de comando):
+```bash
+cd server-java
+mvn clean compile exec:exec
+```
+
+#### Usando scripts:
 **Linux/Mac:**
 ```bash
 cd server-java
@@ -85,19 +92,27 @@ run-server.bat
 
 **Saída esperada:**
 ```
-Servidor Finanza iniciado na porta 8080
+=== Servidor Finanza ===
+Servidor iniciado na porta 8080
 Aguardando conexões...
 ```
 
 ### 2. Executar o Cliente Desktop
 
-#### Usando NetBeans:
-1. Abra o NetBeans IDE
-2. Importe o projeto do diretório `desktop-client`
-3. Clique com botão direito no projeto > "Run"
-4. A interface desktop será exibida
+#### Usando NetBeans (Recomendado):
+1. **Abra o NetBeans IDE**
+2. **File > Open Project**
+3. **Navegue até `desktop-client` e abra o projeto**
+4. **Clique com botão direito no projeto > "Run"**
+5. A interface desktop será exibida
 
-#### Usando linha de comando:
+#### Usando Maven (linha de comando):
+```bash
+cd desktop-client
+mvn clean compile exec:exec
+```
+
+#### Usando scripts:
 **Linux/Mac:**
 ```bash
 cd desktop-client

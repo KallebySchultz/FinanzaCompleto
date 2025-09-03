@@ -3,11 +3,22 @@ package com.finanza.desktop;
 import com.finanza.desktop.config.SettingsManager;
 import com.finanza.desktop.network.NetworkManager;
 import com.finanza.desktop.ui.ModernUIHelper;
+import com.finanza.desktop.controller.AuthController;
+import com.finanza.desktop.controller.FinanceController;
+import com.finanza.desktop.model.Usuario;
+import com.finanza.desktop.model.Conta;
+import com.finanza.desktop.model.Lancamento;
+import com.finanza.desktop.model.Categoria;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Aplicação desktop Finanza
@@ -30,6 +41,10 @@ public class FinanzaDesktop extends JFrame {
     private SettingsManager settingsManager;
     private NetworkManager networkManager;
     
+    // Controllers MVC
+    private AuthController authController;
+    private FinanceController financeController;
+    
     // Status da conexão
     private JLabel connectionStatusLabel;
     
@@ -45,6 +60,10 @@ public class FinanzaDesktop extends JFrame {
         // Inicializar managers
         settingsManager = SettingsManager.getInstance();
         networkManager = NetworkManager.getInstance();
+        
+        // Inicializar controllers MVC
+        authController = new AuthController();
+        financeController = new FinanceController(authController);
         
         initializeUI();
         showLoginScreen();
@@ -104,7 +123,7 @@ public class FinanzaDesktop extends JFrame {
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         centerPanel.add(titleLabel, gbc);
         
-        JLabel subtitleLabel = new JLabel("Faça login para continuar");
+        JLabel subtitleLabel = new JLabel("Sistema de Gestão Financeira");
         subtitleLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         subtitleLabel.setForeground(WHITE);
         subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -115,56 +134,218 @@ public class FinanzaDesktop extends JFrame {
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(WHITE);
         formPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
-        formPanel.setPreferredSize(new Dimension(400, 300));
+        formPanel.setPreferredSize(new Dimension(450, 400));
         
         GridBagConstraints formGbc = new GridBagConstraints();
         formGbc.insets = new Insets(10, 0, 10, 0);
         formGbc.fill = GridBagConstraints.HORIZONTAL;
         formGbc.anchor = GridBagConstraints.CENTER;
         
-        // Campo email
-        JLabel emailLabel = new JLabel("Email:");
-        emailLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        // Tab para Login/Registro
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        
+        // Tab de Login
+        JPanel loginTab = createLoginTab();
+        tabbedPane.addTab("Entrar", loginTab);
+        
+        // Tab de Registro
+        JPanel registerTab = createRegisterTab();
+        tabbedPane.addTab("Criar Conta", registerTab);
+        
         formGbc.gridx = 0; formGbc.gridy = 0;
-        formPanel.add(emailLabel, formGbc);
-        
-        JTextField emailField = ModernUIHelper.createModernTextField("Digite seu email", 20);
-        formGbc.gridy = 1;
-        formPanel.add(emailField, formGbc);
-        
-        // Campo senha
-        JLabel passwordLabel = new JLabel("Senha:");
-        passwordLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        formGbc.gridy = 2;
-        formPanel.add(passwordLabel, formGbc);
-        
-        JPasswordField passwordField = ModernUIHelper.createModernPasswordField("Digite sua senha", 20);
-        formGbc.gridy = 3;
-        formPanel.add(passwordField, formGbc);
-        
-        // Botão login
-        JButton loginButton = ModernUIHelper.createModernButton("Entrar", ModernUIHelper.ICON_SUCCESS, ACCENT_BLUE);
-        loginButton.addActionListener(e -> showDashboard());
-        formGbc.gridy = 4;
-        formGbc.insets = new Insets(20, 0, 10, 0);
-        formPanel.add(loginButton, formGbc);
-        
-        // Link criar conta
-        JLabel createAccountLabel = new JLabel("<html><u>Não tem conta? Criar conta</u></html>");
-        createAccountLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        createAccountLabel.setForeground(ACCENT_BLUE);
-        createAccountLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        createAccountLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        formGbc.gridy = 5;
-        formGbc.insets = new Insets(10, 0, 10, 0);
-        formPanel.add(createAccountLabel, formGbc);
+        formGbc.weightx = 1.0; formGbc.weighty = 1.0;
+        formGbc.fill = GridBagConstraints.BOTH;
+        formPanel.add(tabbedPane, formGbc);
         
         gbc.gridy = 2; gbc.gridwidth = 1;
         centerPanel.add(formPanel, gbc);
         
         loginPanel.add(centerPanel, BorderLayout.CENTER);
     }
+
+    private JPanel createLoginTab() {
+        JPanel loginTab = new JPanel(new GridBagLayout());
+        loginTab.setBackground(WHITE);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 20, 10, 20);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        
+        // Campo email
+        JLabel emailLabel = new JLabel("Email:");
+        emailLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridx = 0; gbc.gridy = 0;
+        loginTab.add(emailLabel, gbc);
+        
+        JTextField emailField = ModernUIHelper.createModernTextField("Digite seu email", 20);
+        gbc.gridy = 1;
+        loginTab.add(emailField, gbc);
+        
+        // Campo senha
+        JLabel passwordLabel = new JLabel("Senha:");
+        passwordLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridy = 2;
+        loginTab.add(passwordLabel, gbc);
+        
+        JPasswordField passwordField = ModernUIHelper.createModernPasswordField("Digite sua senha", 20);
+        gbc.gridy = 3;
+        loginTab.add(passwordField, gbc);
+        
+        // Label para mensagens de erro
+        JLabel messageLabel = new JLabel(" ");
+        messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        messageLabel.setForeground(NEGATIVE_RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 4;
+        loginTab.add(messageLabel, gbc);
+        
+        // Botão login
+        JButton loginButton = ModernUIHelper.createModernButton("Entrar", ModernUIHelper.ICON_SUCCESS, ACCENT_BLUE);
+        loginButton.addActionListener(e -> {
+            String email = emailField.getText().trim();
+            String senha = new String(passwordField.getPassword());
+            
+            if (email.isEmpty() || senha.isEmpty()) {
+                messageLabel.setText("Por favor, preencha todos os campos.");
+                return;
+            }
+            
+            if (authController.login(email, senha)) {
+                messageLabel.setText(" ");
+                updateDashboard();
+                showDashboard();
+            } else {
+                messageLabel.setText("Email ou senha incorretos.");
+                passwordField.setText("");
+            }
+        });
+        gbc.gridy = 5;
+        gbc.insets = new Insets(20, 20, 10, 20);
+        loginTab.add(loginButton, gbc);
+        
+        return loginTab;
+    }
+
+    private JPanel createRegisterTab() {
+        JPanel registerTab = new JPanel(new GridBagLayout());
+        registerTab.setBackground(WHITE);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 20, 8, 20);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        
+        // Campo nome
+        JLabel nameLabel = new JLabel("Nome:");
+        nameLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridx = 0; gbc.gridy = 0;
+        registerTab.add(nameLabel, gbc);
+        
+        JTextField nameField = ModernUIHelper.createModernTextField("Digite seu nome completo", 20);
+        gbc.gridy = 1;
+        registerTab.add(nameField, gbc);
+        
+        // Campo email
+        JLabel emailLabel = new JLabel("Email:");
+        emailLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridy = 2;
+        registerTab.add(emailLabel, gbc);
+        
+        JTextField emailField = ModernUIHelper.createModernTextField("Digite seu email", 20);
+        gbc.gridy = 3;
+        registerTab.add(emailField, gbc);
+        
+        // Campo senha
+        JLabel passwordLabel = new JLabel("Senha:");
+        passwordLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridy = 4;
+        registerTab.add(passwordLabel, gbc);
+        
+        JPasswordField passwordField = ModernUIHelper.createModernPasswordField("Digite sua senha (mín. 6 caracteres)", 20);
+        gbc.gridy = 5;
+        registerTab.add(passwordField, gbc);
+        
+        // Campo confirmar senha
+        JLabel confirmPasswordLabel = new JLabel("Confirmar Senha:");
+        confirmPasswordLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridy = 6;
+        registerTab.add(confirmPasswordLabel, gbc);
+        
+        JPasswordField confirmPasswordField = ModernUIHelper.createModernPasswordField("Confirme sua senha", 20);
+        gbc.gridy = 7;
+        registerTab.add(confirmPasswordField, gbc);
+        
+        // Label para mensagens
+        JLabel messageLabel = new JLabel(" ");
+        messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        messageLabel.setForeground(NEGATIVE_RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 8;
+        registerTab.add(messageLabel, gbc);
+        
+        // Botão registro
+        JButton registerButton = ModernUIHelper.createModernButton("Criar Conta", ModernUIHelper.ICON_ADD, POSITIVE_GREEN);
+        registerButton.addActionListener(e -> {
+            String nome = nameField.getText().trim();
+            String email = emailField.getText().trim();
+            String senha = new String(passwordField.getPassword());
+            String confirmSenha = new String(confirmPasswordField.getPassword());
+            
+            if (nome.isEmpty() || email.isEmpty() || senha.isEmpty() || confirmSenha.isEmpty()) {
+                messageLabel.setText("Por favor, preencha todos os campos.");
+                return;
+            }
+            
+            if (!senha.equals(confirmSenha)) {
+                messageLabel.setText("As senhas não coincidem.");
+                confirmPasswordField.setText("");
+                return;
+            }
+            
+            if (senha.length() < 6) {
+                messageLabel.setText("A senha deve ter pelo menos 6 caracteres.");
+                return;
+            }
+            
+            if (!email.contains("@") || !email.contains(".")) {
+                messageLabel.setText("Por favor, digite um email válido.");
+                return;
+            }
+            
+            if (authController.registrar(nome, email, senha)) {
+                messageLabel.setForeground(POSITIVE_GREEN);
+                messageLabel.setText("Conta criada com sucesso! Faça login.");
+                // Limpar campos
+                nameField.setText("");
+                emailField.setText("");
+                passwordField.setText("");
+                confirmPasswordField.setText("");
+            } else {
+                messageLabel.setForeground(NEGATIVE_RED);
+                messageLabel.setText("Erro ao criar conta. Email já pode estar em uso.");
+            }
+        });
+        gbc.gridy = 9;
+        gbc.insets = new Insets(15, 20, 10, 20);
+        registerTab.add(registerButton, gbc);
+        
+        return registerTab;
+    }
     
+    
+    private void updateDashboard() {
+        if (authController.isLogado()) {
+            // Remover o painel antigo e criar um novo
+            mainPanel.remove(dashboardPanel);
+            createDashboardPanel();
+            mainPanel.add(dashboardPanel, "DASHBOARD");
+            mainPanel.revalidate();
+            mainPanel.repaint();
+        }
+    }
+
     private void createDashboardPanel() {
         dashboardPanel = new JPanel(new BorderLayout());
         dashboardPanel.setBackground(WHITE);
@@ -175,18 +356,30 @@ public class FinanzaDesktop extends JFrame {
         headerPanel.setPreferredSize(new Dimension(0, 200));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
         
-        JLabel welcomeLabel = new JLabel("Bem-vindo ao Finanza");
+        // Header personalizado
+        Usuario usuario = authController.getUsuarioLogado();
+        String nomeUsuario = usuario != null ? usuario.getNome() : "Usuário";
+        JLabel welcomeLabel = new JLabel("Bem-vindo, " + nomeUsuario + "!");
         welcomeLabel.setFont(new Font("Arial", Font.BOLD, 24));
         welcomeLabel.setForeground(WHITE);
         headerPanel.add(welcomeLabel, BorderLayout.NORTH);
         
-        // Painel de saldos
+        // Painel de saldos com dados reais
         JPanel balancePanel = new JPanel(new GridLayout(1, 3, 20, 0));
         balancePanel.setBackground(PRIMARY_DARK_BLUE);
         
-        balancePanel.add(createBalanceCard("Saldo Total", "R$ 2.500,00", WHITE));
-        balancePanel.add(createBalanceCard("Receitas", "R$ 3.200,00", POSITIVE_GREEN));
-        balancePanel.add(createBalanceCard("Despesas", "R$ 700,00", NEGATIVE_RED));
+        // Calcular dados financeiros reais
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+        currencyFormat.setMaximumFractionDigits(2);
+        
+        Map<String, Double> resumo = financeController.calcularResumoFinanceiro();
+        double totalReceitas = resumo != null ? resumo.get("receitas") : 0.0;
+        double totalDespesas = resumo != null ? resumo.get("despesas") : 0.0;
+        double saldo = totalReceitas - totalDespesas;
+        
+        balancePanel.add(createBalanceCard("Saldo Total", currencyFormat.format(saldo), WHITE));
+        balancePanel.add(createBalanceCard("Receitas", currencyFormat.format(totalReceitas), POSITIVE_GREEN));
+        balancePanel.add(createBalanceCard("Despesas", currencyFormat.format(totalDespesas), NEGATIVE_RED));
         
         headerPanel.add(balancePanel, BorderLayout.CENTER);
         
@@ -202,14 +395,33 @@ public class FinanzaDesktop extends JFrame {
         transactionsLabel.setForeground(PRIMARY_DARK_BLUE);
         contentPanel.add(transactionsLabel, BorderLayout.NORTH);
         
-        // Lista de transações simulada
+        // Lista de transações reais
         JPanel transactionsList = new JPanel();
         transactionsList.setLayout(new BoxLayout(transactionsList, BoxLayout.Y_AXIS));
         transactionsList.setBackground(WHITE);
         
-        transactionsList.add(createTransactionItem("Salário", "R$ 2.500,00", "01/12/2024", true));
-        transactionsList.add(createTransactionItem("Supermercado", "R$ 150,00", "30/11/2024", false));
-        transactionsList.add(createTransactionItem("Freelancer", "R$ 500,00", "29/11/2024", true));
+        List<Lancamento> lancamentos = financeController.obterLancamentosMesAtual();
+        if (lancamentos != null && !lancamentos.isEmpty()) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            int count = 0;
+            for (Lancamento lancamento : lancamentos) {
+                if (count >= 5) break; // Mostrar apenas os 5 mais recentes
+                
+                String valor = currencyFormat.format(lancamento.getValor());
+                String data = dateFormat.format(new Date(lancamento.getData()));
+                boolean isReceita = "receita".equals(lancamento.getTipo());
+                
+                transactionsList.add(createTransactionItem(lancamento.getDescricao(), valor, data, isReceita));
+                count++;
+            }
+        } else {
+            JLabel noDataLabel = new JLabel("Nenhuma transação encontrada este mês.");
+            noDataLabel.setFont(new Font("Segoe UI", Font.ITALIC, 14));
+            noDataLabel.setForeground(Color.GRAY);
+            noDataLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            noDataLabel.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+            transactionsList.add(noDataLabel);
+        }
         
         contentPanel.add(transactionsList, BorderLayout.CENTER);
         
@@ -382,7 +594,10 @@ public class FinanzaDesktop extends JFrame {
         settingsButton.addActionListener(e -> showSettings());
         
         JButton logoutButton = ModernUIHelper.createNavButton("Sair", ModernUIHelper.ICON_LOGOUT);
-        logoutButton.addActionListener(e -> showLoginScreen());
+        logoutButton.addActionListener(e -> {
+            authController.logout();
+            showLoginScreen();
+        });
         
         navPanel.add(homeButton);
         navPanel.add(accountsButton);

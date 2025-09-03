@@ -37,6 +37,7 @@ public class ModernUIHelper {
     public static final String ICON_MONEY = "💰";
     public static final String ICON_UP = "⬆️";
     public static final String ICON_DOWN = "⬇️";
+    public static final String ICON_ADD = "➕";
     
     /**
      * Cria um botão moderno com hover effect

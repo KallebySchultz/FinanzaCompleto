@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.10.14
+Created-By: 17.0.16+8 (Eclipse Adoptium)
+Main-Class: server.FinanzaServer
+Implementation-Title: Finanza Server
+Implementation-Version: 1.0
+Built-By: runner
+Built-Date: ${TODAY}
+

@@ -28,3 +28,4 @@ finanza.db
 # Server build artifacts
 server-java/target/
 server-java/*.jar
+/Desktop Version/desktop-client/target/

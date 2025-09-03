@@ -1,0 +1,24 @@
+===============================================
+           RELATÓRIO FINANCEIRO FINANZA       
+===============================================
+Data do relatório: 03/09/2025 16:36:13
+
+RESUMO FINANCEIRO:
+Total de Receitas: R$ 3500.00
+Total de Despesas: R$ 750.00
+Saldo Atual: R$ 2750.00
+
+CONTAS:
+- Cartão de Crédito: R$ 0.00
+- Conta Corrente: R$ 4250.00
+- Poupança: R$ 5000.00
+
+ÚLTIMAS TRANSAÇÕES:
+03/09/2025 - Teste Controller: R$ 100.00 (DESPESA)
+03/09/2025 - Salário Mensal: R$ 3500.00 (RECEITA)
+03/09/2025 - Compras do Mês: R$ 450.00 (DESPESA)
+03/09/2025 - Combustível: R$ 200.00 (DESPESA)
+
+===============================================
+    Relatório gerado pelo Finanza Desktop     
+===============================================

@@ -435,48 +435,189 @@ public class FinanzaDesktop extends JFrame {
         accountsPanel = new JPanel(new BorderLayout());
         accountsPanel.setBackground(WHITE);
         
-        JLabel titleLabel = new JLabel("Contas");
+        // Header com título e botão adicionar
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(WHITE);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        
+        JLabel titleLabel = new JLabel(ModernUIHelper.ICON_ACCOUNTS + " Contas");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(PRIMARY_DARK_BLUE);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
-        accountsPanel.add(titleLabel, BorderLayout.NORTH);
+        headerPanel.add(titleLabel, BorderLayout.WEST);
         
-        // Conteúdo das contas
+        JButton addAccountButton = ModernUIHelper.createModernButton("Nova Conta", ModernUIHelper.ICON_ADD, POSITIVE_GREEN);
+        addAccountButton.addActionListener(e -> showAddAccountDialog());
+        headerPanel.add(addAccountButton, BorderLayout.EAST);
+        
+        accountsPanel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Conteúdo das contas (será atualizado dinamicamente)
+        updateAccountsList();
+        
+        accountsPanel.add(createNavigationPanel(), BorderLayout.SOUTH);
+    }
+    
+    private void updateAccountsList() {
+        // Remove o painel anterior se existir
+        Component[] components = accountsPanel.getComponents();
+        for (Component comp : components) {
+            if (comp instanceof JScrollPane) {
+                accountsPanel.remove(comp);
+                break;
+            }
+        }
+        
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(WHITE);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 20, 30));
         
-        contentPanel.add(createAccountItem("Conta Corrente", "R$ 1.500,00", PRIMARY_DARK_BLUE));
-        contentPanel.add(createAccountItem("Poupança", "R$ 1.000,00", POSITIVE_GREEN));
+        // Buscar contas reais do banco de dados
+        if (authController.isLogado()) {
+            List<Conta> contas = financeController.obterContas();
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+            
+            if (contas != null && !contas.isEmpty()) {
+                for (Conta conta : contas) {
+                    String saldoFormatado = currencyFormat.format(conta.getSaldo());
+                    Color iconColor = conta.getSaldo() >= 0 ? PRIMARY_DARK_BLUE : NEGATIVE_RED;
+                    
+                    JPanel accountItem = createAccountItemWithActions(conta.getNome(), saldoFormatado, iconColor, conta);
+                    contentPanel.add(accountItem);
+                    contentPanel.add(Box.createVerticalStrut(10));
+                }
+            } else {
+                JLabel noAccountsLabel = new JLabel("Nenhuma conta cadastrada. Clique em 'Nova Conta' para começar.");
+                noAccountsLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
+                noAccountsLabel.setForeground(Color.GRAY);
+                noAccountsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                noAccountsLabel.setBorder(BorderFactory.createEmptyBorder(50, 0, 50, 0));
+                contentPanel.add(noAccountsLabel);
+            }
+        }
         
-        accountsPanel.add(contentPanel, BorderLayout.CENTER);
-        accountsPanel.add(createNavigationPanel(), BorderLayout.SOUTH);
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
+        accountsPanel.add(scrollPane, BorderLayout.CENTER);
+        accountsPanel.revalidate();
+        accountsPanel.repaint();
     }
     
     private void createMovementsPanel() {
         movementsPanel = new JPanel(new BorderLayout());
         movementsPanel.setBackground(WHITE);
         
-        JLabel titleLabel = new JLabel("Movimentações");
+        // Header com título e botão adicionar
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(WHITE);
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        
+        JLabel titleLabel = new JLabel(ModernUIHelper.ICON_MOVEMENTS + " Movimentações");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(PRIMARY_DARK_BLUE);
-        titleLabel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
-        movementsPanel.add(titleLabel, BorderLayout.NORTH);
+        headerPanel.add(titleLabel, BorderLayout.WEST);
         
-        // Conteúdo das movimentações
+        JPanel rightPanel = new JPanel(new FlowLayout());
+        rightPanel.setBackground(WHITE);
+        
+        JButton addTransactionButton = ModernUIHelper.createModernButton("Nova Transação", ModernUIHelper.ICON_ADD, POSITIVE_GREEN);
+        addTransactionButton.addActionListener(e -> showAddTransactionDialog());
+        rightPanel.add(addTransactionButton);
+        
+        headerPanel.add(rightPanel, BorderLayout.EAST);
+        
+        movementsPanel.add(headerPanel, BorderLayout.NORTH);
+        
+        // Painel de filtros
+        JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        filterPanel.setBackground(WHITE);
+        filterPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 10, 30));
+        
+        JLabel filterLabel = new JLabel("Filtros:");
+        filterLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        filterPanel.add(filterLabel);
+        
+        JComboBox<String> typeFilter = new JComboBox<>(new String[]{"Todos", "Receitas", "Despesas"});
+        typeFilter.addActionListener(e -> updateMovementsList());
+        filterPanel.add(typeFilter);
+        
+        JComboBox<String> accountFilter = new JComboBox<>();
+        accountFilter.addItem("Todas as Contas");
+        // Adicionar contas reais
+        if (authController.isLogado()) {
+            List<Conta> contas = financeController.obterContas();
+            if (contas != null) {
+                for (Conta conta : contas) {
+                    accountFilter.addItem(conta.getNome());
+                }
+            }
+        }
+        accountFilter.addActionListener(e -> updateMovementsList());
+        filterPanel.add(accountFilter);
+        
+        movementsPanel.add(filterPanel, BorderLayout.CENTER);
+        
+        // Conteúdo das movimentações (será atualizado dinamicamente)
+        updateMovementsList();
+        
+        movementsPanel.add(createNavigationPanel(), BorderLayout.SOUTH);
+    }
+    
+    private void updateMovementsList() {
+        // Remove os painéis anteriores se existirem
+        Component[] components = movementsPanel.getComponents();
+        for (Component comp : components) {
+            if (comp instanceof JScrollPane) {
+                movementsPanel.remove(comp);
+                break;
+            }
+        }
+        
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(WHITE);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 20, 30));
         
-        contentPanel.add(createTransactionItem("Salário", "R$ 2.500,00", "01/12/2024", true));
-        contentPanel.add(createTransactionItem("Supermercado", "R$ 150,00", "30/11/2024", false));
-        contentPanel.add(createTransactionItem("Gasolina", "R$ 80,00", "29/11/2024", false));
-        contentPanel.add(createTransactionItem("Freelancer", "R$ 500,00", "28/11/2024", true));
+        // Buscar movimentações reais do banco de dados
+        if (authController.isLogado()) {
+            List<Lancamento> lancamentos = financeController.obterTodosLancamentos();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+            
+            if (lancamentos != null && !lancamentos.isEmpty()) {
+                for (Lancamento lancamento : lancamentos) {
+                    String valor = currencyFormat.format(lancamento.getValor());
+                    String data = dateFormat.format(new Date(lancamento.getData()));
+                    boolean isReceita = "receita".equals(lancamento.getTipo());
+                    
+                    JPanel transactionItem = createTransactionItemWithActions(
+                        lancamento.getDescricao(), valor, data, isReceita, lancamento);
+                    contentPanel.add(transactionItem);
+                    contentPanel.add(Box.createVerticalStrut(10));
+                }
+            } else {
+                JLabel noDataLabel = new JLabel("Nenhuma transação encontrada. Clique em 'Nova Transação' para começar.");
+                noDataLabel.setFont(new Font("Segoe UI", Font.ITALIC, 16));
+                noDataLabel.setForeground(Color.GRAY);
+                noDataLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                noDataLabel.setBorder(BorderFactory.createEmptyBorder(50, 0, 50, 0));
+                contentPanel.add(noDataLabel);
+            }
+        }
         
-        movementsPanel.add(contentPanel, BorderLayout.CENTER);
-        movementsPanel.add(createNavigationPanel(), BorderLayout.SOUTH);
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
+        movementsPanel.add(scrollPane, BorderLayout.CENTER);
+        movementsPanel.revalidate();
+        movementsPanel.repaint();
     }
     
     private JPanel createBalanceCard(String title, String value, Color valueColor) {
@@ -498,6 +639,68 @@ public class FinanzaDesktop extends JFrame {
         card.add(valueLabel, BorderLayout.CENTER);
         
         return card;
+    }
+    
+    private JPanel createTransactionItemWithActions(String description, String value, String date, boolean isIncome, Lancamento lancamento) {
+        JPanel item = ModernUIHelper.createCardPanel();
+        item.setLayout(new BorderLayout());
+        item.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        
+        // Ícone da transação
+        String icon = isIncome ? ModernUIHelper.ICON_UP : ModernUIHelper.ICON_DOWN;
+        JLabel iconLabel = new JLabel(icon);
+        iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        iconLabel.setPreferredSize(new Dimension(30, 30));
+        
+        JLabel descLabel = new JLabel(description);
+        descLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        descLabel.setForeground(PRIMARY_DARK_BLUE);
+        
+        JLabel dateLabel = new JLabel(date);
+        dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        dateLabel.setForeground(ModernUIHelper.DARK_GRAY);
+        
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBackground(WHITE);
+        leftPanel.add(descLabel, BorderLayout.NORTH);
+        leftPanel.add(dateLabel, BorderLayout.SOUTH);
+        
+        JPanel leftContainer = new JPanel(new BorderLayout());
+        leftContainer.setBackground(WHITE);
+        leftContainer.add(iconLabel, BorderLayout.WEST);
+        leftContainer.add(leftPanel, BorderLayout.CENTER);
+        
+        JLabel valueLabel = new JLabel(value);
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        valueLabel.setForeground(isIncome ? POSITIVE_GREEN : NEGATIVE_RED);
+        
+        // Painel de ações
+        JPanel actionsPanel = new JPanel(new FlowLayout());
+        actionsPanel.setBackground(WHITE);
+        
+        JButton editButton = ModernUIHelper.createModernButton("Editar", ModernUIHelper.ICON_EDIT, ACCENT_BLUE);
+        editButton.setPreferredSize(new Dimension(70, 25));
+        editButton.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        editButton.addActionListener(e -> showEditTransactionDialog(lancamento));
+        
+        JButton deleteButton = ModernUIHelper.createModernButton("Excluir", ModernUIHelper.ICON_DELETE, NEGATIVE_RED);
+        deleteButton.setPreferredSize(new Dimension(70, 25));
+        deleteButton.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        deleteButton.addActionListener(e -> deleteTransaction(lancamento));
+        
+        actionsPanel.add(editButton);
+        actionsPanel.add(deleteButton);
+        
+        JPanel rightPanel = new JPanel(new BorderLayout());
+        rightPanel.setBackground(WHITE);
+        rightPanel.add(valueLabel, BorderLayout.NORTH);
+        rightPanel.add(actionsPanel, BorderLayout.SOUTH);
+        
+        item.add(leftContainer, BorderLayout.WEST);
+        item.add(rightPanel, BorderLayout.EAST);
+        
+        return item;
     }
     
     private JPanel createTransactionItem(String description, String value, String date, boolean isIncome) {
@@ -540,7 +743,258 @@ public class FinanzaDesktop extends JFrame {
         return item;
     }
     
-    private JPanel createAccountItem(String name, String balance, Color iconColor) {
+    private void showAddTransactionDialog() {
+        JDialog dialog = new JDialog(this, "Nova Transação", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(450, 400);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBackground(WHITE);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 10, 8, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Campo descrição
+        JLabel descLabel = new JLabel("Descrição:");
+        descLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridx = 0; gbc.gridy = 0;
+        contentPanel.add(descLabel, gbc);
+        
+        JTextField descField = ModernUIHelper.createModernTextField("Ex: Compras no supermercado", 25);
+        gbc.gridy = 1;
+        contentPanel.add(descField, gbc);
+        
+        // Campo valor
+        JLabel valueLabel = new JLabel("Valor:");
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridy = 2;
+        contentPanel.add(valueLabel, gbc);
+        
+        JTextField valueField = ModernUIHelper.createModernTextField("0.00", 25);
+        gbc.gridy = 3;
+        contentPanel.add(valueField, gbc);
+        
+        // Tipo da transação
+        JLabel typeLabel = new JLabel("Tipo:");
+        typeLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridy = 4;
+        contentPanel.add(typeLabel, gbc);
+        
+        JComboBox<String> typeCombo = new JComboBox<>(new String[]{"receita", "despesa"});
+        typeCombo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridy = 5;
+        contentPanel.add(typeCombo, gbc);
+        
+        // Conta
+        JLabel accountLabel = new JLabel("Conta:");
+        accountLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridy = 6;
+        contentPanel.add(accountLabel, gbc);
+        
+        JComboBox<Conta> accountCombo = new JComboBox<>();
+        List<Conta> contas = financeController.obterContas();
+        if (contas != null) {
+            for (Conta conta : contas) {
+                accountCombo.addItem(conta);
+            }
+        }
+        accountCombo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridy = 7;
+        contentPanel.add(accountCombo, gbc);
+        
+        // Mensagem de erro
+        JLabel messageLabel = new JLabel(" ");
+        messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        messageLabel.setForeground(NEGATIVE_RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 8;
+        contentPanel.add(messageLabel, gbc);
+        
+        // Botões
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(WHITE);
+        
+        JButton cancelButton = ModernUIHelper.createModernButton("Cancelar", "❌", GRAY);
+        cancelButton.addActionListener(e -> dialog.dispose());
+        
+        JButton saveButton = ModernUIHelper.createModernButton("Salvar", "💾", POSITIVE_GREEN);
+        saveButton.addActionListener(e -> {
+            String descricao = descField.getText().trim();
+            String valorText = valueField.getText().trim().replace(",", ".");
+            String tipo = (String) typeCombo.getSelectedItem();
+            Conta conta = (Conta) accountCombo.getSelectedItem();
+            
+            if (descricao.isEmpty()) {
+                messageLabel.setText("Por favor, digite a descrição.");
+                return;
+            }
+            
+            if (conta == null) {
+                messageLabel.setText("Por favor, selecione uma conta.");
+                return;
+            }
+            
+            try {
+                double valor = Double.parseDouble(valorText);
+                if (valor <= 0) {
+                    messageLabel.setText("Valor deve ser maior que zero.");
+                    return;
+                }
+                
+                if (financeController.criarLancamento(descricao, valor, tipo, conta.getId(), null)) {
+                    dialog.dispose();
+                    updateMovementsList();
+                    updateDashboard();
+                    updateAccountsList();
+                    JOptionPane.showMessageDialog(this, "Transação criada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    messageLabel.setText("Erro ao criar transação. Tente novamente.");
+                }
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("Valor deve ser um número válido.");
+            }
+        });
+        
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(saveButton);
+        
+        gbc.gridy = 9;
+        gbc.insets = new Insets(20, 10, 10, 10);
+        contentPanel.add(buttonPanel, gbc);
+        
+        dialog.add(contentPanel, BorderLayout.CENTER);
+        dialog.setVisible(true);
+    }
+    
+    private void showEditTransactionDialog(Lancamento lancamento) {
+        JDialog dialog = new JDialog(this, "Editar Transação", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(450, 400);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBackground(WHITE);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(8, 10, 8, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Campo descrição
+        JLabel descLabel = new JLabel("Descrição:");
+        descLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridx = 0; gbc.gridy = 0;
+        contentPanel.add(descLabel, gbc);
+        
+        JTextField descField = ModernUIHelper.createModernTextField("", 25);
+        descField.setText(lancamento.getDescricao());
+        gbc.gridy = 1;
+        contentPanel.add(descField, gbc);
+        
+        // Campo valor
+        JLabel valueLabel = new JLabel("Valor:");
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridy = 2;
+        contentPanel.add(valueLabel, gbc);
+        
+        JTextField valueField = ModernUIHelper.createModernTextField("", 25);
+        valueField.setText(String.valueOf(lancamento.getValor()));
+        gbc.gridy = 3;
+        contentPanel.add(valueField, gbc);
+        
+        // Tipo da transação
+        JLabel typeLabel = new JLabel("Tipo:");
+        typeLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridy = 4;
+        contentPanel.add(typeLabel, gbc);
+        
+        JComboBox<String> typeCombo = new JComboBox<>(new String[]{"receita", "despesa"});
+        typeCombo.setSelectedItem(lancamento.getTipo());
+        typeCombo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        gbc.gridy = 5;
+        contentPanel.add(typeCombo, gbc);
+        
+        // Mensagem de erro
+        JLabel messageLabel = new JLabel(" ");
+        messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        messageLabel.setForeground(NEGATIVE_RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 6;
+        contentPanel.add(messageLabel, gbc);
+        
+        // Botões
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(WHITE);
+        
+        JButton cancelButton = ModernUIHelper.createModernButton("Cancelar", "❌", GRAY);
+        cancelButton.addActionListener(e -> dialog.dispose());
+        
+        JButton saveButton = ModernUIHelper.createModernButton("Salvar", "💾", POSITIVE_GREEN);
+        saveButton.addActionListener(e -> {
+            String descricao = descField.getText().trim();
+            String valorText = valueField.getText().trim().replace(",", ".");
+            String tipo = (String) typeCombo.getSelectedItem();
+            
+            if (descricao.isEmpty()) {
+                messageLabel.setText("Por favor, digite a descrição.");
+                return;
+            }
+            
+            try {
+                double valor = Double.parseDouble(valorText);
+                if (valor <= 0) {
+                    messageLabel.setText("Valor deve ser maior que zero.");
+                    return;
+                }
+                
+                if (financeController.atualizarLancamento(lancamento.getId(), descricao, valor, tipo, lancamento.getContaId(), lancamento.getCategoriaId())) {
+                    dialog.dispose();
+                    updateMovementsList();
+                    updateDashboard();
+                    updateAccountsList();
+                    JOptionPane.showMessageDialog(this, "Transação atualizada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    messageLabel.setText("Erro ao atualizar transação. Tente novamente.");
+                }
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("Valor deve ser um número válido.");
+            }
+        });
+        
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(saveButton);
+        
+        gbc.gridy = 7;
+        gbc.insets = new Insets(20, 10, 10, 10);
+        contentPanel.add(buttonPanel, gbc);
+        
+        dialog.add(contentPanel, BorderLayout.CENTER);
+        dialog.setVisible(true);
+    }
+    
+    private void deleteTransaction(Lancamento lancamento) {
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Tem certeza que deseja excluir a transação '" + lancamento.getDescricao() + "'?",
+            "Confirmar Exclusão",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (financeController.excluirLancamento(lancamento.getId())) {
+                updateMovementsList();
+                updateDashboard();
+                updateAccountsList();
+                JOptionPane.showMessageDialog(this, "Transação excluída com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Erro ao excluir transação.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private JPanel createAccountItemWithActions(String name, String balance, Color iconColor, Conta conta) {
         JPanel item = ModernUIHelper.createCardPanel();
         item.setLayout(new BorderLayout());
         item.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -566,11 +1020,221 @@ public class FinanzaDesktop extends JFrame {
         balanceLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         balanceLabel.setForeground(PRIMARY_DARK_BLUE);
         
+        // Painel de ações
+        JPanel actionsPanel = new JPanel(new FlowLayout());
+        actionsPanel.setBackground(WHITE);
+        
+        JButton editButton = ModernUIHelper.createModernButton("Editar", ModernUIHelper.ICON_EDIT, ACCENT_BLUE);
+        editButton.setPreferredSize(new Dimension(80, 30));
+        editButton.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        editButton.addActionListener(e -> showEditAccountDialog(conta));
+        
+        JButton deleteButton = ModernUIHelper.createModernButton("Excluir", ModernUIHelper.ICON_DELETE, NEGATIVE_RED);
+        deleteButton.setPreferredSize(new Dimension(80, 30));
+        deleteButton.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        deleteButton.addActionListener(e -> deleteAccount(conta));
+        
+        actionsPanel.add(editButton);
+        actionsPanel.add(deleteButton);
+        
+        // Painel central com nome e saldo
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.setBackground(WHITE);
+        centerPanel.add(nameLabel, BorderLayout.NORTH);
+        centerPanel.add(balanceLabel, BorderLayout.SOUTH);
+        
         item.add(iconPanel, BorderLayout.WEST);
-        item.add(nameLabel, BorderLayout.CENTER);
-        item.add(balanceLabel, BorderLayout.EAST);
+        item.add(centerPanel, BorderLayout.CENTER);
+        item.add(actionsPanel, BorderLayout.EAST);
         
         return item;
+    }
+    
+    private void showAddAccountDialog() {
+        JDialog dialog = new JDialog(this, "Nova Conta", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBackground(WHITE);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Campo nome
+        JLabel nameLabel = new JLabel("Nome da Conta:");
+        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridx = 0; gbc.gridy = 0;
+        contentPanel.add(nameLabel, gbc);
+        
+        JTextField nameField = ModernUIHelper.createModernTextField("Ex: Conta Corrente", 20);
+        gbc.gridy = 1;
+        contentPanel.add(nameField, gbc);
+        
+        // Campo saldo inicial
+        JLabel balanceLabel = new JLabel("Saldo Inicial:");
+        balanceLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridy = 2;
+        contentPanel.add(balanceLabel, gbc);
+        
+        JTextField balanceField = ModernUIHelper.createModernTextField("0.00", 20);
+        gbc.gridy = 3;
+        contentPanel.add(balanceField, gbc);
+        
+        // Mensagem de erro
+        JLabel messageLabel = new JLabel(" ");
+        messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        messageLabel.setForeground(NEGATIVE_RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 4;
+        contentPanel.add(messageLabel, gbc);
+        
+        // Botões
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(WHITE);
+        
+        JButton cancelButton = ModernUIHelper.createModernButton("Cancelar", "❌", GRAY);
+        cancelButton.addActionListener(e -> dialog.dispose());
+        
+        JButton saveButton = ModernUIHelper.createModernButton("Salvar", "💾", POSITIVE_GREEN);
+        saveButton.addActionListener(e -> {
+            String nome = nameField.getText().trim();
+            String saldoText = balanceField.getText().trim().replace(",", ".");
+            
+            if (nome.isEmpty()) {
+                messageLabel.setText("Por favor, digite o nome da conta.");
+                return;
+            }
+            
+            try {
+                double saldo = Double.parseDouble(saldoText);
+                
+                if (financeController.criarConta(nome, saldo)) {
+                    dialog.dispose();
+                    updateAccountsList();
+                    JOptionPane.showMessageDialog(this, "Conta criada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    messageLabel.setText("Erro ao criar conta. Tente novamente.");
+                }
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("Saldo deve ser um número válido.");
+            }
+        });
+        
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(saveButton);
+        
+        gbc.gridy = 5;
+        gbc.insets = new Insets(20, 10, 10, 10);
+        contentPanel.add(buttonPanel, gbc);
+        
+        dialog.add(contentPanel, BorderLayout.CENTER);
+        dialog.setVisible(true);
+    }
+    
+    private void showEditAccountDialog(Conta conta) {
+        JDialog dialog = new JDialog(this, "Editar Conta", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel contentPanel = new JPanel(new GridBagLayout());
+        contentPanel.setBackground(WHITE);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Campo nome
+        JLabel nameLabel = new JLabel("Nome da Conta:");
+        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridx = 0; gbc.gridy = 0;
+        contentPanel.add(nameLabel, gbc);
+        
+        JTextField nameField = ModernUIHelper.createModernTextField("", 20);
+        nameField.setText(conta.getNome());
+        gbc.gridy = 1;
+        contentPanel.add(nameField, gbc);
+        
+        // Campo saldo atual (apenas informativo)
+        JLabel balanceLabel = new JLabel("Saldo Atual:");
+        balanceLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        gbc.gridy = 2;
+        contentPanel.add(balanceLabel, gbc);
+        
+        NumberFormat currencyFormat = NumberFormat.getCurrencyInstance();
+        JLabel balanceValueLabel = new JLabel(currencyFormat.format(conta.getSaldo()));
+        balanceValueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        balanceValueLabel.setForeground(PRIMARY_DARK_BLUE);
+        gbc.gridy = 3;
+        contentPanel.add(balanceValueLabel, gbc);
+        
+        // Mensagem de erro
+        JLabel messageLabel = new JLabel(" ");
+        messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        messageLabel.setForeground(NEGATIVE_RED);
+        messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridy = 4;
+        contentPanel.add(messageLabel, gbc);
+        
+        // Botões
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(WHITE);
+        
+        JButton cancelButton = ModernUIHelper.createModernButton("Cancelar", "❌", GRAY);
+        cancelButton.addActionListener(e -> dialog.dispose());
+        
+        JButton saveButton = ModernUIHelper.createModernButton("Salvar", "💾", POSITIVE_GREEN);
+        saveButton.addActionListener(e -> {
+            String nome = nameField.getText().trim();
+            
+            if (nome.isEmpty()) {
+                messageLabel.setText("Por favor, digite o nome da conta.");
+                return;
+            }
+            
+            if (financeController.atualizarConta(conta.getId(), nome, conta.getSaldo())) {
+                dialog.dispose();
+                updateAccountsList();
+                updateDashboard(); // Atualizar dashboard também
+                JOptionPane.showMessageDialog(this, "Conta atualizada com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                messageLabel.setText("Erro ao atualizar conta. Tente novamente.");
+            }
+        });
+        
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(saveButton);
+        
+        gbc.gridy = 5;
+        gbc.insets = new Insets(20, 10, 10, 10);
+        contentPanel.add(buttonPanel, gbc);
+        
+        dialog.add(contentPanel, BorderLayout.CENTER);
+        dialog.setVisible(true);
+    }
+    
+    private void deleteAccount(Conta conta) {
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Tem certeza que deseja excluir a conta '" + conta.getNome() + "'?\n" +
+            "Esta ação também excluirá todas as transações desta conta!",
+            "Confirmar Exclusão",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            if (financeController.excluirConta(conta.getId())) {
+                updateAccountsList();
+                updateDashboard(); // Atualizar dashboard também
+                JOptionPane.showMessageDialog(this, "Conta excluída com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Erro ao excluir conta.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
     
     private JPanel createNavigationPanel() {
@@ -639,15 +1303,23 @@ public class FinanzaDesktop extends JFrame {
     }
     
     private void showAccounts() {
+        updateAccountsList();
         cardLayout.show(mainPanel, "ACCOUNTS");
     }
     
     private void showMovements() {
+        updateMovementsList();
         cardLayout.show(mainPanel, "MOVEMENTS");
     }
     
     private void showProfile() {
+        // Atualizar o painel de perfil com dados do usuário atual
+        mainPanel.remove(profilePanel);
+        createProfilePanel();
+        mainPanel.add(profilePanel, "PROFILE");
         cardLayout.show(mainPanel, "PROFILE");
+        mainPanel.revalidate();
+        mainPanel.repaint();
     }
     
     private void showSettings() {
@@ -720,7 +1392,11 @@ public class FinanzaDesktop extends JFrame {
         infoPanel.add(avatarPanel, infoPanelGbc);
         
         // Nome do usuário
-        JLabel nameLabel = new JLabel("Usuário Demo");
+        Usuario usuario = authController.getUsuarioLogado();
+        String nomeUsuario = usuario != null ? usuario.getNome() : "Usuário";
+        String emailUsuario = usuario != null ? usuario.getEmail() : "email@exemplo.com";
+        
+        JLabel nameLabel = new JLabel(nomeUsuario);
         nameLabel.setFont(new Font("Arial", Font.BOLD, 20));
         nameLabel.setForeground(PRIMARY_DARK_BLUE);
         nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -728,7 +1404,7 @@ public class FinanzaDesktop extends JFrame {
         infoPanel.add(nameLabel, infoPanelGbc);
         
         // Email
-        JLabel emailLabel = new JLabel("usuario@demo.com");
+        JLabel emailLabel = new JLabel(emailUsuario);
         emailLabel.setFont(new Font("Arial", Font.PLAIN, 16));
         emailLabel.setForeground(GRAY);
         emailLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -736,7 +1412,12 @@ public class FinanzaDesktop extends JFrame {
         infoPanel.add(emailLabel, infoPanelGbc);
         
         // Data de criação
-        JLabel dateLabel = new JLabel("Membro desde: 01/01/2024");
+        String dataCriacao = "01/01/2024";
+        if (usuario != null && usuario.getDataCriacao() > 0) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            dataCriacao = dateFormat.format(new Date(usuario.getDataCriacao()));
+        }
+        JLabel dateLabel = new JLabel("Membro desde: " + dataCriacao);
         dateLabel.setFont(new Font("Arial", Font.PLAIN, 14));
         dateLabel.setForeground(GRAY);
         dateLabel.setHorizontalAlignment(SwingConstants.CENTER);

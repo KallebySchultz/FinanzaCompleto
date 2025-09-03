@@ -52,13 +52,16 @@ public class Conta {
         this.usuarioId = usuarioId;
     }
 
+    /**
+     * Retorna o saldo da conta (inicialmente igual ao saldo inicial)
+     * Este método pode ser expandido para calcular o saldo baseado nas transações
+     */
+    public double getSaldo() {
+        return saldoInicial;
+    }
+
     @Override
     public String toString() {
-        return "Conta{" +
-                "id=" + id +
-                ", nome='" + nome + '\'' +
-                ", saldoInicial=" + saldoInicial +
-                ", usuarioId=" + usuarioId +
-                '}';
+        return nome; // Para exibição em ComboBox
     }
 }

@@ -1,0 +1,145 @@
+{
+  "dataExportacao": 1756917373290,
+  "resumoFinanceiro": {
+    "receitas": 3500.0,
+    "saldo": 2750.0,
+    "despesas": 750.0
+  },
+  "lancamentos": [
+    {
+      "id": 4,
+      "valor": 100.0,
+      "data": 1756917373254,
+      "descricao": "Teste Controller",
+      "contaId": 1,
+      "categoriaId": 5,
+      "usuarioId": 1,
+      "tipo": "despesa"
+    },
+    {
+      "id": 1,
+      "valor": 3500.0,
+      "data": 1756917373164,
+      "descricao": "Salário Mensal",
+      "contaId": 1,
+      "categoriaId": 2,
+      "usuarioId": 1,
+      "tipo": "receita"
+    },
+    {
+      "id": 2,
+      "valor": 450.0,
+      "data": 1756917373164,
+      "descricao": "Compras do Mês",
+      "contaId": 1,
+      "categoriaId": 5,
+      "usuarioId": 1,
+      "tipo": "despesa"
+    },
+    {
+      "id": 3,
+      "valor": 200.0,
+      "data": 1756917373164,
+      "descricao": "Combustível",
+      "contaId": 1,
+      "categoriaId": 5,
+      "usuarioId": 1,
+      "tipo": "despesa"
+    }
+  ],
+  "categorias": [
+    {
+      "id": 5,
+      "nome": "Alimentação",
+      "corHex": "#F44336",
+      "tipo": "despesa"
+    },
+    {
+      "id": 11,
+      "nome": "Compras",
+      "corHex": "#607D8B",
+      "tipo": "despesa"
+    },
+    {
+      "id": 9,
+      "nome": "Educação",
+      "corHex": "#3F51B5",
+      "tipo": "despesa"
+    },
+    {
+      "id": 10,
+      "nome": "Lazer",
+      "corHex": "#FFEB3B",
+      "tipo": "despesa"
+    },
+    {
+      "id": 7,
+      "nome": "Moradia",
+      "corHex": "#795548",
+      "tipo": "despesa"
+    },
+    {
+      "id": 12,
+      "nome": "Outras Despesas",
+      "corHex": "#9E9E9E",
+      "tipo": "despesa"
+    },
+    {
+      "id": 8,
+      "nome": "Saúde",
+      "corHex": "#E91E63",
+      "tipo": "despesa"
+    },
+    {
+      "id": 6,
+      "nome": "Transporte",
+      "corHex": "#FF5722",
+      "tipo": "despesa"
+    },
+    {
+      "id": 2,
+      "nome": "Freelance",
+      "corHex": "#2196F3",
+      "tipo": "receita"
+    },
+    {
+      "id": 3,
+      "nome": "Investimentos",
+      "corHex": "#FF9800",
+      "tipo": "receita"
+    },
+    {
+      "id": 4,
+      "nome": "Outros Ganhos",
+      "corHex": "#9C27B0",
+      "tipo": "receita"
+    },
+    {
+      "id": 1,
+      "nome": "Salário",
+      "corHex": "#4CAF50",
+      "tipo": "receita"
+    }
+  ],
+  "contas": [
+    {
+      "id": 3,
+      "nome": "Cartão de Crédito",
+      "saldoInicial": 0.0,
+      "usuarioId": 1
+    },
+    {
+      "id": 1,
+      "nome": "Conta Corrente",
+      "saldoInicial": 1500.0,
+      "usuarioId": 1
+    },
+    {
+      "id": 2,
+      "nome": "Poupança",
+      "saldoInicial": 5000.0,
+      "usuarioId": 1
+    }
+  ],
+  "versao": "1.0"
+}

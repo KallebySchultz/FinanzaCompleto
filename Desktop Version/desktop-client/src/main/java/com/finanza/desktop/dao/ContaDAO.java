@@ -159,4 +159,31 @@ public class ContaDAO {
         
         return false;
     }
+
+    /**
+     * Atualiza uma conta com novos valores específicos
+     */
+    public boolean atualizar(int contaId, String nome, double saldo) {
+        String sql = "UPDATE contas SET nome = ?, saldo_inicial = ? WHERE id = ?";
+        
+        try (PreparedStatement stmt = dbManager.getConnection().prepareStatement(sql)) {
+            stmt.setString(1, nome);
+            stmt.setDouble(2, saldo);
+            stmt.setInt(3, contaId);
+            
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.err.println("Erro ao atualizar conta: " + e.getMessage());
+        }
+        
+        return false;
+    }
+
+    /**
+     * Exclui uma conta por ID
+     */
+    public boolean excluir(int contaId) {
+        return remover(contaId);
+    }
 }

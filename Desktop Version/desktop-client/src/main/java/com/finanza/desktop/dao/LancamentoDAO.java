@@ -249,4 +249,38 @@ public class LancamentoDAO {
         
         return false;
     }
+
+    /**
+     * Atualiza um lançamento com novos valores específicos
+     */
+    public boolean atualizar(int lancamentoId, String descricao, double valor, String tipo, int contaId, Integer categoriaId) {
+        String sql = "UPDATE lancamentos SET descricao = ?, valor = ?, tipo = ?, conta_id = ?, categoria_id = ? WHERE id = ?";
+        
+        try (PreparedStatement stmt = dbManager.getConnection().prepareStatement(sql)) {
+            stmt.setString(1, descricao);
+            stmt.setDouble(2, valor);
+            stmt.setString(3, tipo);
+            stmt.setInt(4, contaId);
+            if (categoriaId != null) {
+                stmt.setInt(5, categoriaId);
+            } else {
+                stmt.setNull(5, Types.INTEGER);
+            }
+            stmt.setInt(6, lancamentoId);
+            
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.err.println("Erro ao atualizar lançamento: " + e.getMessage());
+        }
+        
+        return false;
+    }
+
+    /**
+     * Exclui um lançamento por ID
+     */
+    public boolean excluir(int lancamentoId) {
+        return remover(lancamentoId);
+    }
 }

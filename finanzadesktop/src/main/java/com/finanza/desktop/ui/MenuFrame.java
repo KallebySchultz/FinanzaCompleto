@@ -2,6 +2,7 @@ package com.finanza.desktop.ui;
 
 import com.finanza.desktop.model.*;
 import com.finanza.desktop.database.*;
+import com.finanza.desktop.network.FinanzaClient;
 import com.finanza.desktop.util.UIUtils;
 import com.finanza.desktop.util.FormatUtils;
 
@@ -213,9 +214,12 @@ public class MenuFrame extends JFrame {
 
         gbc.gridx = 0;
         gbc.gridy++;
-        gbc.gridwidth = 2;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.anchor = GridBagConstraints.CENTER;
+        panel.add(new JButton("Sincronizar com Servidor") {{
+            UIUtils.configureSecondaryButton(this);
+            addActionListener(e -> mostrarSincronizacao());
+        }}, gbc);
+
+        gbc.gridx = 1;
         panel.add(sobreButton, gbc);
 
         return panel;
@@ -376,7 +380,8 @@ public class MenuFrame extends JFrame {
             "• Gestão de contas bancárias\n" +
             "• Categorização de transações\n" +
             "• Relatórios e exportação de dados\n" +
-            "• Interface intuitiva e moderna\n\n" +
+            "• Interface intuitiva e moderna\n" +
+            "• Sincronização com servidor\n\n" +
             "© 2024 Finanza Desktop";
 
         JTextArea textArea = new JTextArea(sobre);
@@ -387,6 +392,11 @@ public class MenuFrame extends JFrame {
         scrollPane.setPreferredSize(new Dimension(400, 300));
 
         JOptionPane.showMessageDialog(this, scrollPane, "Sobre o Finanza Desktop", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void mostrarSincronizacao() {
+        SyncDialog dialog = new SyncDialog(this, usuario);
+        dialog.setVisible(true);
     }
 
     private void configureFrame() {
@@ -475,6 +485,127 @@ public class MenuFrame extends JFrame {
                     }
                 }
             }
+        }
+    }
+
+    // Dialog para sincronização com servidor
+    private static class SyncDialog extends JDialog {
+        private FinanzaClient client;
+        private Usuario usuario;
+        
+        private JTextField hostField;
+        private JTextField portField;
+        private JButton testButton;
+        private JButton syncButton;
+        private JTextArea logArea;
+        
+        public SyncDialog(JFrame parent, Usuario usuario) {
+            super(parent, "Sincronização com Servidor", true);
+            this.usuario = usuario;
+            this.client = new FinanzaClient();
+            
+            initComponents();
+            setupLayout();
+        }
+        
+        private void initComponents() {
+            hostField = new JTextField("localhost");
+            UIUtils.configureTextField(hostField);
+            
+            portField = new JTextField("8080");
+            UIUtils.configureTextField(portField);
+            
+            testButton = new JButton("Testar Conexão");
+            UIUtils.configureSecondaryButton(testButton);
+            
+            syncButton = new JButton("Sincronizar");
+            UIUtils.configureButton(syncButton);
+            
+            logArea = new JTextArea(10, 40);
+            logArea.setEditable(false);
+            logArea.setFont(new Font("Courier", Font.PLAIN, 12));
+            logArea.setText("Pronto para sincronizar...\n");
+            
+            testButton.addActionListener(e -> testarConexao());
+            syncButton.addActionListener(e -> sincronizar());
+        }
+        
+        private void setupLayout() {
+            setLayout(new BorderLayout());
+            
+            JPanel configPanel = new JPanel(new GridBagLayout());
+            GridBagConstraints gbc = new GridBagConstraints();
+            gbc.insets = new Insets(5, 5, 5, 5);
+            
+            gbc.gridx = 0; gbc.gridy = 0;
+            configPanel.add(new JLabel("Host:"), gbc);
+            gbc.gridx = 1;
+            configPanel.add(hostField, gbc);
+            
+            gbc.gridx = 0; gbc.gridy = 1;
+            configPanel.add(new JLabel("Porta:"), gbc);
+            gbc.gridx = 1;
+            configPanel.add(portField, gbc);
+            
+            gbc.gridx = 0; gbc.gridy = 2;
+            gbc.gridwidth = 2;
+            JPanel buttonPanel = new JPanel(new FlowLayout());
+            buttonPanel.add(testButton);
+            buttonPanel.add(syncButton);
+            configPanel.add(buttonPanel, gbc);
+            
+            add(configPanel, BorderLayout.NORTH);
+            add(new JScrollPane(logArea), BorderLayout.CENTER);
+            
+            pack();
+            setLocationRelativeTo(getParent());
+        }
+        
+        private void testarConexao() {
+            String host = hostField.getText().trim();
+            String portStr = portField.getText().trim();
+            
+            try {
+                int port = Integer.parseInt(portStr);
+                logArea.append("🔄 Testando conexão com " + host + ":" + port + "...\n");
+                
+                if (client.testConnection(host, port)) {
+                    logArea.append("✅ Conexão bem-sucedida!\n");
+                    FinanzaClient.ServerResponse info = client.getServerInfo(host, port);
+                    if (info.isSuccess()) {
+                        logArea.append("📋 Servidor: " + info.getMessage() + "\n");
+                    }
+                } else {
+                    logArea.append("❌ Falha na conexão\n");
+                }
+            } catch (NumberFormatException e) {
+                logArea.append("❌ Porta inválida\n");
+            }
+            logArea.setCaretPosition(logArea.getDocument().getLength());
+        }
+        
+        private void sincronizar() {
+            String host = hostField.getText().trim();
+            String portStr = portField.getText().trim();
+            
+            try {
+                int port = Integer.parseInt(portStr);
+                logArea.append("🚀 Iniciando sincronização...\n");
+                
+                // Sincronizar usuário
+                FinanzaClient.ServerResponse response = client.syncUser(usuario, host, port);
+                if (response.isSuccess()) {
+                    logArea.append("✅ Usuário sincronizado: " + response.getMessage() + "\n");
+                } else {
+                    logArea.append("❌ Erro ao sincronizar usuário: " + response.getMessage() + "\n");
+                }
+                
+                logArea.append("🎉 Sincronização concluída!\n");
+                
+            } catch (NumberFormatException e) {
+                logArea.append("❌ Porta inválida\n");
+            }
+            logArea.setCaretPosition(logArea.getDocument().getLength());
         }
     }
 }

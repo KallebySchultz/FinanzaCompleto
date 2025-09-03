@@ -3,6 +3,7 @@ com/finanza/desktop/ui/AddTransactionDialog$JDateChooser.class
 com/finanza/desktop/ui/RegisterFrame$1.class
 com/finanza/desktop/database/ContaDao.class
 com/finanza/desktop/ui/MainFrame.class
+com/finanza/desktop/network/FinanzaClient$SyncRequest.class
 com/finanza/desktop/FinanzaDesktopApp.class
 com/finanza/desktop/ui/RegisterFrame.class
 com/finanza/desktop/util/UIUtils.class
@@ -20,8 +21,12 @@ com/finanza/desktop/ui/AccountsFrame$AccountDialog.class
 com/finanza/desktop/database/CategoriaDao.class
 com/finanza/desktop/ui/MovementsFrame$1.class
 com/finanza/desktop/model/Categoria.class
+com/finanza/desktop/network/FinanzaClient$ServerResponse.class
 com/finanza/desktop/util/UIUtils$1.class
+com/finanza/desktop/ui/MenuFrame$1.class
 com/finanza/desktop/model/Lancamento.class
 com/finanza/desktop/database/DatabaseManager.class
 com/finanza/desktop/ui/AddTransactionDialog.class
+com/finanza/desktop/network/FinanzaClient.class
+com/finanza/desktop/ui/MenuFrame$SyncDialog.class
 com/finanza/desktop/ui/AccountsFrame$1.class

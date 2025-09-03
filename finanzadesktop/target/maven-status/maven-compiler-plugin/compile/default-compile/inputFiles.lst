@@ -14,6 +14,7 @@
 /home/runner/work/Finanza/Finanza/finanzadesktop/src/main/java/com/finanza/desktop/database/ContaDao.java
 /home/runner/work/Finanza/Finanza/finanzadesktop/src/main/java/com/finanza/desktop/database/CategoriaDao.java
 /home/runner/work/Finanza/Finanza/finanzadesktop/src/main/java/com/finanza/desktop/database/DatabaseManager.java
+/home/runner/work/Finanza/Finanza/finanzadesktop/src/main/java/com/finanza/desktop/network/FinanzaClient.java
 /home/runner/work/Finanza/Finanza/finanzadesktop/src/main/java/com/finanza/desktop/ui/AddTransactionDialog.java
 /home/runner/work/Finanza/Finanza/finanzadesktop/src/main/java/com/finanza/desktop/FinanzaDesktopApp.java
 /home/runner/work/Finanza/Finanza/finanzadesktop/src/main/java/com/finanza/desktop/model/Categoria.java

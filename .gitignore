@@ -17,6 +17,9 @@ local.properties
 # Desktop client build artifacts
 desktop-client/target/
 desktop-client/*.jar
+*/build/
+*/dist/
+*/lib/
 
 # Configuration files (keep examples but ignore user configs)
 finanza-config.properties

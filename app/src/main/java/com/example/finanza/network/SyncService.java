@@ -24,20 +24,20 @@ public class SyncService {
     private Runnable autoSyncRunnable;
     private static final long AUTO_SYNC_INTERVAL = 30000; // 30 segundos
     private boolean autoSyncEnabled = true;
-    
+
     public SyncService(Context context) {
         this.context = context;
         this.serverClient = new ServerClient();
         this.localDb = Room.databaseBuilder(context,
-                AppDatabase.class, "finanza-db")
+                        AppDatabase.class, "finanza-db")
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
-        
+
         // Inicializar auto-sync
         iniciarAutoSync();
     }
-    
+
     private void iniciarAutoSync() {
         autoSyncHandler = new Handler(Looper.getMainLooper());
         autoSyncRunnable = new Runnable() {
@@ -58,37 +58,37 @@ public class SyncService {
         // Iniciar primeira sincronização após 5 segundos
         autoSyncHandler.postDelayed(autoSyncRunnable, 5000);
     }
-    
+
     public void pararAutoSync() {
         autoSyncEnabled = false;
         if (autoSyncHandler != null && autoSyncRunnable != null) {
             autoSyncHandler.removeCallbacks(autoSyncRunnable);
         }
     }
-    
+
     public void iniciarAutoSyncNovamente() {
         autoSyncEnabled = true;
         if (autoSyncHandler != null && autoSyncRunnable != null) {
             autoSyncHandler.postDelayed(autoSyncRunnable, AUTO_SYNC_INTERVAL);
         }
     }
-    
+
     public boolean isOnline() {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
     }
-    
+
     public void sincronizarTudo(int usuarioId) {
         // Sincronização manual com feedback ao usuário
         sincronizarTudoComFeedback(usuarioId, true);
     }
-    
+
     private void sincronizarTudoSilencioso(int usuarioId) {
         // Sincronização automática sem feedback ao usuário
         sincronizarTudoComFeedback(usuarioId, false);
     }
-    
+
     private void sincronizarTudoComFeedback(int usuarioId, boolean mostrarFeedback) {
         // Sincronizar em sequência: usuário -> contas -> lançamentos
         sincronizarUsuario(usuarioId, () -> {
@@ -101,11 +101,22 @@ public class SyncService {
             });
         });
     }
-    
+
+    // REMOVIDO O MÉTODO DUPLICADO! Mantido apenas este:
     public void testarConexao(String host, int port) {
-        serverClient.testarConexao(host, port);
+        serverClient.conectar(host, port, new ServerClient.ServerCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                Toast.makeText(context, result, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(String error) {
+                Toast.makeText(context, error, Toast.LENGTH_LONG).show();
+            }
+        });
     }
-    
+
     private void sincronizarUsuario(int usuarioId, Runnable onComplete) {
         serverClient.sincronizarUsuario(usuarioId, new ServerClient.ServerCallback<String>() {
             @Override
@@ -114,7 +125,7 @@ public class SyncService {
                 // Por enquanto, apenas continua para próxima sincronização
                 onComplete.run();
             }
-            
+
             @Override
             public void onError(String error) {
                 Toast.makeText(context, "Erro ao sincronizar usuário: " + error, Toast.LENGTH_SHORT).show();
@@ -122,14 +133,14 @@ public class SyncService {
             }
         });
     }
-    
+
     private void sincronizarContas(int usuarioId, Runnable onComplete) {
         serverClient.sincronizarContas(usuarioId, new ServerClient.ServerCallback<String>() {
             @Override
             public void onSuccess(String result) {
                 onComplete.run();
             }
-            
+
             @Override
             public void onError(String error) {
                 Toast.makeText(context, "Erro ao sincronizar contas: " + error, Toast.LENGTH_SHORT).show();
@@ -137,14 +148,14 @@ public class SyncService {
             }
         });
     }
-    
+
     private void sincronizarLancamentos(int usuarioId, Runnable onComplete) {
         serverClient.sincronizarLancamentos(usuarioId, new ServerClient.ServerCallback<String>() {
             @Override
             public void onSuccess(String result) {
                 onComplete.run();
             }
-            
+
             @Override
             public void onError(String error) {
                 Toast.makeText(context, "Erro ao sincronizar lançamentos: " + error, Toast.LENGTH_SHORT).show();
@@ -152,21 +163,7 @@ public class SyncService {
             }
         });
     }
-    
-    public void testarConexao(String host, int port) {
-        serverClient.conectar(host, port, new ServerClient.ServerCallback<String>() {
-            @Override
-            public void onSuccess(String result) {
-                Toast.makeText(context, result, Toast.LENGTH_LONG).show();
-            }
-            
-            @Override
-            public void onError(String error) {
-                Toast.makeText(context, error, Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-    
+
     public void fechar() {
         if (serverClient != null) {
             serverClient.fechar();

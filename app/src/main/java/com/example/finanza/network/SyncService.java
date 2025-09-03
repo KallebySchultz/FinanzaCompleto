@@ -1,6 +1,11 @@
 package com.example.finanza.network;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
 import com.example.finanza.model.*;
 import com.example.finanza.db.AppDatabase;
@@ -9,11 +14,16 @@ import androidx.room.Room;
 /**
  * Serviço de sincronização com servidor
  * Integra operações locais com comunicação remota
+ * Inclui sincronização automática quando online
  */
 public class SyncService {
     private Context context;
     private ServerClient serverClient;
     private AppDatabase localDb;
+    private Handler autoSyncHandler;
+    private Runnable autoSyncRunnable;
+    private static final long AUTO_SYNC_INTERVAL = 30000; // 30 segundos
+    private boolean autoSyncEnabled = true;
     
     public SyncService(Context context) {
         this.context = context;
@@ -23,17 +33,77 @@ public class SyncService {
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
+        
+        // Inicializar auto-sync
+        iniciarAutoSync();
+    }
+    
+    private void iniciarAutoSync() {
+        autoSyncHandler = new Handler(Looper.getMainLooper());
+        autoSyncRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (autoSyncEnabled && isOnline()) {
+                    // Obter usuário ID dos SharedPreferences
+                    SharedPreferences prefs = context.getSharedPreferences("FinanzaAuth", Context.MODE_PRIVATE);
+                    int usuarioId = prefs.getInt("usuarioId", -1);
+                    if (usuarioId != -1) {
+                        sincronizarTudoSilencioso(usuarioId);
+                    }
+                }
+                // Reagendar próxima sincronização
+                autoSyncHandler.postDelayed(this, AUTO_SYNC_INTERVAL);
+            }
+        };
+        // Iniciar primeira sincronização após 5 segundos
+        autoSyncHandler.postDelayed(autoSyncRunnable, 5000);
+    }
+    
+    public void pararAutoSync() {
+        autoSyncEnabled = false;
+        if (autoSyncHandler != null && autoSyncRunnable != null) {
+            autoSyncHandler.removeCallbacks(autoSyncRunnable);
+        }
+    }
+    
+    public void iniciarAutoSyncNovamente() {
+        autoSyncEnabled = true;
+        if (autoSyncHandler != null && autoSyncRunnable != null) {
+            autoSyncHandler.postDelayed(autoSyncRunnable, AUTO_SYNC_INTERVAL);
+        }
+    }
+    
+    public boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
     
     public void sincronizarTudo(int usuarioId) {
+        // Sincronização manual com feedback ao usuário
+        sincronizarTudoComFeedback(usuarioId, true);
+    }
+    
+    private void sincronizarTudoSilencioso(int usuarioId) {
+        // Sincronização automática sem feedback ao usuário
+        sincronizarTudoComFeedback(usuarioId, false);
+    }
+    
+    private void sincronizarTudoComFeedback(int usuarioId, boolean mostrarFeedback) {
         // Sincronizar em sequência: usuário -> contas -> lançamentos
         sincronizarUsuario(usuarioId, () -> {
             sincronizarContas(usuarioId, () -> {
                 sincronizarLancamentos(usuarioId, () -> {
-                    Toast.makeText(context, "Sincronização completa!", Toast.LENGTH_SHORT).show();
+                    if (mostrarFeedback) {
+                        Toast.makeText(context, "Sincronização completa!", Toast.LENGTH_SHORT).show();
+                    }
                 });
             });
         });
+    }
+    
+    public void testarConexao(String host, int port) {
+        serverClient.testarConexao(host, port);
     }
     
     private void sincronizarUsuario(int usuarioId, Runnable onComplete) {

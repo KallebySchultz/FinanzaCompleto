@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/rounded_white"
+    android:padding="24dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Confirmar Exclusão"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/negativeRed"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Digite sua senha para confirmar a exclusão permanente da conta:"
+        android:textSize="14sp"
+        android:textColor="@color/primaryDarkBlue"
+        android:textAlignment="center"
+        android:layout_marginBottom="20dp" />
+
+    <!-- Campo Senha -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/input_senha_confirmacao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edittext_bg"
+            android:hint="Senha"
+            android:inputType="textPassword"
+            android:padding="16dp"
+            android:textColor="@color/primaryDarkBlue"
+            android:textColorHint="@color/darkGray" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Botão Confirmar Exclusão -->
+    <Button
+        android:id="@+id/btn_confirmar_exclusao"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Excluir Conta"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:background="@drawable/button_red"
+        android:layout_marginBottom="8dp"
+        android:elevation="2dp" />
+
+    <!-- Botão Cancelar -->
+    <Button
+        android:id="@+id/btn_cancelar_exclusao"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="Cancelar"
+        android:textColor="@color/primaryDarkBlue"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:background="@drawable/button_gray"
+        android:elevation="1dp" />
+
+</LinearLayout>

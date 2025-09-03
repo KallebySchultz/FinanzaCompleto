@@ -27,6 +27,7 @@ public class FinanzaDesktop extends JFrame {
     private JPanel dashboardPanel;
     private JPanel accountsPanel;
     private JPanel movementsPanel;
+    private JPanel profilePanel;
     
     public FinanzaDesktop() {
         initializeUI();
@@ -48,12 +49,14 @@ public class FinanzaDesktop extends JFrame {
         createDashboardPanel();
         createAccountsPanel();
         createMovementsPanel();
+        createProfilePanel();
         
         // Adicionar telas ao layout
         mainPanel.add(loginPanel, "LOGIN");
         mainPanel.add(dashboardPanel, "DASHBOARD");
         mainPanel.add(accountsPanel, "ACCOUNTS");
         mainPanel.add(movementsPanel, "MOVEMENTS");
+        mainPanel.add(profilePanel, "PROFILE");
         
         add(mainPanel);
     }
@@ -347,12 +350,16 @@ public class FinanzaDesktop extends JFrame {
         JButton movementsButton = createNavButton("Movimentações");
         movementsButton.addActionListener(e -> showMovements());
         
+        JButton profileButton = createNavButton("Perfil");
+        profileButton.addActionListener(e -> showProfile());
+        
         JButton logoutButton = createNavButton("Sair");
         logoutButton.addActionListener(e -> showLoginScreen());
         
         navPanel.add(homeButton);
         navPanel.add(accountsButton);
         navPanel.add(movementsButton);
+        navPanel.add(profileButton);
         navPanel.add(logoutButton);
         
         return navPanel;
@@ -393,6 +400,122 @@ public class FinanzaDesktop extends JFrame {
     
     private void showMovements() {
         cardLayout.show(mainPanel, "MOVEMENTS");
+    }
+    
+    private void showProfile() {
+        cardLayout.show(mainPanel, "PROFILE");
+    }
+    
+    private void createProfilePanel() {
+        profilePanel = new JPanel(new BorderLayout());
+        profilePanel.setBackground(PRIMARY_DARK_BLUE);
+        
+        // Painel principal centralizado
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(PRIMARY_DARK_BLUE);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.CENTER;
+        
+        // Título
+        JLabel titleLabel = new JLabel("Perfil do Usuário");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 32));
+        titleLabel.setForeground(WHITE);
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        centerPanel.add(titleLabel, gbc);
+        
+        // Container branco para informações
+        JPanel infoPanel = new JPanel(new GridBagLayout());
+        infoPanel.setBackground(WHITE);
+        infoPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+        infoPanel.setPreferredSize(new Dimension(500, 400));
+        
+        GridBagConstraints infoPanelGbc = new GridBagConstraints();
+        infoPanelGbc.insets = new Insets(15, 0, 15, 0);
+        infoPanelGbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Avatar visual
+        JPanel avatarPanel = new JPanel();
+        avatarPanel.setPreferredSize(new Dimension(80, 80));
+        avatarPanel.setBackground(ACCENT_BLUE);
+        avatarPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JLabel avatarLabel = new JLabel("U", SwingConstants.CENTER);
+        avatarLabel.setFont(new Font("Arial", Font.BOLD, 32));
+        avatarLabel.setForeground(WHITE);
+        avatarPanel.add(avatarLabel);
+        
+        infoPanelGbc.gridx = 0; infoPanelGbc.gridy = 0; infoPanelGbc.gridwidth = 2;
+        infoPanelGbc.anchor = GridBagConstraints.CENTER;
+        infoPanel.add(avatarPanel, infoPanelGbc);
+        
+        // Nome do usuário
+        JLabel nameLabel = new JLabel("Usuário Demo");
+        nameLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        nameLabel.setForeground(PRIMARY_DARK_BLUE);
+        nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        infoPanelGbc.gridy = 1;
+        infoPanel.add(nameLabel, infoPanelGbc);
+        
+        // Email
+        JLabel emailLabel = new JLabel("usuario@demo.com");
+        emailLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        emailLabel.setForeground(GRAY);
+        emailLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        infoPanelGbc.gridy = 2;
+        infoPanel.add(emailLabel, infoPanelGbc);
+        
+        // Data de criação
+        JLabel dateLabel = new JLabel("Membro desde: 01/01/2024");
+        dateLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        dateLabel.setForeground(GRAY);
+        dateLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        infoPanelGbc.gridy = 3;
+        infoPanel.add(dateLabel, infoPanelGbc);
+        
+        // Botões de ação
+        JPanel actionPanel = new JPanel(new GridLayout(2, 1, 0, 15));
+        actionPanel.setBackground(WHITE);
+        
+        JButton editButton = createStyledButton("Editar Perfil", ACCENT_BLUE);
+        editButton.addActionListener(e -> {
+            JOptionPane.showMessageDialog(this, 
+                "Funcionalidade de edição será implementada na próxima versão.",
+                "Editar Perfil", 
+                JOptionPane.INFORMATION_MESSAGE);
+        });
+        
+        JButton deleteButton = createStyledButton("Excluir Conta", Color.RED);
+        deleteButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this,
+                "Tem certeza que deseja excluir sua conta?\nEsta ação é irreversível!",
+                "Confirmar Exclusão",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+            
+            if (confirm == JOptionPane.YES_OPTION) {
+                JOptionPane.showMessageDialog(this,
+                    "Conta excluída com sucesso!\nVoltando para a tela de login.",
+                    "Conta Excluída",
+                    JOptionPane.INFORMATION_MESSAGE);
+                showLoginScreen();
+            }
+        });
+        
+        actionPanel.add(editButton);
+        actionPanel.add(deleteButton);
+        
+        infoPanelGbc.gridy = 4;
+        infoPanelGbc.insets = new Insets(30, 0, 0, 0);
+        infoPanel.add(actionPanel, infoPanelGbc);
+        
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        centerPanel.add(infoPanel, gbc);
+        
+        profilePanel.add(centerPanel, BorderLayout.CENTER);
+        profilePanel.add(createNavigationPanel(), BorderLayout.SOUTH);
     }
     
     public static void main(String[] args) {

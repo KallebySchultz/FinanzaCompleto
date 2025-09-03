@@ -120,6 +120,17 @@ public class MenuActivity extends AppCompatActivity {
             });
         }
 
+        // Perfil functionality
+        TextView btnPerfil = findViewById(R.id.btnPerfil);
+        if (btnPerfil != null) {
+            btnPerfil.setOnClickListener(v -> {
+                Intent intent = new Intent(MenuActivity.this, ProfileActivity.class);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+                finish();
+            });
+        }
+
         if (btnVoltarPainel != null) {
             btnVoltarPainel.setOnClickListener(v -> {
                 categoriasPanel.setVisibility(View.GONE);
@@ -170,10 +181,20 @@ public class MenuActivity extends AppCompatActivity {
             });
         }
 
-        // Sync functionality
+        // Sync functionality - só mostrar se offline
         TextView btnSyncServer = findViewById(R.id.btnSyncServer);
         if (btnSyncServer != null) {
-            btnSyncServer.setOnClickListener(v -> realizarSincronizacao());
+            // Verificar conectividade
+            boolean isOnline = syncService.isOnline();
+            if (isOnline) {
+                // Se online, esconder botão de sync pois é automático
+                btnSyncServer.setVisibility(View.GONE);
+            } else {
+                // Se offline, mostrar botão para sync manual
+                btnSyncServer.setVisibility(View.VISIBLE);
+                btnSyncServer.setText("Sincronizar (Offline)");
+                btnSyncServer.setOnClickListener(v -> realizarSincronizacao());
+            }
         }
 
         // Logout functionality

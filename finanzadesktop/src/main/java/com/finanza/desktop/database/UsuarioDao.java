@@ -131,14 +131,15 @@ public class UsuarioDao {
     }
 
     public boolean atualizar(Usuario usuario) {
-        String sql = "UPDATE usuarios SET nome = ?, email = ? WHERE id = ?";
+        String sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ? WHERE id = ?";
         
         try (Connection conn = dbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getEmail());
-            stmt.setInt(3, usuario.getId());
+            stmt.setString(3, usuario.getSenha());
+            stmt.setInt(4, usuario.getId());
             
             return stmt.executeUpdate() > 0;
             

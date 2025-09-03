@@ -1,11 +1,51 @@
 {
-  "dataExportacao": 1756917373290,
+  "dataExportacao": 1756917579039,
   "resumoFinanceiro": {
-    "receitas": 3500.0,
-    "saldo": 2750.0,
-    "despesas": 750.0
+    "receitas": 7000.0,
+    "saldo": 5500.0,
+    "despesas": 1500.0
   },
   "lancamentos": [
+    {
+      "id": 8,
+      "valor": 100.0,
+      "data": 1756917579004,
+      "descricao": "Teste Controller",
+      "contaId": 3,
+      "categoriaId": 5,
+      "usuarioId": 1,
+      "tipo": "despesa"
+    },
+    {
+      "id": 5,
+      "valor": 3500.0,
+      "data": 1756917578918,
+      "descricao": "Salário Mensal",
+      "contaId": 4,
+      "categoriaId": 2,
+      "usuarioId": 1,
+      "tipo": "receita"
+    },
+    {
+      "id": 6,
+      "valor": 450.0,
+      "data": 1756917578918,
+      "descricao": "Compras do Mês",
+      "contaId": 4,
+      "categoriaId": 5,
+      "usuarioId": 1,
+      "tipo": "despesa"
+    },
+    {
+      "id": 7,
+      "valor": 200.0,
+      "data": 1756917578918,
+      "descricao": "Combustível",
+      "contaId": 4,
+      "categoriaId": 5,
+      "usuarioId": 1,
+      "tipo": "despesa"
+    },
     {
       "id": 4,
       "valor": 100.0,
@@ -129,13 +169,31 @@
       "usuarioId": 1
     },
     {
+      "id": 6,
+      "nome": "Cartão de Crédito",
+      "saldoInicial": 0.0,
+      "usuarioId": 1
+    },
+    {
       "id": 1,
       "nome": "Conta Corrente",
       "saldoInicial": 1500.0,
       "usuarioId": 1
     },
     {
+      "id": 4,
+      "nome": "Conta Corrente",
+      "saldoInicial": 1500.0,
+      "usuarioId": 1
+    },
+    {
       "id": 2,
+      "nome": "Poupança",
+      "saldoInicial": 5000.0,
+      "usuarioId": 1
+    },
+    {
+      "id": 5,
       "nome": "Poupança",
       "saldoInicial": 5000.0,
       "usuarioId": 1

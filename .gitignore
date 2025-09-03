@@ -13,3 +13,14 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Desktop client build artifacts
+desktop-client/target/
+desktop-client/*.jar
+
+# Configuration files (keep examples but ignore user configs)
+finanza-config.properties
+
+# Server build artifacts
+server-java/target/
+server-java/*.jar

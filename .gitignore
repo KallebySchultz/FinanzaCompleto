@@ -21,6 +21,10 @@ desktop-client/*.jar
 # Configuration files (keep examples but ignore user configs)
 finanza-config.properties
 
+# Database files
+*.db
+finanza.db
+
 # Server build artifacts
 server-java/target/
 server-java/*.jar

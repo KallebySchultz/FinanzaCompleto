@@ -110,4 +110,9 @@ public class SettingsManager {
     public String getServerAddress() {
         return getServerHost() + ":" + getServerPort();
     }
+    
+    public void resetToDefaults() {
+        setDefaultSettings();
+        saveSettings();
+    }
 }

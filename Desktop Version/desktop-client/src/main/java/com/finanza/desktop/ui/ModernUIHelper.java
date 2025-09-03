@@ -48,6 +48,7 @@ public class ModernUIHelper {
     public static final String ICON_CHART = "📈";
     public static final String ICON_REPORT = "📄";
     public static final String ICON_FILTER = "🔍";
+    public static final String ICON_USER_ADD = "👤";
     
     /**
      * Cria um botão moderno com hover effect

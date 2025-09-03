@@ -28,6 +28,16 @@ public class Lancamento {
         this.tipo = tipo;
     }
 
+    public Lancamento(String descricao, double valor, String tipo, int contaId, Integer categoriaId, int usuarioId) {
+        this();
+        this.descricao = descricao;
+        this.valor = valor;
+        this.tipo = tipo;
+        this.contaId = contaId;
+        this.categoriaId = categoriaId != null ? categoriaId : 0;
+        this.usuarioId = usuarioId;
+    }
+
     // Getters and setters
     public int getId() {
         return id;

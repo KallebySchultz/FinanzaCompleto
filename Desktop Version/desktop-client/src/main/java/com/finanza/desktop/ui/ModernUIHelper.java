@@ -38,6 +38,16 @@ public class ModernUIHelper {
     public static final String ICON_UP = "⬆️";
     public static final String ICON_DOWN = "⬇️";
     public static final String ICON_ADD = "➕";
+    public static final String ICON_EDIT = "✏️";
+    public static final String ICON_DELETE = "🗑️";
+    public static final String ICON_SAVE = "💾";
+    public static final String ICON_CANCEL = "❌";
+    public static final String ICON_INCOME = "💵";
+    public static final String ICON_EXPENSE = "💸";
+    public static final String ICON_BALANCE = "⚖️";
+    public static final String ICON_CHART = "📈";
+    public static final String ICON_REPORT = "📄";
+    public static final String ICON_FILTER = "🔍";
     
     /**
      * Cria um botão moderno com hover effect

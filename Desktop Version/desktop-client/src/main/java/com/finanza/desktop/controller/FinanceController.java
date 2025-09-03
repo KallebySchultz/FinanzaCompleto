@@ -230,4 +230,113 @@ public class FinanceController {
 
         return lancamentoDAO.listarPorPeriodo(usuario.getId(), inicioMes, fimMes);
     }
+
+    /**
+     * Obtém todas as contas do usuário logado
+     */
+    public List<Conta> obterContas() {
+        Usuario usuario = authController.getUsuarioLogado();
+        if (usuario == null) {
+            return null;
+        }
+        return contaDAO.listarPorUsuario(usuario.getId());
+    }
+
+    /**
+     * Obtém todos os lançamentos do usuário
+     */
+    public List<Lancamento> obterTodosLancamentos() {
+        Usuario usuario = authController.getUsuarioLogado();
+        if (usuario == null) {
+            return null;
+        }
+        return lancamentoDAO.listarPorUsuario(usuario.getId());
+    }
+
+    /**
+     * Atualiza uma conta existente
+     */
+    public boolean atualizarConta(int contaId, String nome, double saldo) {
+        Usuario usuario = authController.getUsuarioLogado();
+        if (usuario == null) {
+            return false;
+        }
+
+        if (nome == null || nome.trim().isEmpty()) {
+            return false;
+        }
+
+        return contaDAO.atualizar(contaId, nome.trim(), saldo);
+    }
+
+    /**
+     * Exclui uma conta
+     */
+    public boolean excluirConta(int contaId) {
+        Usuario usuario = authController.getUsuarioLogado();
+        if (usuario == null) {
+            return false;
+        }
+        return contaDAO.excluir(contaId);
+    }
+
+    /**
+     * Cria um novo lançamento
+     */
+    public boolean criarLancamento(String descricao, double valor, String tipo, int contaId, Integer categoriaId) {
+        Usuario usuario = authController.getUsuarioLogado();
+        if (usuario == null) {
+            return false;
+        }
+
+        if (descricao == null || descricao.trim().isEmpty()) {
+            return false;
+        }
+
+        if (valor <= 0) {
+            return false;
+        }
+
+        if (!tipo.equals("receita") && !tipo.equals("despesa")) {
+            return false;
+        }
+
+        Lancamento lancamento = new Lancamento(descricao.trim(), valor, tipo, contaId, categoriaId, usuario.getId());
+        return lancamentoDAO.criar(lancamento);
+    }
+
+    /**
+     * Atualiza um lançamento existente
+     */
+    public boolean atualizarLancamento(int lancamentoId, String descricao, double valor, String tipo, int contaId, Integer categoriaId) {
+        Usuario usuario = authController.getUsuarioLogado();
+        if (usuario == null) {
+            return false;
+        }
+
+        if (descricao == null || descricao.trim().isEmpty()) {
+            return false;
+        }
+
+        if (valor <= 0) {
+            return false;
+        }
+
+        if (!tipo.equals("receita") && !tipo.equals("despesa")) {
+            return false;
+        }
+
+        return lancamentoDAO.atualizar(lancamentoId, descricao.trim(), valor, tipo, contaId, categoriaId);
+    }
+
+    /**
+     * Exclui um lançamento
+     */
+    public boolean excluirLancamento(int lancamentoId) {
+        Usuario usuario = authController.getUsuarioLogado();
+        if (usuario == null) {
+            return false;
+        }
+        return lancamentoDAO.excluir(lancamentoId);
+    }
 }

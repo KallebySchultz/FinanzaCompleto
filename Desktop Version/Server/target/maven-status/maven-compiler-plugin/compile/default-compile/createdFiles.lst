@@ -1,3 +1,5 @@
+com/finanza/server/data/DataStoreEnhanced.class
 com/finanza/server/FinanzaServer$ClientHandler.class
+com/finanza/server/database/DatabaseManager.class
 com/finanza/server/data/DataStore.class
 com/finanza/server/FinanzaServer.class

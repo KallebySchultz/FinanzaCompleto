@@ -1,6 +1,9 @@
 package com.finanza.server;
 
 import com.finanza.server.data.DataStore;
+import com.finanza.server.data.DataStoreEnhanced;
+import com.finanza.server.database.DatabaseManager;
+
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ExecutorService;
@@ -10,6 +13,7 @@ import java.util.Map;
 /**
  * Servidor Java para receber dados do aplicativo Finanza
  * Implementa threading para múltiplas conexões simultâneas
+ * Utiliza SQLite para persistência de dados
  */
 public class FinanzaServer {
     private static final int PORT = 8080;
@@ -17,8 +21,45 @@ public class FinanzaServer {
     private ExecutorService executor;
     private boolean running = false;
     
+    // Componentes de dados
+    private DataStore dataStore;
+    private DataStoreEnhanced dataStoreEnhanced;
+    private DatabaseManager databaseManager;
+    
     public FinanzaServer() {
         executor = Executors.newFixedThreadPool(10);
+        
+        // Inicializar componentes de dados
+        System.out.println("Inicializando componentes de dados...");
+        databaseManager = DatabaseManager.getInstance();
+        dataStore = DataStore.getInstance();
+        dataStoreEnhanced = DataStoreEnhanced.getInstance();
+        
+        // Testar banco de dados
+        testDatabase();
+    }
+    
+    
+    /**
+     * Testa a integridade do banco de dados
+     */
+    private void testDatabase() {
+        System.out.println("Testando componentes do banco de dados...");
+        
+        if (databaseManager.testConnection()) {
+            System.out.println("✓ Conexão com SQLite estabelecida");
+            databaseManager.testDatabase();
+        } else {
+            System.err.println("✗ Falha na conexão com SQLite");
+        }
+        
+        if (dataStoreEnhanced.testDatabaseConnection()) {
+            System.out.println("✓ DataStoreEnhanced operacional");
+        } else {
+            System.err.println("✗ Problemas no DataStoreEnhanced");
+        }
+        
+        System.out.println("Teste de componentes concluído.");
     }
     
     public void iniciar() throws IOException {
@@ -43,12 +84,21 @@ public class FinanzaServer {
     
     public void parar() throws IOException {
         running = false;
+        
+        // Finalizar componentes de dados
+        System.out.println("Finalizando componentes de dados...");
+        if (dataStoreEnhanced != null) {
+            dataStoreEnhanced.shutdown();
+        }
+        
         if (serverSocket != null) {
             serverSocket.close();
         }
         if (executor != null) {
             executor.shutdown();
         }
+        
+        System.out.println("Servidor finalizado.");
     }
     
     private static class ClientHandler implements Runnable {

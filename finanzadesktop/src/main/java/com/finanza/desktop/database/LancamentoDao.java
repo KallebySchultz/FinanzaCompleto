@@ -206,6 +206,37 @@ public class LancamentoDao {
         }
     }
 
+    public List<Lancamento> listarPorUsuarioPeriodo(int usuarioId, long dataInicio, long dataFim) {
+        return listarPorPeriodo(usuarioId, dataInicio, dataFim);
+    }
+
+    public List<Lancamento> listarUltimosPorUsuario(int usuarioId, int limite) {
+        String sql = "SELECT * FROM lancamentos WHERE usuario_id = ? ORDER BY data DESC LIMIT ?";
+        List<Lancamento> lancamentos = new ArrayList<>();
+        
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, usuarioId);
+            stmt.setInt(2, limite);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    lancamentos.add(mapResultSetToLancamento(rs));
+                }
+            }
+            
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar últimos lançamentos", e);
+        }
+        
+        return lancamentos;
+    }
+
+    public Double somaPorTipo(String tipo, int usuarioId) {
+        return somarPorTipo(tipo, usuarioId);
+    }
+
     public boolean deletar(int id) {
         String sql = "DELETE FROM lancamentos WHERE id = ?";
         

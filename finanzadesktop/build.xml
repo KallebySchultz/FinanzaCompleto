@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="finanza-desktop" default="compile" basedir=".">
+    <description>
+        Finanza Desktop - Sistema de Gestão Financeira Pessoal
+    </description>
+
+    <!-- Propriedades do projeto -->
+    <property name="src.dir" value="src/main/java"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="jar.name" value="finanza-desktop.jar"/>
+    <property name="main.class" value="com.finanza.desktop.FinanzaDesktopApp"/>
+
+    <!-- Classpath com as dependências -->
+    <path id="classpath">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Target para criar diretórios -->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+        <mkdir dir="${lib.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <!-- Target para baixar dependências -->
+    <target name="dependencies" depends="init">
+        <echo message="Baixando dependências..."/>
+        
+        <!-- SQLite JDBC -->
+        <get src="https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.42.0.0/sqlite-jdbc-3.42.0.0.jar"
+             dest="${lib.dir}/sqlite-jdbc-3.42.0.0.jar"
+             usetimestamp="true"/>
+        
+        <!-- Gson -->
+        <get src="https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar"
+             dest="${lib.dir}/gson-2.10.1.jar"
+             usetimestamp="true"/>
+        
+        <!-- Logback Classic -->
+        <get src="https://repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.4.7/logback-classic-1.4.7.jar"
+             dest="${lib.dir}/logback-classic-1.4.7.jar"
+             usetimestamp="true"/>
+        
+        <!-- Logback Core -->
+        <get src="https://repo1.maven.org/maven2/ch/qos/logback/logback-core/1.4.7/logback-core-1.4.7.jar"
+             dest="${lib.dir}/logback-core-1.4.7.jar"
+             usetimestamp="true"/>
+        
+        <!-- SLF4J API -->
+        <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.7/slf4j-api-2.0.7.jar"
+             dest="${lib.dir}/slf4j-api-2.0.7.jar"
+             usetimestamp="true"/>
+        
+        <!-- Apache Commons Lang3 -->
+        <get src="https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar"
+             dest="${lib.dir}/commons-lang3-3.12.0.jar"
+             usetimestamp="true"/>
+    </target>
+
+    <!-- Target para compilar o código -->
+    <target name="compile" depends="dependencies">
+        <echo message="Compilando código fonte..."/>
+        <javac srcdir="${src.dir}"
+               destdir="${classes.dir}"
+               classpathref="classpath"
+               includeantruntime="false"
+               source="11"
+               target="11"
+               encoding="UTF-8">
+            <compilerarg value="-Xlint:unchecked"/>
+        </javac>
+    </target>
+
+    <!-- Target para criar o JAR -->
+    <target name="jar" depends="compile">
+        <echo message="Criando JAR executável..."/>
+        
+        <!-- Criar manifest com classpath -->
+        <pathconvert property="jar.classpath" pathsep=" ">
+            <path refid="classpath"/>
+            <mapper>
+                <chainedmapper>
+                    <flattenmapper/>
+                    <globmapper from="*" to="lib/*"/>
+                </chainedmapper>
+            </mapper>
+        </pathconvert>
+        
+        <jar jarfile="${dist.dir}/${jar.name}" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+                <attribute name="Class-Path" value="${jar.classpath}"/>
+                <attribute name="Implementation-Title" value="Finanza Desktop"/>
+                <attribute name="Implementation-Version" value="1.0.0"/>
+                <attribute name="Implementation-Vendor" value="Finanza Team"/>
+            </manifest>
+        </jar>
+        
+        <!-- Copiar bibliotecas para o diretório de distribuição -->
+        <copy todir="${dist.dir}/lib">
+            <fileset dir="${lib.dir}"/>
+        </copy>
+        
+        <echo message="JAR criado em: ${dist.dir}/${jar.name}"/>
+    </target>
+
+    <!-- Target para executar a aplicação -->
+    <target name="run" depends="jar">
+        <echo message="Executando Finanza Desktop..."/>
+        <java jar="${dist.dir}/${jar.name}" fork="true"/>
+    </target>
+
+    <!-- Target para limpar arquivos gerados -->
+    <target name="clean">
+        <echo message="Limpando arquivos gerados..."/>
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <!-- Target para limpeza completa (incluindo dependências) -->
+    <target name="clean-all" depends="clean">
+        <echo message="Removendo dependências baixadas..."/>
+        <delete dir="${lib.dir}"/>
+    </target>
+
+    <!-- Target para rebuild completo -->
+    <target name="rebuild" depends="clean,jar">
+        <echo message="Rebuild completo finalizado!"/>
+    </target>
+
+    <!-- Target para mostrar informações -->
+    <target name="info">
+        <echo message="Finanza Desktop - Build Information"/>
+        <echo message="===================================="/>
+        <echo message="Source Directory: ${src.dir}"/>
+        <echo message="Build Directory: ${build.dir}"/>
+        <echo message="Library Directory: ${lib.dir}"/>
+        <echo message="Distribution Directory: ${dist.dir}"/>
+        <echo message="JAR Name: ${jar.name}"/>
+        <echo message="Main Class: ${main.class}"/>
+        <echo message=""/>
+        <echo message="Available targets:"/>
+        <echo message="  compile    - Compila o código fonte"/>
+        <echo message="  jar        - Cria o JAR executável"/>
+        <echo message="  run        - Executa a aplicação"/>
+        <echo message="  clean      - Remove arquivos gerados"/>
+        <echo message="  clean-all  - Remove tudo incluindo dependências"/>
+        <echo message="  rebuild    - Rebuild completo"/>
+    </target>
+</project>

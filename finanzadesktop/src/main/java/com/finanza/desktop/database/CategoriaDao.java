@@ -140,6 +140,28 @@ public class CategoriaDao {
         }
     }
 
+    public List<Categoria> buscarPorNome(String nome) {
+        String sql = "SELECT * FROM categorias WHERE nome LIKE ? ORDER BY nome";
+        List<Categoria> categorias = new ArrayList<>();
+        
+        try (Connection conn = dbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, "%" + nome + "%");
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    categorias.add(mapResultSetToCategoria(rs));
+                }
+            }
+            
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar categorias por nome", e);
+        }
+        
+        return categorias;
+    }
+
     private Categoria mapResultSetToCategoria(ResultSet rs) throws SQLException {
         Categoria categoria = new Categoria();
         categoria.setId(rs.getInt("id"));

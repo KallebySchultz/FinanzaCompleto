@@ -20,6 +20,7 @@ desktop-client/*.jar
 */build/
 */dist/
 */lib/
+*.class
 
 # Configuration files (keep examples but ignore user configs)
 finanza-config.properties

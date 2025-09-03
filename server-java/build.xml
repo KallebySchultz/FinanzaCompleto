@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="finanza-server" default="compile" basedir=".">
+    <description>
+        Finanza Server - Servidor Java para sincronização de dados
+    </description>
+
+    <!-- Propriedades do projeto -->
+    <property name="src.dir" value="src/main/java"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="jar.name" value="finanza-server.jar"/>
+    <property name="main.class" value="com.finanza.server.FinanzaServer"/>
+
+    <!-- Classpath (neste caso só precisamos das classes Java padrão) -->
+    <path id="classpath">
+        <fileset dir="${lib.dir}" erroronmissingdir="false">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Target para criar diretórios -->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+        <mkdir dir="${lib.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <!-- Target para compilar o código -->
+    <target name="compile" depends="init">
+        <echo message="Compilando código fonte do servidor..."/>
+        <javac srcdir="${src.dir}"
+               destdir="${classes.dir}"
+               classpathref="classpath"
+               includeantruntime="false"
+               source="8"
+               target="8"
+               encoding="UTF-8">
+            <compilerarg value="-Xlint:unchecked"/>
+        </javac>
+    </target>
+
+    <!-- Target para criar o JAR -->
+    <target name="jar" depends="compile">
+        <echo message="Criando JAR executável do servidor..."/>
+        
+        <jar jarfile="${dist.dir}/${jar.name}" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+                <attribute name="Implementation-Title" value="Finanza Server"/>
+                <attribute name="Implementation-Version" value="1.0.0"/>
+                <attribute name="Implementation-Vendor" value="Finanza Team"/>
+            </manifest>
+        </jar>
+        
+        <echo message="JAR do servidor criado em: ${dist.dir}/${jar.name}"/>
+    </target>
+
+    <!-- Target para executar o servidor -->
+    <target name="run" depends="jar">
+        <echo message="Iniciando Finanza Server..."/>
+        <java jar="${dist.dir}/${jar.name}" fork="true"/>
+    </target>
+
+    <!-- Target para executar o servidor em background -->
+    <target name="start" depends="jar">
+        <echo message="Iniciando Finanza Server em background..."/>
+        <java jar="${dist.dir}/${jar.name}" fork="true" spawn="true"/>
+        <echo message="Servidor iniciado em background na porta 8080"/>
+    </target>
+
+    <!-- Target para parar o servidor -->
+    <target name="stop">
+        <echo message="Parando Finanza Server..."/>
+        <exec executable="pkill" failonerror="false">
+            <arg value="-f"/>
+            <arg value="finanza-server.jar"/>
+        </exec>
+    </target>
+
+    <!-- Target para limpar arquivos gerados -->
+    <target name="clean">
+        <echo message="Limpando arquivos gerados..."/>
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <!-- Target para rebuild completo -->
+    <target name="rebuild" depends="clean,jar">
+        <echo message="Rebuild completo do servidor finalizado!"/>
+    </target>
+
+    <!-- Target para mostrar informações -->
+    <target name="info">
+        <echo message="Finanza Server - Build Information"/>
+        <echo message="==================================="/>
+        <echo message="Source Directory: ${src.dir}"/>
+        <echo message="Build Directory: ${build.dir}"/>
+        <echo message="Distribution Directory: ${dist.dir}"/>
+        <echo message="JAR Name: ${jar.name}"/>
+        <echo message="Main Class: ${main.class}"/>
+        <echo message=""/>
+        <echo message="Available targets:"/>
+        <echo message="  compile  - Compila o código fonte"/>
+        <echo message="  jar      - Cria o JAR executável"/>
+        <echo message="  run      - Executa o servidor"/>
+        <echo message="  start    - Inicia servidor em background"/>
+        <echo message="  stop     - Para o servidor"/>
+        <echo message="  clean    - Remove arquivos gerados"/>
+        <echo message="  rebuild  - Rebuild completo"/>
+    </target>
+</project>

@@ -1,0 +1,10 @@
+com/finanza/desktop/network/NetworkManager$ConnectionCallback.class
+com/finanza/desktop/config/SettingsManager.class
+com/finanza/desktop/ui/IconLoader.class
+com/finanza/desktop/network/NetworkManager.class
+com/finanza/desktop/ui/ModernUIHelper$RoundedBorder.class
+com/finanza/desktop/ui/ModernUIHelper$ShadowBorder.class
+com/finanza/desktop/ui/ModernUIHelper.class
+com/finanza/desktop/ui/ModernUIHelper$1.class
+com/finanza/desktop/ui/ModernUIHelper$2.class
+com/finanza/desktop/FinanzaDesktop.class

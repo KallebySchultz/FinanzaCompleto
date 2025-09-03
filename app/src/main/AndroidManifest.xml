@@ -44,6 +44,9 @@
         <activity android:name=".ui.CategoriaActivity" />
         <activity android:name=".ui.ReportsActivity" />
         <activity android:name=".ui.ProfileActivity" />
+        <activity 
+            android:name=".ui.SettingsActivity"
+            android:windowSoftInputMode="adjustPan" />
 
     </application>
 </manifest>

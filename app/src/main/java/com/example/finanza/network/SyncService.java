@@ -27,7 +27,7 @@ public class SyncService {
 
     public SyncService(Context context) {
         this.context = context;
-        this.serverClient = new ServerClient();
+        this.serverClient = new ServerClient(context);
         this.localDb = Room.databaseBuilder(context,
                         AppDatabase.class, "finanza-db")
                 .fallbackToDestructiveMigration()

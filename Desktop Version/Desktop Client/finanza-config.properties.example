@@ -1,0 +1,28 @@
+# Exemplo de Configuração do Finanza Desktop
+# Este arquivo é criado automaticamente pelo cliente desktop
+# Você pode editá-lo manualmente se necessário
+
+# Configurações do Servidor
+server.host=localhost
+server.port=8080
+connection.timeout=5000
+
+# Configurações de Comportamento
+auto.connect=true
+
+# Configurações de Interface
+theme=light
+
+# Exemplos de configurações para diferentes cenários:
+
+# Para conectar com servidor em outra máquina na rede local:
+# server.host=192.168.1.100
+
+# Para usar porta diferente:
+# server.port=9090
+
+# Para desabilitar conexão automática ao iniciar:
+# auto.connect=false
+
+# Para aumentar timeout de conexão (em milissegundos):
+# connection.timeout=10000

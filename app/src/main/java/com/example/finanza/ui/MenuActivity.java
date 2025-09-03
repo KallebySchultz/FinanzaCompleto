@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat;
 import androidx.room.Room;
 import com.example.finanza.R;
 import com.example.finanza.ui.AccountsActivity;
+import com.example.finanza.ui.SettingsActivity;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Categoria;
 import com.example.finanza.model.Lancamento;
@@ -195,6 +196,15 @@ public class MenuActivity extends AppCompatActivity {
                 btnSyncServer.setText("Sincronizar (Offline)");
                 btnSyncServer.setOnClickListener(v -> realizarSincronizacao());
             }
+        }
+
+        // Settings functionality
+        TextView btnSettings = findViewById(R.id.btnSettings);
+        if (btnSettings != null) {
+            btnSettings.setOnClickListener(v -> {
+                Intent intent = new Intent(MenuActivity.this, SettingsActivity.class);
+                startActivity(intent);
+            });
         }
 
         // Logout functionality

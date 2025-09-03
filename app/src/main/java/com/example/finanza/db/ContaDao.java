@@ -19,6 +19,9 @@ public interface ContaDao {
     @Delete
     void deletar(Conta conta);
 
+    @Query("DELETE FROM Conta WHERE usuarioId = :usuarioId")
+    void excluirPorUsuario(int usuarioId);
+
     @Query("SELECT * FROM Conta WHERE usuarioId = :usuarioId")
     List<Conta> listarPorUsuario(int usuarioId);
 

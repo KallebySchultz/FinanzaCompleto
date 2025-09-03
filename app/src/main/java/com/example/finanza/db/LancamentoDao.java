@@ -19,6 +19,9 @@ public interface LancamentoDao {
     @Delete
     void deletar(Lancamento lancamento);
 
+    @Query("DELETE FROM Lancamento WHERE usuarioId = :usuarioId")
+    void excluirPorUsuario(int usuarioId);
+
     @Query("SELECT * FROM Lancamento WHERE usuarioId = :usuarioId ORDER BY data DESC")
     List<Lancamento> listarPorUsuario(int usuarioId);
 

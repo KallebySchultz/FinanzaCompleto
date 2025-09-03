@@ -268,17 +268,17 @@ public class FinanzaDesktop extends JFrame {
     }
     
     private JPanel createBalanceCard(String title, String value, Color valueColor) {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(WHITE);
-        card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        JPanel card = ModernUIHelper.createCardPanel();
+        card.setLayout(new BorderLayout());
+        card.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        titleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         titleLabel.setForeground(PRIMARY_DARK_BLUE);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
         JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         valueLabel.setForeground(valueColor);
         valueLabel.setHorizontalAlignment(SwingConstants.CENTER);
         
@@ -289,57 +289,69 @@ public class FinanzaDesktop extends JFrame {
     }
     
     private JPanel createTransactionItem(String description, String value, String date, boolean isIncome) {
-        JPanel item = new JPanel(new BorderLayout());
-        item.setBackground(WHITE);
-        item.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 0, 1, 0, GRAY),
-            BorderFactory.createEmptyBorder(15, 0, 15, 0)
-        ));
-        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        JPanel item = ModernUIHelper.createCardPanel();
+        item.setLayout(new BorderLayout());
+        item.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+        
+        // Ícone da transação
+        String icon = isIncome ? ModernUIHelper.ICON_UP : ModernUIHelper.ICON_DOWN;
+        JLabel iconLabel = new JLabel(icon);
+        iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        iconLabel.setPreferredSize(new Dimension(30, 30));
         
         JLabel descLabel = new JLabel(description);
-        descLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        descLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         descLabel.setForeground(PRIMARY_DARK_BLUE);
         
         JLabel dateLabel = new JLabel(date);
-        dateLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        dateLabel.setForeground(Color.GRAY);
+        dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        dateLabel.setForeground(ModernUIHelper.DARK_GRAY);
         
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setBackground(WHITE);
         leftPanel.add(descLabel, BorderLayout.NORTH);
         leftPanel.add(dateLabel, BorderLayout.SOUTH);
         
+        JPanel leftContainer = new JPanel(new BorderLayout());
+        leftContainer.setBackground(WHITE);
+        leftContainer.add(iconLabel, BorderLayout.WEST);
+        leftContainer.add(leftPanel, BorderLayout.CENTER);
+        
         JLabel valueLabel = new JLabel(value);
-        valueLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         valueLabel.setForeground(isIncome ? POSITIVE_GREEN : NEGATIVE_RED);
         
-        item.add(leftPanel, BorderLayout.WEST);
+        item.add(leftContainer, BorderLayout.WEST);
         item.add(valueLabel, BorderLayout.EAST);
         
         return item;
     }
     
     private JPanel createAccountItem(String name, String balance, Color iconColor) {
-        JPanel item = new JPanel(new BorderLayout());
-        item.setBackground(WHITE);
-        item.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(GRAY),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
+        JPanel item = ModernUIHelper.createCardPanel();
+        item.setLayout(new BorderLayout());
+        item.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         item.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
         
-        // Ícone colorido
+        // Ícone colorido moderno
         JPanel iconPanel = new JPanel();
-        iconPanel.setPreferredSize(new Dimension(40, 40));
+        iconPanel.setPreferredSize(new Dimension(50, 50));
         iconPanel.setBackground(iconColor);
+        iconPanel.setBorder(new ModernUIHelper.RoundedBorder(25, iconColor));
+        
+        JLabel iconSymbol = new JLabel(ModernUIHelper.ICON_MONEY, SwingConstants.CENTER);
+        iconSymbol.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        iconSymbol.setForeground(WHITE);
+        iconPanel.setLayout(new BorderLayout());
+        iconPanel.add(iconSymbol, BorderLayout.CENTER);
         
         JLabel nameLabel = new JLabel(name);
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         nameLabel.setForeground(PRIMARY_DARK_BLUE);
         
         JLabel balanceLabel = new JLabel(balance);
-        balanceLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        balanceLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
         balanceLabel.setForeground(PRIMARY_DARK_BLUE);
         
         item.add(iconPanel, BorderLayout.WEST);
@@ -520,7 +532,7 @@ public class FinanzaDesktop extends JFrame {
         JPanel actionPanel = new JPanel(new GridLayout(2, 1, 0, 15));
         actionPanel.setBackground(WHITE);
         
-        JButton editButton = createStyledButton("Editar Perfil", ACCENT_BLUE);
+        JButton editButton = ModernUIHelper.createModernButton("Editar Perfil", ModernUIHelper.ICON_PROFILE, ACCENT_BLUE);
         editButton.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, 
                 "Funcionalidade de edição será implementada na próxima versão.",
@@ -528,7 +540,7 @@ public class FinanzaDesktop extends JFrame {
                 JOptionPane.INFORMATION_MESSAGE);
         });
         
-        JButton deleteButton = createStyledButton("Excluir Conta", Color.RED);
+        JButton deleteButton = ModernUIHelper.createModernButton("Excluir Conta", ModernUIHelper.ICON_ERROR, NEGATIVE_RED);
         deleteButton.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(this,
                 "Tem certeza que deseja excluir sua conta?\nEsta ação é irreversível!",

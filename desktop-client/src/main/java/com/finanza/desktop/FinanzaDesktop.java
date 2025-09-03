@@ -1,5 +1,9 @@
 package com.finanza.desktop;
 
+import com.finanza.desktop.config.SettingsManager;
+import com.finanza.desktop.network.NetworkManager;
+import com.finanza.desktop.ui.ModernUIHelper;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -11,16 +15,23 @@ import java.awt.event.ActionListener;
  */
 public class FinanzaDesktop extends JFrame {
     
-    // Cores do tema (baseadas no app móvel)
-    private static final Color PRIMARY_DARK_BLUE = new Color(27, 42, 87);  // #1B2A57
-    private static final Color ACCENT_BLUE = new Color(74, 124, 245);      // #4A7CF5
-    private static final Color POSITIVE_GREEN = new Color(33, 200, 122);   // #21C87A
-    private static final Color NEGATIVE_RED = new Color(229, 57, 53);      // #E53935
-    private static final Color WHITE = Color.WHITE;
-    private static final Color GRAY = new Color(245, 245, 245);            // #F5F5F5
+    // Cores do tema (baseadas no app móvel) - usando ModernUIHelper
+    private static final Color PRIMARY_DARK_BLUE = ModernUIHelper.PRIMARY_DARK_BLUE;
+    private static final Color ACCENT_BLUE = ModernUIHelper.ACCENT_BLUE;
+    private static final Color POSITIVE_GREEN = ModernUIHelper.POSITIVE_GREEN;
+    private static final Color NEGATIVE_RED = ModernUIHelper.NEGATIVE_RED;
+    private static final Color WHITE = ModernUIHelper.WHITE;
+    private static final Color GRAY = ModernUIHelper.GRAY;
     
     private CardLayout cardLayout;
     private JPanel mainPanel;
+    
+    // Managers
+    private SettingsManager settingsManager;
+    private NetworkManager networkManager;
+    
+    // Status da conexão
+    private JLabel connectionStatusLabel;
     
     // Telas
     private JPanel loginPanel;
@@ -28,10 +39,20 @@ public class FinanzaDesktop extends JFrame {
     private JPanel accountsPanel;
     private JPanel movementsPanel;
     private JPanel profilePanel;
+    private JPanel settingsPanel;
     
     public FinanzaDesktop() {
+        // Inicializar managers
+        settingsManager = SettingsManager.getInstance();
+        networkManager = NetworkManager.getInstance();
+        
         initializeUI();
         showLoginScreen();
+        
+        // Testar conexão inicial se auto-connect estiver habilitado
+        if (settingsManager.isAutoConnect()) {
+            testConnection();
+        }
     }
     
     private void initializeUI() {
@@ -50,6 +71,7 @@ public class FinanzaDesktop extends JFrame {
         createAccountsPanel();
         createMovementsPanel();
         createProfilePanel();
+        createSettingsPanel();
         
         // Adicionar telas ao layout
         mainPanel.add(loginPanel, "LOGIN");
@@ -57,6 +79,7 @@ public class FinanzaDesktop extends JFrame {
         mainPanel.add(accountsPanel, "ACCOUNTS");
         mainPanel.add(movementsPanel, "MOVEMENTS");
         mainPanel.add(profilePanel, "PROFILE");
+        mainPanel.add(settingsPanel, "SETTINGS");
         
         add(mainPanel);
     }
@@ -101,36 +124,26 @@ public class FinanzaDesktop extends JFrame {
         
         // Campo email
         JLabel emailLabel = new JLabel("Email:");
-        emailLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        emailLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         formGbc.gridx = 0; formGbc.gridy = 0;
         formPanel.add(emailLabel, formGbc);
         
-        JTextField emailField = new JTextField(20);
-        emailField.setFont(new Font("Arial", Font.PLAIN, 14));
-        emailField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(GRAY, 2),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        JTextField emailField = ModernUIHelper.createModernTextField("Digite seu email", 20);
         formGbc.gridy = 1;
         formPanel.add(emailField, formGbc);
         
         // Campo senha
         JLabel passwordLabel = new JLabel("Senha:");
-        passwordLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        passwordLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         formGbc.gridy = 2;
         formPanel.add(passwordLabel, formGbc);
         
-        JPasswordField passwordField = new JPasswordField(20);
-        passwordField.setFont(new Font("Arial", Font.PLAIN, 14));
-        passwordField.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(GRAY, 2),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+        JPasswordField passwordField = ModernUIHelper.createModernPasswordField("Digite sua senha", 20);
         formGbc.gridy = 3;
         formPanel.add(passwordField, formGbc);
         
         // Botão login
-        JButton loginButton = createStyledButton("Entrar", ACCENT_BLUE);
+        JButton loginButton = ModernUIHelper.createModernButton("Entrar", ModernUIHelper.ICON_SUCCESS, ACCENT_BLUE);
         loginButton.addActionListener(e -> showDashboard());
         formGbc.gridy = 4;
         formGbc.insets = new Insets(20, 0, 10, 0);
@@ -341,25 +354,29 @@ public class FinanzaDesktop extends JFrame {
         navPanel.setBackground(PRIMARY_DARK_BLUE);
         navPanel.setPreferredSize(new Dimension(0, 60));
         
-        JButton homeButton = createNavButton("Dashboard");
+        JButton homeButton = ModernUIHelper.createNavButton("Dashboard", ModernUIHelper.ICON_HOME);
         homeButton.addActionListener(e -> showDashboard());
         
-        JButton accountsButton = createNavButton("Contas");
+        JButton accountsButton = ModernUIHelper.createNavButton("Contas", ModernUIHelper.ICON_ACCOUNTS);
         accountsButton.addActionListener(e -> showAccounts());
         
-        JButton movementsButton = createNavButton("Movimentações");
+        JButton movementsButton = ModernUIHelper.createNavButton("Movimentações", ModernUIHelper.ICON_MOVEMENTS);
         movementsButton.addActionListener(e -> showMovements());
         
-        JButton profileButton = createNavButton("Perfil");
+        JButton profileButton = ModernUIHelper.createNavButton("Perfil", ModernUIHelper.ICON_PROFILE);
         profileButton.addActionListener(e -> showProfile());
         
-        JButton logoutButton = createNavButton("Sair");
+        JButton settingsButton = ModernUIHelper.createNavButton("Configurações", ModernUIHelper.ICON_SETTINGS);
+        settingsButton.addActionListener(e -> showSettings());
+        
+        JButton logoutButton = ModernUIHelper.createNavButton("Sair", ModernUIHelper.ICON_LOGOUT);
         logoutButton.addActionListener(e -> showLoginScreen());
         
         navPanel.add(homeButton);
         navPanel.add(accountsButton);
         navPanel.add(movementsButton);
         navPanel.add(profileButton);
+        navPanel.add(settingsButton);
         navPanel.add(logoutButton);
         
         return navPanel;
@@ -404,6 +421,31 @@ public class FinanzaDesktop extends JFrame {
     
     private void showProfile() {
         cardLayout.show(mainPanel, "PROFILE");
+    }
+    
+    private void showSettings() {
+        cardLayout.show(mainPanel, "SETTINGS");
+    }
+    
+    private void testConnection() {
+        updateConnectionStatus("Testando conexão...", ModernUIHelper.DARK_GRAY);
+        
+        networkManager.testConnection().thenAccept(success -> {
+            SwingUtilities.invokeLater(() -> {
+                if (success) {
+                    updateConnectionStatus("Conectado", POSITIVE_GREEN);
+                } else {
+                    updateConnectionStatus("Desconectado - " + networkManager.getLastError(), NEGATIVE_RED);
+                }
+            });
+        });
+    }
+    
+    private void updateConnectionStatus(String text, Color color) {
+        if (connectionStatusLabel != null) {
+            connectionStatusLabel.setText(ModernUIHelper.ICON_CONNECT + " " + text);
+            connectionStatusLabel.setForeground(color);
+        }
     }
     
     private void createProfilePanel() {
@@ -516,6 +558,162 @@ public class FinanzaDesktop extends JFrame {
         
         profilePanel.add(centerPanel, BorderLayout.CENTER);
         profilePanel.add(createNavigationPanel(), BorderLayout.SOUTH);
+    }
+    
+    private void createSettingsPanel() {
+        settingsPanel = new JPanel(new BorderLayout());
+        settingsPanel.setBackground(PRIMARY_DARK_BLUE);
+        
+        // Painel principal centralizado
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        centerPanel.setBackground(PRIMARY_DARK_BLUE);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.anchor = GridBagConstraints.CENTER;
+        
+        // Título
+        JLabel titleLabel = new JLabel(ModernUIHelper.ICON_SETTINGS + " Configurações");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 32));
+        titleLabel.setForeground(WHITE);
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        centerPanel.add(titleLabel, gbc);
+        
+        // Container branco para configurações
+        JPanel configPanel = ModernUIHelper.createCardPanel();
+        configPanel.setLayout(new GridBagLayout());
+        configPanel.setPreferredSize(new Dimension(600, 500));
+        configPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        
+        GridBagConstraints configGbc = new GridBagConstraints();
+        configGbc.insets = new Insets(15, 10, 15, 10);
+        configGbc.fill = GridBagConstraints.HORIZONTAL;
+        configGbc.anchor = GridBagConstraints.WEST;
+        
+        // Seção de Conexão
+        JLabel connectionLabel = new JLabel("🌐 Configurações de Rede");
+        connectionLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        connectionLabel.setForeground(PRIMARY_DARK_BLUE);
+        configGbc.gridx = 0; configGbc.gridy = 0; configGbc.gridwidth = 2;
+        configPanel.add(connectionLabel, configGbc);
+        
+        // Campo IP do Servidor
+        JLabel hostLabel = new JLabel("IP do Servidor:");
+        hostLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        configGbc.gridx = 0; configGbc.gridy = 1; configGbc.gridwidth = 1;
+        configGbc.weightx = 0.3;
+        configPanel.add(hostLabel, configGbc);
+        
+        JTextField hostField = ModernUIHelper.createModernTextField("", 20);
+        hostField.setText(settingsManager.getServerHost());
+        configGbc.gridx = 1; configGbc.gridy = 1;
+        configGbc.weightx = 0.7;
+        configPanel.add(hostField, configGbc);
+        
+        // Campo Porta
+        JLabel portLabel = new JLabel("Porta:");
+        portLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        configGbc.gridx = 0; configGbc.gridy = 2;
+        configGbc.weightx = 0.3;
+        configPanel.add(portLabel, configGbc);
+        
+        JTextField portField = ModernUIHelper.createModernTextField("", 10);
+        portField.setText(String.valueOf(settingsManager.getServerPort()));
+        configGbc.gridx = 1; configGbc.gridy = 2;
+        configGbc.weightx = 0.7;
+        configPanel.add(portField, configGbc);
+        
+        // Status da conexão
+        connectionStatusLabel = ModernUIHelper.createStatusLabel(
+            "Não testado", ModernUIHelper.ICON_DISCONNECT, ModernUIHelper.DARK_GRAY);
+        configGbc.gridx = 0; configGbc.gridy = 3; configGbc.gridwidth = 2;
+        configGbc.insets = new Insets(5, 10, 15, 10);
+        configPanel.add(connectionStatusLabel, configGbc);
+        
+        // Botões de ação
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(WHITE);
+        
+        JButton testButton = ModernUIHelper.createModernButton("Testar Conexão", 
+            ModernUIHelper.ICON_CONNECT, ACCENT_BLUE);
+        testButton.addActionListener(e -> testConnection());
+        
+        JButton saveButton = ModernUIHelper.createModernButton("Salvar", 
+            ModernUIHelper.ICON_SUCCESS, POSITIVE_GREEN);
+        saveButton.addActionListener(e -> {
+            // Validar e salvar configurações
+            try {
+                String host = hostField.getText().trim();
+                int port = Integer.parseInt(portField.getText().trim());
+                
+                if (host.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "IP do servidor não pode estar vazio!", 
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                if (port < 1 || port > 65535) {
+                    JOptionPane.showMessageDialog(this, "Porta deve estar entre 1 e 65535!", 
+                        "Erro", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                // Salvar configurações
+                settingsManager.setServerHost(host);
+                settingsManager.setServerPort(port);
+                settingsManager.saveSettings();
+                
+                JOptionPane.showMessageDialog(this, "Configurações salvas com sucesso!", 
+                    "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                
+                // Testar nova conexão
+                testConnection();
+                
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Porta deve ser um número válido!", 
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        buttonPanel.add(testButton);
+        buttonPanel.add(saveButton);
+        
+        configGbc.gridx = 0; configGbc.gridy = 4; configGbc.gridwidth = 2;
+        configGbc.insets = new Insets(20, 10, 10, 10);
+        configPanel.add(buttonPanel, configGbc);
+        
+        // Seção de Informações
+        JLabel infoLabel = new JLabel("ℹ️ Informações");
+        infoLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        infoLabel.setForeground(PRIMARY_DARK_BLUE);
+        configGbc.gridx = 0; configGbc.gridy = 5; configGbc.gridwidth = 2;
+        configGbc.insets = new Insets(30, 10, 15, 10);
+        configPanel.add(infoLabel, configGbc);
+        
+        JTextArea infoText = new JTextArea(
+            "• Para conectar com o aplicativo móvel, ambos devem estar na mesma rede WiFi\n" +
+            "• Descubra o IP do computador executando 'ipconfig' (Windows) ou 'ifconfig' (Linux/Mac)\n" +
+            "• A porta padrão é 8080, mas pode ser alterada se necessário\n" +
+            "• Exemplo de IP: 192.168.1.100"
+        );
+        infoText.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        infoText.setForeground(ModernUIHelper.DARK_GRAY);
+        infoText.setBackground(WHITE);
+        infoText.setEditable(false);
+        infoText.setLineWrap(true);
+        infoText.setWrapStyleWord(true);
+        
+        configGbc.gridx = 0; configGbc.gridy = 6; configGbc.gridwidth = 2;
+        configGbc.insets = new Insets(5, 10, 10, 10);
+        configPanel.add(infoText, configGbc);
+        
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        centerPanel.add(configPanel, gbc);
+        
+        settingsPanel.add(centerPanel, BorderLayout.CENTER);
+        settingsPanel.add(createNavigationPanel(), BorderLayout.SOUTH);
     }
     
     public static void main(String[] args) {

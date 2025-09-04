@@ -44,7 +44,6 @@ public class LoginView extends javax.swing.JFrame {
         setBackground(new java.awt.Color(27, 44, 92));
         setMaximumSize(new java.awt.Dimension(900, 650));
         setMinimumSize(new java.awt.Dimension(900, 650));
-        setPreferredSize(new java.awt.Dimension(900, 650));
         setResizable(false);
 
         jPanel1.setBackground(new java.awt.Color(27, 44, 92));

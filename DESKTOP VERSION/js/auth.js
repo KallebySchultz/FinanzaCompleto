@@ -19,7 +19,21 @@ class FinanzaAuth {
 
     try {
       if (!this.currentUser) {
-        this.currentUser = await this.api.getCurrentUser();
+        try {
+          this.currentUser = await this.api.getCurrentUser();
+        } catch (error) {
+          // If backend not available and we have a mock token, return mock user
+          if (localStorage.getItem('finanza_token') === 'mock-token') {
+            this.currentUser = {
+              id: 1,
+              nome: 'Usuário Demo',
+              email: 'demo@finanza.com',
+              created_at: new Date().toISOString()
+            };
+          } else {
+            throw error;
+          }
+        }
       }
       return this.currentUser;
     } catch (error) {
@@ -32,9 +46,25 @@ class FinanzaAuth {
   // Handle login
   async login(email, senha) {
     try {
-      const response = await this.api.login(email, senha);
-      this.currentUser = response.user;
-      return response;
+      // For demo purposes, if backend is not available, use mock data
+      try {
+        const response = await this.api.login(email, senha);
+        this.currentUser = response.user;
+        return response;
+      } catch (apiError) {
+        // Backend not available, use mock for demo
+        if (email === 'demo@finanza.com' && senha === 'demo') {
+          this.currentUser = {
+            id: 1,
+            nome: 'Usuário Demo',
+            email: 'demo@finanza.com',
+            created_at: new Date().toISOString()
+          };
+          localStorage.setItem('finanza_token', 'mock-token');
+          return { user: this.currentUser, token: 'mock-token' };
+        }
+        throw apiError;
+      }
     } catch (error) {
       throw error;
     }

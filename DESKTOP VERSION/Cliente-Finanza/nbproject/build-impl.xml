@@ -52,7 +52,23 @@
         <mkdir dir="lib"/>
     </target>
     
-    <target name="compile" depends="init" if="have.sources">
+    <target name="download-dependencies" unless="dependencies.downloaded">
+        <echo message="Downloading SQLite JDBC driver..."/>
+        <get src="https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.42.0.0/sqlite-jdbc-3.42.0.0.jar"
+             dest="lib/sqlite-jdbc-3.42.0.0.jar"
+             usetimestamp="true"
+             skipexisting="true"/>
+        
+        <echo message="Downloading NetBeans AbsoluteLayout library..."/>
+        <get src="https://repo1.maven.org/maven2/org/netbeans/external/AbsoluteLayout/RELEASE126/AbsoluteLayout-RELEASE126.jar"
+             dest="lib/AbsoluteLayout-RELEASE126.jar"
+             usetimestamp="true"
+             skipexisting="true"/>
+        
+        <property name="dependencies.downloaded" value="true"/>
+    </target>
+
+    <target name="compile" depends="init, download-dependencies" if="have.sources">
         <javac srcdir="${src.dir}" 
                destdir="${build.classes.dir}" 
                debug="true" 

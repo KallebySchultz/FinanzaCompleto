@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Finanza Desktop</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23667eea'/><text x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-weight='bold'>F</text></svg>">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="logo">F</div>
+            <h1>Finanza Desktop</h1>
+            
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Senha</label>
+                    <input type="password" id="password" class="form-input" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Entrar
+                </button>
+            </form>
+            
+            <div id="errorContainer" class="alert alert-error hidden mt-3"></div>
+            
+            <p class="mt-3">
+                <a href="register.html" class="auth-link">Não tem conta? Cadastre-se</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // Initialize authentication
+        const auth = new FinanzaAuth();
+        
+        // Redirect if already authenticated
+        auth.redirectIfAuthenticated();
+        
+        // Handle login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            try {
+                auth.hideError();
+                auth.showLoading(submitBtn, 'Entrando...');
+                
+                await auth.login(email, password);
+                
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                auth.showError(error.message);
+            } finally {
+                auth.hideLoading(submitBtn);
+            }
+        });
+    </script>
+</body>
+</html>

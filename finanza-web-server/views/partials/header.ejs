@@ -1,0 +1,19 @@
+<header class="header">
+    <nav class="navbar">
+        <a href="/" class="logo">🏦 Finanza</a>
+        
+        <ul class="nav-links">
+            <li><a href="/dashboard" class="<%= page === 'dashboard' ? 'active' : '' %>">Dashboard</a></li>
+            <li><a href="/accounts" class="<%= page === 'accounts' ? 'active' : '' %>">Contas</a></li>
+            <li><a href="/transactions" class="<%= page === 'transactions' ? 'active' : '' %>">Lançamentos</a></li>
+            <li><a href="/categories" class="<%= page === 'categories' ? 'active' : '' %>">Categorias</a></li>
+            <li><a href="/reports" class="<%= page === 'reports' ? 'active' : '' %>">Relatórios</a></li>
+            <li><a href="/server" class="<%= page.startsWith('server') ? 'active' : '' %>">Servidor</a></li>
+        </ul>
+        
+        <div class="nav-actions">
+            <span id="connectionIndicator" class="status status-offline">Desconectado</span>
+            <a href="/login" class="btn btn-secondary">Sair</a>
+        </div>
+    </nav>
+</header>

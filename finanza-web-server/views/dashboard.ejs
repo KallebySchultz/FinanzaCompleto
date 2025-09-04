@@ -1,0 +1,109 @@
+<div class="container">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="page-title">Dashboard</h1>
+        <div>
+            <span id="userGreeting" style="color: var(--text-secondary); margin-right: 1rem;">Bem-vindo!</span>
+            <button class="btn btn-primary" data-sync="user" id="syncUser">Sincronizar</button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalAccounts">0</div>
+            <div class="stat-label">Contas Cadastradas</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value" id="totalTransactions">0</div>
+            <div class="stat-label">Lançamentos</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value" id="totalBalance">R$ 0,00</div>
+            <div class="stat-label">Saldo Total</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value" id="monthlyBalance">R$ 0,00</div>
+            <div class="stat-label">Saldo do Mês</div>
+        </div>
+    </div>
+
+    <div class="grid grid-2">
+        <!-- Recent Transactions -->
+        <div class="card">
+            <div class="card-header">
+                <div class="flex justify-between items-center">
+                    <h2 class="card-title">Lançamentos Recentes</h2>
+                    <button class="btn btn-secondary" data-sync="transactions" id="syncTransactions">
+                        Sincronizar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="recentTransactions">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Valor</th>
+                                <th>Conta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--text-secondary);">
+                                    Nenhum lançamento encontrado
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="/transactions" class="btn btn-primary">Ver Todos</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounts Summary -->
+        <div class="card">
+            <div class="card-header">
+                <div class="flex justify-between items-center">
+                    <h2 class="card-title">Minhas Contas</h2>
+                    <button class="btn btn-secondary" data-sync="accounts" id="syncAccounts">
+                        Sincronizar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="accountsSummary">
+                    <div style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Nenhuma conta encontrada
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="/accounts" class="btn btn-primary">Gerenciar Contas</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2 class="card-title">Ações Rápidas</h2>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-4">
+                <a href="/transactions" class="btn btn-primary">Novo Lançamento</a>
+                <a href="/accounts" class="btn btn-secondary">Nova Conta</a>
+                <a href="/reports" class="btn btn-secondary">Ver Relatórios</a>
+                <button class="btn btn-secondary" data-sync="categories" id="syncCategories">
+                    Sincronizar Categorias
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

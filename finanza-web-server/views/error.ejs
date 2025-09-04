@@ -1,0 +1,14 @@
+<div class="container">
+    <h1 class="page-title">Página não encontrada</h1>
+    
+    <div class="card">
+        <div class="card-body text-center">
+            <h2 style="font-size: 4rem; margin-bottom: 1rem;">😔</h2>
+            <h3>Oops! Erro <%= error.status || 500 %></h3>
+            <p style="color: var(--text-secondary); margin: 1rem 0;">
+                <%= error.message || 'Algo deu errado' %>
+            </p>
+            <a href="/" class="btn btn-primary">Voltar ao Início</a>
+        </div>
+    </div>
+</div>

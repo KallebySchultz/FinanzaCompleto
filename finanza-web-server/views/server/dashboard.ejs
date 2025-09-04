@@ -1,0 +1,198 @@
+<div class="container">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="page-title">Painel do Servidor</h1>
+        <button class="btn btn-primary" id="testConnection">Testar Conexão</button>
+    </div>
+
+    <!-- Server Status -->
+    <div class="grid grid-2 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🌐 Servidor Web (Node.js)</h2>
+            </div>
+            <div class="card-body">
+                <div id="webServerStatus">
+                    <span class="status status-online">Online</span>
+                    <div class="mt-2">
+                        <small style="color: var(--text-secondary);">
+                            Porta: 3000<br>
+                            Protocolo: HTTP/WebSocket
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🖧 Servidor Java (TCP)</h2>
+            </div>
+            <div class="card-body">
+                <div id="javaServerStatus">
+                    <span class="status status-offline">Verificando...</span>
+                    <div class="mt-2">
+                        <small style="color: var(--text-secondary);">
+                            Protocolo: TCP/JSON
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Server Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="uptime">0m</div>
+            <div class="stat-label">Tempo Ativo</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value" id="memoryUsage">0 MB</div>
+            <div class="stat-label">Uso de Memória</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value" id="activeConnections">0</div>
+            <div class="stat-label">Conexões Ativas</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-value" id="totalRequests">0</div>
+            <div class="stat-label">Requisições Totais</div>
+        </div>
+    </div>
+
+    <div class="grid grid-2">
+        <!-- API Endpoints -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🔌 Endpoints da API</h2>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Método</th>
+                            <th>Endpoint</th>
+                            <th>Descrição</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="status" style="background: #dbeafe; color: #1e40af;">GET</span></td>
+                            <td>/api/ping</td>
+                            <td>Teste de conectividade</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status" style="background: #dcfce7; color: #166534;">POST</span></td>
+                            <td>/api/auth/login</td>
+                            <td>Autenticação de usuário</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status" style="background: #dbeafe; color: #1e40af;">GET</span></td>
+                            <td>/api/sync/user/:id</td>
+                            <td>Sincronizar usuário</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status" style="background: #dbeafe; color: #1e40af;">GET</span></td>
+                            <td>/api/sync/accounts/:id</td>
+                            <td>Sincronizar contas</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status" style="background: #dbeafe; color: #1e40af;">GET</span></td>
+                            <td>/api/sync/transactions/:id</td>
+                            <td>Sincronizar lançamentos</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">⚙️ Configuração</h2>
+            </div>
+            <div class="card-body">
+                <form id="serverConfig">
+                    <div class="form-group">
+                        <label for="javaHost" class="form-label">Host do Servidor Java</label>
+                        <input type="text" id="javaHost" class="form-control" value="localhost">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="javaPort" class="form-label">Porta do Servidor Java</label>
+                        <input type="number" id="javaPort" class="form-control" value="8080">
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="testCustomConnection()">
+                        Testar Configuração
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Server Actions -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2 class="card-title">🎛️ Ações do Servidor</h2>
+        </div>
+        <div class="card-body">
+            <div class="grid grid-4">
+                <button class="btn btn-secondary" onclick="refreshStatus()">
+                    🔄 Atualizar Status
+                </button>
+                <a href="/server/logs" class="btn btn-secondary">
+                    📋 Ver Logs
+                </a>
+                <a href="/server/status" class="btn btn-secondary">
+                    📊 Status Detalhado
+                </a>
+                <button class="btn btn-warning" onclick="restartServices()">
+                    🔃 Reiniciar Serviços
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testCustomConnection() {
+    const host = document.getElementById('javaHost').value;
+    const port = document.getElementById('javaPort').value;
+    
+    fetch('/server/api/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host, port })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.connected) {
+            finanzaApp.showMessage('Conexão personalizada OK!', 'success');
+        } else {
+            finanzaApp.showMessage('Falha na conexão: ' + result.error, 'error');
+        }
+    })
+    .catch(error => {
+        finanzaApp.showMessage('Erro ao testar conexão personalizada', 'error');
+    });
+}
+
+function refreshStatus() {
+    location.reload();
+}
+
+function restartServices() {
+    finanzaApp.showMessage('Funcionalidade de reinício não implementada (demo)', 'warning');
+}
+
+// Auto-refresh status every 30 seconds
+setInterval(() => {
+    if (window.finanzaApp) {
+        window.finanzaApp.loadServerStatus();
+    }
+}, 30000);
+</script>

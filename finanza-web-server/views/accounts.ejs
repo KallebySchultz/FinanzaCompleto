@@ -1,0 +1,46 @@
+<div class="container">
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="page-title">Gerenciar Contas</h1>
+        <button class="btn btn-primary">Nova Conta</button>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Suas Contas Financeiras</h2>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nome da Conta</th>
+                        <th>Tipo</th>
+                        <th>Saldo Inicial</th>
+                        <th>Saldo Atual</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                            Nenhuma conta encontrada. Sincronize com o servidor ou crie uma nova conta.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2 class="card-title">Sincronização</h2>
+        </div>
+        <div class="card-body">
+            <p style="margin-bottom: 1rem; color: var(--text-secondary);">
+                Sincronize suas contas com o servidor Java para carregar os dados mais recentes.
+            </p>
+            <button class="btn btn-primary" data-sync="accounts" id="syncAccountsPage">
+                Sincronizar Contas
+            </button>
+        </div>
+    </div>
+</div>

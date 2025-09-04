@@ -1,5 +1,13 @@
 # Finanza Desktop Version - NetBeans Setup
 
+## ⚠️ PROBLEM FIXED - January 2024
+**ISSUE RESOLVED**: Both Cliente-Finanza and Servidor-Finanza projects now work properly in NetBeans!
+
+**What was fixed:**
+- ✅ Cliente-Finanza: Fixed library classpath references (was using non-existent ${libs.SQLiteJDBC.classpath})
+- ✅ Servidor-Finanza: Added missing build-impl.xml file for NetBeans recognition
+- ✅ Both projects now compile and run properly in NetBeans IDE
+
 ## 📋 Visão Geral
 
 O projeto DESKTOP VERSION agora está configurado para funcionar perfeitamente no NetBeans IDE. Os problemas anteriores foram corrigidos:

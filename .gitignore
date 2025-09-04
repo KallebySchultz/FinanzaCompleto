@@ -23,6 +23,14 @@ desktop-client/*.jar
 *.class
 *.jar
 
+# NetBeans Desktop Version build artifacts
+DESKTOP\ VERSION/Cliente-Finanza/build/
+DESKTOP\ VERSION/Cliente-Finanza/dist/
+DESKTOP\ VERSION/Cliente-Finanza/lib/
+DESKTOP\ VERSION/Servidor-Finanza/build/
+DESKTOP\ VERSION/Servidor-Finanza/dist/
+DESKTOP\ VERSION/Servidor-Finanza/lib/
+
 # Configuration files (keep examples but ignore user configs)
 finanza-config.properties
 

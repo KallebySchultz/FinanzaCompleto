@@ -9,7 +9,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #1C2953; /* azul escuro sólido */
   min-height: 100vh;
   color: #333;
   line-height: 1.6;
@@ -29,17 +29,11 @@ body {
 
 /* ========== LOGO ========== */
 .logo {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 2rem;
-  font-weight: bold;
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 2rem auto;
+  display: block;
+  object-fit: contain;
 }
 
 /* Smaller logo for navigation */

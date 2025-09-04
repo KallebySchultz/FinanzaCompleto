@@ -42,19 +42,13 @@
         const auth = new FinanzaAuth();
         const nav = new FinanzaNavigation();
         
-        // Check authentication
-        if (!auth.requireAuth()) {
-            // Will redirect to login
-            return;
-        }
-        
         // Initialize page
         async function initDashboard() {
             try {
                 // Get current user
                 const currentUser = await auth.getCurrentUser();
                 if (!currentUser) {
-                    auth.logout();
+                    window.location.href = 'login.html';
                     return;
                 }
                 
@@ -67,7 +61,7 @@
                 
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
-                auth.showError('Erro ao carregar dashboard');
+                document.getElementById('statsGrid').innerHTML = '<p>Erro ao carregar dashboard</p>';
             }
         }
         
@@ -105,12 +99,21 @@
                 
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
-                auth.showError('Erro ao carregar dados do dashboard');
+                document.getElementById('statsGrid').innerHTML = '<p>Erro ao carregar dados do dashboard</p>';
             }
         }
         
         // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initDashboard);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication first
+            if (!auth.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Initialize dashboard
+            initDashboard();
+        });
     </script>
 </body>
 </html>

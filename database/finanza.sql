@@ -91,6 +91,7 @@ INSERT OR IGNORE INTO categorias (nome, cor_hex, tipo) VALUES
 
 -- ================================================
 -- Usuário padrão para testes (senha: "admin")
+-- NOTA: A senha será atualizada automaticamente para hash bcrypt
 -- ================================================
 INSERT OR IGNORE INTO usuarios (nome, email, senha, data_criacao) VALUES
 ('Administrador', 'admin@finanza.com', 'admin', strftime('%s', 'now') * 1000);

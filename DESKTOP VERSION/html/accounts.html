@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contas - Finanza Desktop</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23667eea'/><text x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-weight='bold'>F</text></svg>">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar will be loaded here -->
+        <div id="sidebar"></div>
+        
+        <div class="main-content">
+            <!-- Header will be loaded here -->
+            <div id="header"></div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Minhas Contas</h2>
+                    <button class="btn btn-primary" onclick="showCreateAccountModal()">
+                        Nova Conta
+                    </button>
+                </div>
+                <div id="accountsList">
+                    <div class="loading"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for creating/editing accounts -->
+    <div id="accountModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Nova Conta</h3>
+                <button class="modal-close" onclick="closeAccountModal()">&times;</button>
+            </div>
+            <form id="accountForm">
+                <div class="form-group">
+                    <label for="accountName" class="form-label">Nome da Conta</label>
+                    <input type="text" id="accountName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="accountType" class="form-label">Tipo</label>
+                    <select id="accountType" class="form-input" required>
+                        <option value="">Selecione o tipo</option>
+                        <option value="corrente">Conta Corrente</option>
+                        <option value="poupanca">Conta Poupança</option>
+                        <option value="cartao">Cartão de Crédito</option>
+                        <option value="investimento">Investimento</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="accountBalance" class="form-label">Saldo Inicial</label>
+                    <input type="number" id="accountBalance" class="form-input" step="0.01" value="0">
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" class="btn btn-secondary ml-2" onclick="closeAccountModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/navigation.js"></script>
+    <script>
+        // Initialize components
+        const auth = new FinanzaAuth();
+        const nav = new FinanzaNavigation();
+        let currentEditingAccount = null;
+        
+        // Check authentication
+        if (!auth.requireAuth()) {
+            return;
+        }
+        
+        // Initialize page
+        async function initAccountsPage() {
+            try {
+                const currentUser = await auth.getCurrentUser();
+                if (!currentUser) {
+                    auth.logout();
+                    return;
+                }
+                
+                document.getElementById('sidebar').innerHTML = nav.generateSidebar(currentUser);
+                document.getElementById('header').innerHTML = nav.generateHeader('Contas', currentUser);
+                
+                await loadAccounts();
+                
+            } catch (error) {
+                console.error('Error initializing accounts page:', error);
+            }
+        }
+        
+        // Load accounts
+        async function loadAccounts() {
+            try {
+                const accounts = await auth.api.getAccounts();
+                
+                if (accounts.length === 0) {
+                    document.getElementById('accountsList').innerHTML = `
+                        <p class="text-center">Nenhuma conta cadastrada.</p>
+                    `;
+                    return;
+                }
+                
+                const accountsHTML = accounts.map(account => `
+                    <div class="stat-card" style="margin-bottom: 1rem;">
+                        <h4>${account.nome}</h4>
+                        <p><strong>Tipo:</strong> ${getAccountTypeLabel(account.tipo)}</p>
+                        <p><strong>Saldo:</strong> ${auth.formatCurrency(account.saldo)}</p>
+                        <div style="margin-top: 1rem;">
+                            <button class="btn btn-secondary" onclick="editAccount(${account.id})">Editar</button>
+                            <button class="btn btn-danger ml-2" onclick="deleteAccount(${account.id})">Excluir</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('accountsList').innerHTML = `
+                    <div class="stats-grid">
+                        ${accountsHTML}
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                auth.showError('Erro ao carregar contas');
+            }
+        }
+        
+        // Get account type label
+        function getAccountTypeLabel(type) {
+            const labels = {
+                'corrente': 'Conta Corrente',
+                'poupanca': 'Conta Poupança',
+                'cartao': 'Cartão de Crédito',
+                'investimento': 'Investimento'
+            };
+            return labels[type] || type;
+        }
+        
+        // Show create account modal
+        function showCreateAccountModal() {
+            currentEditingAccount = null;
+            document.getElementById('modalTitle').textContent = 'Nova Conta';
+            document.getElementById('accountForm').reset();
+            document.getElementById('accountModal').classList.remove('hidden');
+        }
+        
+        // Edit account
+        async function editAccount(accountId) {
+            try {
+                const accounts = await auth.api.getAccounts();
+                const account = accounts.find(a => a.id === accountId);
+                
+                if (account) {
+                    currentEditingAccount = account;
+                    document.getElementById('modalTitle').textContent = 'Editar Conta';
+                    document.getElementById('accountName').value = account.nome;
+                    document.getElementById('accountType').value = account.tipo;
+                    document.getElementById('accountBalance').value = account.saldo;
+                    document.getElementById('accountModal').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error loading account for editing:', error);
+            }
+        }
+        
+        // Delete account
+        async function deleteAccount(accountId) {
+            if (confirm('Tem certeza que deseja excluir esta conta?')) {
+                try {
+                    await auth.api.deleteAccount(accountId);
+                    await loadAccounts();
+                } catch (error) {
+                    console.error('Error deleting account:', error);
+                    auth.showError('Erro ao excluir conta');
+                }
+            }
+        }
+        
+        // Close account modal
+        function closeAccountModal() {
+            document.getElementById('accountModal').classList.add('hidden');
+            currentEditingAccount = null;
+        }
+        
+        // Handle account form submission
+        document.getElementById('accountForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('accountName').value;
+            const type = document.getElementById('accountType').value;
+            const balance = parseFloat(document.getElementById('accountBalance').value);
+            
+            try {
+                if (currentEditingAccount) {
+                    await auth.api.updateAccount(currentEditingAccount.id, {
+                        nome: name,
+                        tipo: type,
+                        saldo: balance
+                    });
+                } else {
+                    await auth.api.createAccount({
+                        nome: name,
+                        tipo: type,
+                        saldo: balance
+                    });
+                }
+                
+                closeAccountModal();
+                await loadAccounts();
+                
+            } catch (error) {
+                console.error('Error saving account:', error);
+                auth.showError('Erro ao salvar conta');
+            }
+        });
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initAccountsPage);
+    </script>
+</body>
+</html>

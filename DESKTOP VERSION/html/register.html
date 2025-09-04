@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Finanza Desktop</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/auth.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23667eea'/><text x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-weight='bold'>F</text></svg>">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="logo">F</div>
+            <h1>Criar Conta</h1>
+            
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="name" class="form-label">Nome completo</label>
+                    <input type="text" id="name" class="form-input" required autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">Senha</label>
+                    <input type="password" id="password" class="form-input" required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirmar senha</label>
+                    <input type="password" id="confirmPassword" class="form-input" required autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Criar Conta
+                </button>
+            </form>
+            
+            <div id="errorContainer" class="alert alert-error hidden mt-3"></div>
+            
+            <p class="mt-3">
+                <a href="login.html" class="auth-link">Já tem conta? Faça login</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // Initialize authentication
+        const auth = new FinanzaAuth();
+        
+        // Redirect if already authenticated
+        auth.redirectIfAuthenticated();
+        
+        // Handle register form submission
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            try {
+                auth.hideError();
+                
+                // Validate passwords match
+                if (password !== confirmPassword) {
+                    throw new Error('Senhas não coincidem');
+                }
+                
+                auth.showLoading(submitBtn, 'Criando conta...');
+                
+                await auth.register(name, email, password);
+                
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+            } catch (error) {
+                auth.showError(error.message);
+            } finally {
+                auth.hideLoading(submitBtn);
+            }
+        });
+    </script>
+</body>
+</html>

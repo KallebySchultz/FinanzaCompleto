@@ -14,7 +14,7 @@ const categoryRoutes = require('./routes/categories');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080; // Changed default to 8080 for Android compatibility
 
 // Security middleware
 app.use(helmet());
@@ -27,9 +27,10 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
+// CORS configuration - Allow connections from local network
+const corsOrigin = process.env.CORS_ORIGIN;
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+  origin: corsOrigin === '*' ? true : (corsOrigin || 'http://localhost:3001'),
   credentials: true
 }));
 
@@ -71,10 +72,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Servidor Finanza API rodando na porta ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`📱 Para Android: Configure o IP da sua rede (ex: 192.168.1.100:${PORT})`);
+  console.log(`🖥️  Para Desktop: Acesse http://localhost:3001`);
 });
 
 module.exports = app;

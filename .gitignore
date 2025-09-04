@@ -36,3 +36,5 @@ server-java/*.jar
 /Desktop Version/desktop-client/target/
 /DESKTOP VERSION/Cliente-Finanza/nbproject/private/
 /DESKTOP VERSION/Cliente-Finanza/dist/
+/DESKTOP VERSION/Servidor-Finanza/build/
+/DESKTOP VERSION/Servidor-Finanza/dist/

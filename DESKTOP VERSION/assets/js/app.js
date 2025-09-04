@@ -183,6 +183,7 @@ class FinanzaApp {
     this.api = new FinanzaAPI();
     this.currentUser = JSON.parse(localStorage.getItem('finanza_user') || 'null');
     this.currentPage = 'dashboard';
+    this.icons = null; // Will be initialized when needed
     
     this.init();
   }
@@ -459,6 +460,11 @@ class FinanzaApp {
   }
 
   getSidebarHTML(isAdmin = false) {
+    // Initialize icons system if not already done
+    if (!this.icons) {
+      this.icons = new window.FinanzaIcons();
+    }
+
     return `
       <div class="sidebar">
         <div class="sidebar-logo">
@@ -469,32 +475,32 @@ class FinanzaApp {
         <ul class="nav-menu">
           <li class="nav-item">
             <a href="#" class="nav-link active" data-page="dashboard">
-              <span class="nav-icon">📊</span>
+              <span class="nav-icon finanza-icon-wrapper">${this.icons.getIcon('dashboard')}</span>
               Dashboard
             </a>
           </li>
           <li class="nav-item">
             <a href="#" class="nav-link" data-page="accounts">
-              <span class="nav-icon">🏦</span>
+              <span class="nav-icon finanza-icon-wrapper">${this.icons.getIcon('accounts')}</span>
               Contas
             </a>
           </li>
           <li class="nav-item">
             <a href="#" class="nav-link" data-page="transactions">
-              <span class="nav-icon">💰</span>
+              <span class="nav-icon finanza-icon-wrapper">${this.icons.getIcon('transactions')}</span>
               Transações
             </a>
           </li>
           <li class="nav-item">
             <a href="#" class="nav-link" data-page="profile">
-              <span class="nav-icon">👤</span>
+              <span class="nav-icon finanza-icon-wrapper">${this.icons.getIcon('profile')}</span>
               Perfil
             </a>
           </li>
           ${isAdmin ? `
           <li class="nav-item">
             <a href="#" class="nav-link" data-page="admin">
-              <span class="nav-icon">⚙️</span>
+              <span class="nav-icon finanza-icon-wrapper">${this.icons.getIcon('admin')}</span>
               Admin
             </a>
           </li>

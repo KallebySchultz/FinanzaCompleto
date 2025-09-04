@@ -2,7 +2,7 @@
 
 class FinanzaAPI {
   constructor() {
-    this.baseURL = 'http://localhost:3000/api';
+    this.baseURL = 'http://localhost:8080/api'; // Updated to match server port
     this.token = localStorage.getItem('finanza_token');
   }
 

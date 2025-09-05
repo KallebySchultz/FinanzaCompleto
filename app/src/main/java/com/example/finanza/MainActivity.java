@@ -27,7 +27,6 @@ import com.example.finanza.model.Conta;
 import com.example.finanza.model.Categoria;
 import com.example.finanza.ui.MenuActivity;
 import com.example.finanza.ui.MovementsActivity;
-import com.example.finanza.network.SyncService;
 
 import java.util.Calendar;
 import java.util.List;
@@ -36,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean saldoVisivel = true;
     private AppDatabase db;
-    private SyncService syncService;
     private int usuarioIdAtual;
     private int contaPadraoId;
     private int categoriaReceitaId;
@@ -62,9 +60,6 @@ public class MainActivity extends AppCompatActivity {
                 .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
                 .allowMainThreadQueries()
                 .build();
-
-        // Inicializar serviço de sincronização
-        syncService = new SyncService(this);
 
         // Obter usuário autenticado
         usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
@@ -629,22 +624,5 @@ public class MainActivity extends AppCompatActivity {
         double totalDespesas = despesas != null ? despesas : 0.0;
 
         return conta.saldoInicial + totalReceitas - totalDespesas;
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (syncService != null) {
-            syncService.fechar();
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Sincronizar dados quando a activity é retomada
-        if (syncService != null && usuarioIdAtual != -1) {
-            syncService.sincronizarTudo(usuarioIdAtual);
-        }
     }
 }

@@ -17,9 +17,7 @@ import java.util.concurrent.Executors;
 public class FirebaseAuthClient {
     // Firebase Auth REST API
     private static final String FIREBASE_AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts:";
-    // IMPORTANTE: Esta chave deve ser configurada com a chave correta do seu projeto Firebase
-    // Para produção, considere armazenar em SharedPreferences ou arquivo de configuração
-    private static final String API_KEY = "AIzaSyDnmRVgLMKg9-wXZKXEjIUjAhOxRfXlJEI"; // Substitua pela sua chave da API Firebase
+    private static final String API_KEY = "AIzaSyDnmRVgLMKg9-wXZKXEjIUjAhOxRfXlJEI"; // Sua chave da API Firebase
     
     private ExecutorService networkExecutor;
     private Handler mainHandler;

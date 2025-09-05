@@ -17,23 +17,60 @@ echo -e "${BLUE}   🖥️ FINANZA - CLIENTE DESKTOP${NC}"
 echo "========================================"
 echo
 
-echo -e "${CYAN}🔍 Verificando se Node.js está instalado...${NC}"
-if ! command -v node &> /dev/null; then
-    echo
-    echo -e "${RED}❌ ERRO: Node.js não foi encontrado!${NC}"
-    echo
-    echo -e "${YELLOW}📥 SOLUÇÃO:${NC}"
-    echo "1. Acesse: https://nodejs.org"
-    echo "2. Baixe a versão LTS (recomendada)"
-    echo "3. Instale normalmente"
-    echo "4. Reinicie o terminal"
-    echo "5. Execute este arquivo novamente"
-    echo
-    read -p "Pressione Enter para continuar..."
-    exit 1
-fi
+# Function to check Node.js version
+check_node_version() {
+    local required_major=18
+    local required_minor=19
+    local required_patch=0
+    
+    if ! command -v node &> /dev/null; then
+        echo
+        echo -e "${RED}❌ ERRO: Node.js não foi encontrado!${NC}"
+        echo
+        echo -e "${YELLOW}📥 SOLUÇÃO:${NC}"
+        echo "1. Acesse: https://nodejs.org"
+        echo "2. Baixe a versão LTS (recomendada)"
+        echo "3. Instale normalmente"
+        echo "4. Reinicie o terminal"
+        echo "5. Execute este arquivo novamente"
+        echo
+        read -p "Pressione Enter para continuar..."
+        exit 1
+    fi
+    
+    local node_version=$(node --version | sed 's/v//')
+    local major=$(echo $node_version | cut -d. -f1)
+    local minor=$(echo $node_version | cut -d. -f2)
+    local patch=$(echo $node_version | cut -d. -f3)
+    
+    # Check if version meets minimum requirements
+    if [ "$major" -lt "$required_major" ] || \
+       ([ "$major" -eq "$required_major" ] && [ "$minor" -lt "$required_minor" ]) || \
+       ([ "$major" -eq "$required_major" ] && [ "$minor" -eq "$required_minor" ] && [ "$patch" -lt "$required_patch" ]); then
+        echo
+        echo -e "${RED}❌ ERRO: Versão do Node.js incompatível!${NC}"
+        echo -e "${YELLOW}📋 Versão atual: v$node_version${NC}"
+        echo -e "${YELLOW}📋 Versão mínima: v$required_major.$required_minor.$required_patch${NC}"
+        echo
+        echo -e "${YELLOW}📥 SOLUÇÃO:${NC}"
+        echo "1. Acesse: https://nodejs.org"
+        echo "2. Baixe a versão LTS mais recente (recomendada)"
+        echo "3. Instale normalmente"
+        echo "4. Reinicie o terminal"
+        echo "5. Execute este arquivo novamente"
+        echo
+        echo -e "${CYAN}💡 MOTIVO: Node.js v18.18.x possui problemas conhecidos${NC}"
+        echo -e "${CYAN}   de compatibilidade. Use v18.19.0 ou superior.${NC}"
+        echo
+        read -p "Pressione Enter para continuar..."
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✅ Node.js encontrado (v$node_version)${NC}"
+}
 
-echo -e "${GREEN}✅ Node.js encontrado ($(node --version))${NC}"
+echo -e "${CYAN}🔍 Verificando se Node.js está instalado...${NC}"
+check_node_version
 echo
 
 echo -e "${CYAN}📁 Navegando para a pasta do cliente desktop...${NC}"

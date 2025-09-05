@@ -45,11 +45,25 @@ run_check() {
 echo -e "${BLUE}📋 VERIFICANDO REQUISITOS DO SISTEMA...${NC}"
 echo
 
-# Check Node.js
+# Check Node.js version
 if command -v node &> /dev/null; then
-    node_version=$(node --version)
-    echo -e "${GREEN}✅ Node.js instalado ($node_version)${NC}"
-    passed_checks=$((passed_checks + 1))
+    node_version=$(node --version | sed 's/v//')
+    major=$(echo $node_version | cut -d. -f1)
+    minor=$(echo $node_version | cut -d. -f2)
+    patch=$(echo $node_version | cut -d. -f3)
+    
+    # Check if version meets minimum requirements (18.19.0+)
+    if [ "$major" -lt "18" ] || \
+       ([ "$major" -eq "18" ] && [ "$minor" -lt "19" ]) || \
+       ([ "$major" -eq "18" ] && [ "$minor" -eq "19" ] && [ "$patch" -lt "0" ]); then
+        echo -e "${RED}❌ Node.js versão incompatível (v$node_version)${NC}"
+        echo -e "${YELLOW}   📋 Versão mínima requerida: v18.19.0${NC}"
+        echo -e "${YELLOW}   📥 Atualize em: https://nodejs.org${NC}"
+        echo -e "${CYAN}   💡 v18.18.x possui problemas conhecidos${NC}"
+    else
+        echo -e "${GREEN}✅ Node.js instalado (v$node_version)${NC}"
+        passed_checks=$((passed_checks + 1))
+    fi
 else
     echo -e "${RED}❌ Node.js não encontrado${NC}"
     echo -e "${YELLOW}   📥 Instale em: https://nodejs.org${NC}"

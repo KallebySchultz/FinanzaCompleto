@@ -60,9 +60,13 @@ iniciar_tudo.bat
 ## 📋 Requisitos
 
 ### Obrigatórios
-- **Node.js** 18+ (recomendado: versão LTS)
+- **Node.js** 18.19.0+ (recomendado: versão LTS mais recente)
 - **npm** 8+
 - **Sistema**: Windows 10/11, Linux, ou macOS
+
+### ⚠️ Versões Incompatíveis
+- **Node.js v18.18.x**: Possui problemas conhecidos de compatibilidade
+- Use **v18.19.0 ou superior** para evitar erros
 
 ### Verificar se Node.js está instalado
 ```bash
@@ -80,8 +84,9 @@ Se não estiver instalado:
 
 ### "Node.js não foi encontrado"
 1. Instale o Node.js: https://nodejs.org
-2. Reinicie o terminal/computador
-3. Tente novamente
+2. **Use versão 18.19.0 ou superior** (v18.18.x tem problemas conhecidos)
+3. Reinicie o terminal/computador
+4. Tente novamente
 
 ### "Erro ao instalar dependências"
 1. Verifique conexão com internet

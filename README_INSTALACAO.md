@@ -25,13 +25,16 @@
 
 1. Acesse: https://nodejs.org
 2. Baixe a versão "LTS" (recomendada)
-3. Instale normalmente (next, next, next...)
-4. Reinicie o computador
+3. **IMPORTANTE:** Use versão 18.19.0 ou superior
+4. Instale normalmente (next, next, next...)
+5. Reinicie o computador
+
+**⚠️ Versão v18.18.x possui problemas conhecidos!**
 
 **Como testar se funcionou:**
 - Abra o Prompt de Comando (cmd)
 - Digite: `node --version`
-- Deve aparecer algo como: `v20.x.x`
+- Deve aparecer algo como: `v20.x.x` ou `v18.19.x`
 
 ---
 
@@ -103,6 +106,7 @@
 
 ### **"Node.js não foi encontrado"**
 - Instale o Node.js: https://nodejs.org
+- **Use versão 18.19.0 ou superior** (v18.18.x tem problemas)
 - Reinicie o computador
 - Tente novamente
 

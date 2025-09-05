@@ -1,163 +1,124 @@
-// Finanza Desktop - Authentication Utilities
+const express = require('express');
+const path = require('path');
+const bodyParser = require('body-parser');
+const admin = require('firebase-admin');
+const cors = require('cors');
 
-class FinanzaAuth {
-  constructor() {
-    this.api = new FinanzaAPI();
-    this.currentUser = null;
-  }
+const app = express();
+const PORT = process.env.PORT || 3001;
 
-  // Check if user is authenticated
-  isAuthenticated() {
-    return localStorage.getItem('finanza_token') !== null;
-  }
+// Inicializa Firebase Admin SDK
+const serviceAccount = require('./serviceAccountKey.json');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://finanza-2cd68-default-rtdb.firebaseio.com"
+});
 
-  // Get current user from API
-  async getCurrentUser() {
-    if (!this.isAuthenticated()) {
-      return null;
-    }
+// Aceita requisições de qualquer origem
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('.'));
 
-    try {
-      if (!this.currentUser) {
-        try {
-          this.currentUser = await this.api.getCurrentUser();
-        } catch (error) {
-          // If backend not available and we have a mock token, return mock user
-          if (localStorage.getItem('finanza_token') === 'mock-token') {
-            this.currentUser = {
-              id: 1,
-              nome: 'Usuário Demo',
-              email: 'demo@finanza.com',
-              created_at: new Date().toISOString()
-            };
-          } else {
-            throw error;
-          }
-        }
-      }
-      return this.currentUser;
-    } catch (error) {
-      console.error('Error getting current user:', error);
-      this.logout();
-      return null;
-    }
-  }
+// Rota principal
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
-  // Handle login
-  async login(email, senha) {
-    try {
-      // For demo purposes, if backend is not available, use mock data
-      try {
-        const response = await this.api.login(email, senha);
-        this.currentUser = response.user;
-        return response;
-      } catch (apiError) {
-        // Backend not available, use mock for demo
-        if (email === 'demo@finanza.com' && senha === 'demo') {
-          this.currentUser = {
-            id: 1,
-            nome: 'Usuário Demo',
-            email: 'demo@finanza.com',
-            created_at: new Date().toISOString()
-          };
-          localStorage.setItem('finanza_token', 'mock-token');
-          return { user: this.currentUser, token: 'mock-token' };
-        }
-        throw apiError;
-      }
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Handle registration
-  async register(nome, email, senha) {
-    try {
-      const response = await this.api.register(nome, email, senha);
-      this.currentUser = response.user;
-      return response;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // Handle logout
-  logout() {
-    this.api.logout();
-    this.currentUser = null;
-    window.location.href = 'login.html';
-  }
-
-  // Redirect to login if not authenticated
-  requireAuth() {
-    if (!this.isAuthenticated()) {
-      window.location.href = 'login.html';
-      return false;
-    }
-    return true;
-  }
-
-  // Redirect to dashboard if already authenticated
-  redirectIfAuthenticated() {
-    if (this.isAuthenticated()) {
-      window.location.href = 'dashboard.html';
-      return true;
-    }
-    return false;
-  }
-
-  // Format currency helper
-  formatCurrency(value) {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value || 0);
-  }
-
-  // Show error message
-  showError(message, containerId = 'errorContainer') {
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.textContent = message;
-      container.classList.remove('hidden');
-    }
-  }
-
-  // Hide error message
-  hideError(containerId = 'errorContainer') {
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.classList.add('hidden');
-    }
-  }
-
-  // Show success message
-  showSuccess(message, containerId = 'successContainer') {
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.textContent = message;
-      container.classList.remove('hidden');
-    }
-  }
-
-  // Show loading state
-  showLoading(buttonElement, loadingText = 'Carregando...') {
-    if (buttonElement) {
-      buttonElement.disabled = true;
-      buttonElement.dataset.originalText = buttonElement.textContent;
-      buttonElement.innerHTML = `<span class="loading"></span> ${loadingText}`;
-    }
-  }
-
-  // Hide loading state
-  hideLoading(buttonElement) {
-    if (buttonElement && buttonElement.dataset.originalText) {
-      buttonElement.disabled = false;
-      buttonElement.textContent = buttonElement.dataset.originalText;
-      delete buttonElement.dataset.originalText;
-    }
-  }
+// Middleware de autenticação Firebase JWT
+function authRequired(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: 'Token ausente.' });
+  const token = auth.replace('Bearer ', '');
+  admin.auth().verifyIdToken(token)
+    .then(decodedToken => {
+      req.user = decodedToken;
+      next();
+    })
+    .catch(() => res.status(401).json({ error: 'Token inválido ou expirado.' }));
 }
 
-// Export for use in other files
-window.FinanzaAuth = FinanzaAuth;
+// Garante sempre resposta válida para /auth/me
+app.get('/auth/me', authRequired, async (req, res) => {
+  try {
+    const uid = req.user.uid;
+    const ref = admin.database().ref(`usuarios/${uid}`);
+    let userData = (await ref.once('value')).val();
+
+    if (!userData) {
+      userData = {
+        nome: req.user.name || req.user.email || 'Novo usuário',
+        saldo_total: 0,
+        receitas_mes: 0,
+        despesas_mes: 0,
+        total_contas: 0,
+        email: req.user.email || ''
+      };
+      await ref.set(userData);
+    }
+    res.status(200).json(userData);
+  } catch (err) {
+    // NUNCA retorna erro fatal ao dashboard
+    res.status(200).json({
+      saldo_total: 0,
+      receitas_mes: 0,
+      despesas_mes: 0,
+      total_contas: 0,
+      nome: 'Erro',
+      email: ''
+    });
+  }
+});
+
+// Atualiza dados do usuário
+app.post('/auth/me', authRequired, async (req, res) => {
+  try {
+    const uid = req.user.uid;
+    await admin.database().ref(`usuarios/${uid}`).set(req.body);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(200).json({ success: false });
+  }
+});
+
+// Responde sempre campos válidos para o dashboard
+app.get('/api/financialSummary', authRequired, async (req, res) => {
+  try {
+    const uid = req.user.uid;
+    const ref = admin.database().ref(`usuarios/${uid}`);
+    let userData = (await ref.once('value')).val();
+
+    if (!userData) {
+      userData = {
+        saldo_total: 0,
+        receitas_mes: 0,
+        despesas_mes: 0,
+        total_contas: 0,
+        nome: req.user.name || req.user.email || 'Novo usuário',
+        email: req.user.email || ''
+      };
+      await ref.set(userData);
+    }
+    // Sempre responde os campos esperados
+    res.status(200).json({
+      saldo_total: userData.saldo_total || 0,
+      receitas_mes: userData.receitas_mes || 0,
+      despesas_mes: userData.despesas_mes || 0,
+      total_contas: userData.total_contas || 0
+    });
+  } catch (err) {
+    // Nunca retorna erro, sempre objeto default
+    res.status(200).json({
+      saldo_total: 0,
+      receitas_mes: 0,
+      despesas_mes: 0,
+      total_contas: 0
+    });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`🖥️  Cliente Desktop Finanza rodando na porta ${PORT}`);
+  console.log(`🔗 Acesse: http://localhost:${PORT}`);
+});
+
+module.exports = app;

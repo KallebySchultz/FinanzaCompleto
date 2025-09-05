@@ -2,8 +2,12 @@
 
 class FinanzaAPI {
   constructor() {
-    this.baseURL = 'http://localhost:8080/api'; // Updated to match server port
-    this.token = localStorage.getItem('finanza_token');
+    this.baseURL = 'http://localhost:8080/api'; // Ajuste conforme seu backend
+  }
+
+  // Sempre pega o token mais recente do localStorage
+  getToken() {
+    return localStorage.getItem('finanza_token');
   }
 
   // Configurar cabeçalhos de autenticação
@@ -11,11 +15,10 @@ class FinanzaAPI {
     const headers = {
       'Content-Type': 'application/json'
     };
-    
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
-    
     return headers;
   }
 
@@ -46,9 +49,11 @@ class FinanzaAPI {
       method: 'POST',
       body: JSON.stringify({ email, senha })
     });
-    
-    this.token = response.token;
-    localStorage.setItem('finanza_token', this.token);
+
+    // Salva token sempre após login
+    if (response.token) {
+      localStorage.setItem('finanza_token', response.token);
+    }
     return response;
   }
 
@@ -57,14 +62,14 @@ class FinanzaAPI {
       method: 'POST',
       body: JSON.stringify({ nome, email, senha })
     });
-    
-    this.token = response.token;
-    localStorage.setItem('finanza_token', this.token);
+
+    if (response.token) {
+      localStorage.setItem('finanza_token', response.token);
+    }
     return response;
   }
 
   logout() {
-    this.token = null;
     localStorage.removeItem('finanza_token');
   }
 
@@ -73,7 +78,6 @@ class FinanzaAPI {
     try {
       return await this.request('/auth/me');
     } catch (error) {
-      // Return mock user for demo if backend not available
       if (localStorage.getItem('finanza_token') === 'mock-token') {
         return {
           id: 1,

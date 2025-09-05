@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/auth.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%231C2953'/><text x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-weight='bold'>F</text></svg>">
+    <!-- Firebase SDK compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
     <div class="auth-container">
@@ -40,32 +43,76 @@
             </p>
         </div>
     </div>
-
-    <script src="../js/api.js"></script>
-    <script src="../js/auth.js"></script>
     <script>
-        // Initialize authentication
-        const auth = new FinanzaAuth();
-        auth.redirectIfAuthenticated();
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        // Configuração real do Firebase (igual ao login.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtmg3jhdlvF_GJmfLRt_bHCGRw_nWSMCo",
+            authDomain: "finanza-2cd68.firebaseapp.com",
+            databaseURL: "https://finanza-2cd68-default-rtdb.firebaseio.com",
+            projectId: "finanza-2cd68",
+            storageBucket: "finanza-2cd68.appspot.com",
+            messagingSenderId: "991299806624",
+            appId: "1:991299806624:web:12782bf4a0ab6ed52630c5",
+            measurementId: "G-M1TCD97PRW"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        // Só redireciona se já está logado E na página cadastro
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 200);
+            }
+        });
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorContainer');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+        function hideError() {
+            const errorEl = document.getElementById('errorContainer');
+            errorEl.textContent = "";
+            errorEl.classList.add('hidden');
+        }
+        function showLoading(btn, text) {
+            btn.disabled = true;
+            btn.textContent = text;
+        }
+        function hideLoading(btn) {
+            btn.disabled = false;
+            btn.textContent = "Criar Conta";
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const submitBtn = e.target.querySelector('button[type="submit"]');
+            hideError();
+
+            if (password !== confirmPassword) {
+                showError('Senhas não coincidem');
+                return;
+            }
+
             try {
-                auth.hideError();
-                if (password !== confirmPassword) {
-                    throw new Error('Senhas não coincidem');
+                showLoading(submitBtn, 'Criando conta...');
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+
+                // Atualiza o nome do usuário (opcional)
+                if (name) {
+                    await userCredential.user.updateProfile({ displayName: name });
                 }
-                auth.showLoading(submitBtn, 'Criando conta...');
-                await auth.register(name, email, password);
+
                 window.location.href = 'dashboard.html';
             } catch (error) {
-                auth.showError(error.message);
+                showError(error.message);
             } finally {
-                auth.hideLoading(submitBtn);
+                hideLoading(submitBtn);
             }
         });
     </script>

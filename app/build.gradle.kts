@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    // Se usar Kotlin, pode precisar: id("org.jetbrains.kotlin.android")
 }
 
 android {
@@ -13,6 +12,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -33,6 +33,7 @@ android {
 
 dependencies {
     implementation("com.google.android.material:material:1.11.0")
+
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -41,11 +42,11 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+    // ROOM DATABASE (JAVA)
     implementation("androidx.room:room-runtime:2.6.1")
     annotationProcessor("androidx.room:room-compiler:2.6.1")
 
+    // Opcional: LiveData/ViewModel (se quiser usar arquitetura moderna)
     implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
     implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
 }
-
-// NÃO coloque bloco "repositories" aqui!

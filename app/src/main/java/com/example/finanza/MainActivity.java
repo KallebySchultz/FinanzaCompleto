@@ -397,13 +397,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        // Sincronizar dados quando a activity é retomada
-        if (syncService != null && usuarioIdAtual != -1) {
-            syncService.sincronizarTudo(usuarioIdAtual);
-        }
-
-        // Atualizar UI
         final TextView tvSaldo = findViewById(R.id.tvSaldo);
         final TextView tvReceita = findViewById(R.id.tvReceita);
         final TextView tvDespesa = findViewById(R.id.tvDespesa);
@@ -643,6 +636,15 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         if (syncService != null) {
             syncService.fechar();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Sincronizar dados quando a activity é retomada
+        if (syncService != null && usuarioIdAtual != -1) {
+            syncService.sincronizarTudo(usuarioIdAtual);
         }
     }
 }

@@ -41,9 +41,11 @@ DESKTOP\ VERSION/Servidor-Finanza/lib/
 # Configuration files (keep examples but ignore user configs)
 finanza-config.properties
 
-# Database files
+# Database files (created during runtime)
 *.db
 finanza.db
+database/*.db
+database/finanza.db
 
 # Server build artifacts
 server-java/target/

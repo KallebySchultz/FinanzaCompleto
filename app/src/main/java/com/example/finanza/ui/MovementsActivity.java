@@ -28,6 +28,7 @@ import com.example.finanza.model.Categoria;
 import com.example.finanza.ui.AccountsActivity;
 import com.example.finanza.MainActivity;
 import com.example.finanza.ui.MenuActivity;
+import com.example.finanza.network.SyncService;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -38,6 +39,7 @@ import java.util.Locale;
 public class MovementsActivity extends AppCompatActivity {
 
     private AppDatabase db;
+    private SyncService syncService;
     private int usuarioIdAtual;
 
     // Para navegação de mês/ano
@@ -67,6 +69,9 @@ public class MovementsActivity extends AppCompatActivity {
                 .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
                 .allowMainThreadQueries()
                 .build();
+
+        // Inicializar serviço de sincronização
+        syncService = new SyncService(this);
 
         // Obter usuário da intent ou de SharedPreferences
         usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
@@ -323,6 +328,12 @@ public class MovementsActivity extends AppCompatActivity {
                     lancamento.usuarioId = usuarioIdAtual;
                     lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
                     db.lancamentoDao().inserir(lancamento);
+                    
+                    // Sincronizar com Firebase após criar nova transação
+                    if (syncService != null) {
+                        syncService.sincronizarTudo(usuarioIdAtual);
+                    }
+                    
                     updateMovements();
                     dialog.dismiss();
                     Toast.makeText(this, "Transação salva!", Toast.LENGTH_SHORT).show();
@@ -488,6 +499,12 @@ public class MovementsActivity extends AppCompatActivity {
                     lancamento.valor = novoValor;
                     lancamento.categoriaId = categoriaFinal[0].id;
                     db.lancamentoDao().atualizar(lancamento);
+                    
+                    // Sincronizar com Firebase após atualizar transação
+                    if (syncService != null) {
+                        syncService.sincronizarTudo(usuarioIdAtual);
+                    }
+                    
                     updateMovements();
                     dialog.dismiss();
                     Toast.makeText(this, "Transação atualizada!", Toast.LENGTH_SHORT).show();
@@ -522,6 +539,12 @@ public class MovementsActivity extends AppCompatActivity {
 
         btnExcluir.setOnClickListener(v -> {
             db.lancamentoDao().deletar(lancamento);
+            
+            // Sincronizar com Firebase após excluir transação
+            if (syncService != null) {
+                syncService.sincronizarTudo(usuarioIdAtual);
+            }
+            
             updateMovements();
             dialog.dismiss();
             Toast.makeText(this, "Transação excluída!", Toast.LENGTH_SHORT).show();
@@ -625,5 +648,13 @@ public class MovementsActivity extends AppCompatActivity {
     private String formatarMoeda(double valor) {
         java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
         return formatter.format(valor);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (syncService != null) {
+            syncService.fechar();
+        }
     }
 }

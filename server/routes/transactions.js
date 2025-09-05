@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../config/database');
+const firebase = require('../config/firebase');
 const { authenticateToken, checkResourceOwnership } = require('../middleware/auth');
 
 const router = express.Router();
@@ -9,61 +9,63 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const { limit = 50, offset = 0, conta_id, categoria_id, tipo, start_date, end_date } = req.query;
 
-    let whereClause = 'WHERE l.usuario_id = ?';
-    let params = [req.user.id];
+    // Get all data
+    const lancamentos = await firebase.query('lancamentos');
+    const contas = await firebase.query('contas');
+    const categorias = await firebase.query('categorias');
 
+    // Filter transactions for this user
+    let userTransactions = lancamentos.filter(l => l.usuario_id === req.user.id);
+
+    // Apply filters
     if (conta_id) {
-      whereClause += ' AND l.conta_id = ?';
-      params.push(conta_id);
+      userTransactions = userTransactions.filter(l => l.conta_id === conta_id);
     }
 
     if (categoria_id) {
-      whereClause += ' AND l.categoria_id = ?';
-      params.push(categoria_id);
+      userTransactions = userTransactions.filter(l => l.categoria_id === categoria_id);
     }
 
     if (tipo && (tipo === 'receita' || tipo === 'despesa')) {
-      whereClause += ' AND l.tipo = ?';
-      params.push(tipo);
+      userTransactions = userTransactions.filter(l => l.tipo === tipo);
     }
 
     if (start_date) {
-      whereClause += ' AND l.data >= ?';
-      params.push(parseInt(start_date));
+      userTransactions = userTransactions.filter(l => l.data >= parseInt(start_date));
     }
 
     if (end_date) {
-      whereClause += ' AND l.data <= ?';
-      params.push(parseInt(end_date));
+      userTransactions = userTransactions.filter(l => l.data <= parseInt(end_date));
     }
 
-    const transactions = await db.all(`
-      SELECT 
-        l.id,
-        l.valor,
-        l.data,
-        l.descricao,
-        l.tipo,
-        c.nome as conta_nome,
-        cat.nome as categoria_nome,
-        cat.cor_hex as categoria_cor
-      FROM lancamentos l
-      JOIN contas c ON l.conta_id = c.id
-      LEFT JOIN categorias cat ON l.categoria_id = cat.id
-      ${whereClause}
-      ORDER BY l.data DESC
-      LIMIT ? OFFSET ?
-    `, [...params, parseInt(limit), parseInt(offset)]);
+    // Sort by date (newest first)
+    userTransactions.sort((a, b) => b.data - a.data);
 
-    const totalResult = await db.get(`
-      SELECT COUNT(*) as count 
-      FROM lancamentos l 
-      ${whereClause}
-    `, params);
+    // Paginate
+    const startIndex = parseInt(offset);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedTransactions = userTransactions.slice(startIndex, endIndex);
+
+    // Add related data
+    const transactions = paginatedTransactions.map(l => {
+      const conta = contas.find(c => c.id === l.conta_id);
+      const categoria = categorias.find(cat => cat.id === l.categoria_id);
+
+      return {
+        id: l.id,
+        valor: l.valor,
+        data: l.data,
+        descricao: l.descricao,
+        tipo: l.tipo,
+        conta_nome: conta ? conta.nome : null,
+        categoria_nome: categoria ? categoria.nome : null,
+        categoria_cor: categoria ? categoria.cor_hex : null
+      };
+    });
 
     res.json({
       transactions,
-      total: totalResult.count,
+      total: userTransactions.length,
       limit: parseInt(limit),
       offset: parseInt(offset)
     });

@@ -120,38 +120,42 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
 
     // Verificar se a categoria existe
-    const existingCategory = await db.get(
-      'SELECT id FROM categorias WHERE id = ?',
-      [req.params.id]
-    );
+    const existingCategory = await firebase.get('categorias', req.params.id);
 
     if (!existingCategory) {
       return res.status(404).json({ error: 'Categoria não encontrada' });
     }
 
     // Verificar se já existe outra categoria com esse nome e tipo
-    const duplicateCategory = await db.get(
-      'SELECT id FROM categorias WHERE nome = ? AND tipo = ? AND id != ?',
-      [nome, tipo, req.params.id]
+    const categorias = await firebase.query('categorias');
+    const duplicateCategory = categorias.find(cat => 
+      cat.nome === nome && 
+      cat.tipo === tipo && 
+      cat.id !== req.params.id
     );
 
     if (duplicateCategory) {
       return res.status(409).json({ error: 'Já existe uma categoria com esse nome e tipo' });
     }
 
-    await db.run(
-      'UPDATE categorias SET nome = ?, cor_hex = ?, tipo = ? WHERE id = ?',
-      [nome, cor_hex || '#666666', tipo, req.params.id]
-    );
+    const updateData = {
+      nome,
+      cor_hex: cor_hex || '#666666',
+      tipo
+    };
 
-    const updatedCategory = await db.get(
-      'SELECT id, nome, cor_hex, tipo FROM categorias WHERE id = ?',
-      [req.params.id]
-    );
+    await firebase.update('categorias', req.params.id, updateData);
+
+    const updatedCategory = await firebase.get('categorias', req.params.id);
 
     res.json({
       message: 'Categoria atualizada com sucesso',
-      category: updatedCategory
+      category: {
+        id: updatedCategory.id,
+        nome: updatedCategory.nome,
+        cor_hex: updatedCategory.cor_hex,
+        tipo: updatedCategory.tipo
+      }
     });
   } catch (error) {
     console.error('Erro ao atualizar categoria:', error);
@@ -163,25 +167,22 @@ router.put('/:id', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     // Verificar se a categoria tem transações associadas
-    const transactionCount = await db.get(
-      'SELECT COUNT(*) as count FROM lancamentos WHERE categoria_id = ?',
-      [req.params.id]
-    );
+    const lancamentos = await firebase.query('lancamentos');
+    const transactionCount = lancamentos.filter(l => l.categoria_id === req.params.id).length;
 
-    if (transactionCount.count > 0) {
+    if (transactionCount > 0) {
       return res.status(400).json({ 
         error: 'Não é possível excluir categoria com transações associadas' 
       });
     }
 
-    const result = await db.run(
-      'DELETE FROM categorias WHERE id = ?',
-      [req.params.id]
-    );
-
-    if (result.changes === 0) {
+    // Check if category exists
+    const categoria = await firebase.get('categorias', req.params.id);
+    if (!categoria) {
       return res.status(404).json({ error: 'Categoria não encontrada' });
     }
+
+    await firebase.delete('categorias', req.params.id);
 
     res.json({ message: 'Categoria excluída com sucesso' });
   } catch (error) {
@@ -195,37 +196,43 @@ router.get('/stats/usage', authenticateToken, async (req, res) => {
   try {
     const { usuario_id, start_date, end_date } = req.query;
 
-    let whereClause = '';
-    let params = [];
+    // Get all categories and transactions
+    const categorias = await firebase.query('categorias');
+    const lancamentos = await firebase.query('lancamentos');
 
+    // Filter transactions based on query parameters
+    let filteredLancamentos = lancamentos;
+    
     if (usuario_id) {
-      whereClause = 'WHERE l.usuario_id = ?';
-      params.push(usuario_id);
+      filteredLancamentos = filteredLancamentos.filter(l => l.usuario_id === parseInt(usuario_id));
     }
 
     if (start_date) {
-      whereClause += (whereClause ? ' AND' : 'WHERE') + ' l.data >= ?';
-      params.push(parseInt(start_date));
+      filteredLancamentos = filteredLancamentos.filter(l => l.data >= parseInt(start_date));
     }
 
     if (end_date) {
-      whereClause += (whereClause ? ' AND' : 'WHERE') + ' l.data <= ?';
-      params.push(parseInt(end_date));
+      filteredLancamentos = filteredLancamentos.filter(l => l.data <= parseInt(end_date));
     }
 
-    const categoryStats = await db.all(`
-      SELECT 
-        c.id,
-        c.nome,
-        c.cor_hex,
-        c.tipo,
-        COUNT(l.id) as total_transacoes,
-        COALESCE(SUM(ABS(l.valor)), 0) as total_valor
-      FROM categorias c
-      LEFT JOIN lancamentos l ON c.id = l.categoria_id ${whereClause ? 'AND ' + whereClause.replace('WHERE ', '') : ''}
-      GROUP BY c.id, c.nome, c.cor_hex, c.tipo
-      ORDER BY total_valor DESC
-    `, params);
+    // Calculate stats for each category
+    const categoryStats = categorias.map(categoria => {
+      const transacoesCategoria = filteredLancamentos.filter(l => l.categoria_id === categoria.id);
+      const total_transacoes = transacoesCategoria.length;
+      const total_valor = transacoesCategoria.reduce((sum, l) => sum + Math.abs(l.valor), 0);
+
+      return {
+        id: categoria.id,
+        nome: categoria.nome,
+        cor_hex: categoria.cor_hex,
+        tipo: categoria.tipo,
+        total_transacoes,
+        total_valor
+      };
+    });
+
+    // Sort by total value (descending)
+    categoryStats.sort((a, b) => b.total_valor - a.total_valor);
 
     res.json(categoryStats);
   } catch (error) {

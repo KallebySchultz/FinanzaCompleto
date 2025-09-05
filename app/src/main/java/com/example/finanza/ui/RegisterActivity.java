@@ -15,11 +15,15 @@ import com.example.finanza.MainActivity;
 import com.example.finanza.R;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Usuario;
+import com.example.finanza.network.FirebaseAuthClient;
+import com.example.finanza.network.SyncService;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class RegisterActivity extends AppCompatActivity {
 
     private AppDatabase db;
+    private FirebaseAuthClient firebaseAuth;
+    private SyncService syncService;
     private TextInputEditText inputNome, inputEmail, inputSenha, inputConfirmarSenha;
     private Button btnCriarConta;
     private TextView txtFazerLogin;
@@ -40,6 +44,12 @@ public class RegisterActivity extends AppCompatActivity {
                 .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
                 .allowMainThreadQueries()
                 .build();
+
+        // Inicializar Firebase Auth
+        firebaseAuth = new FirebaseAuthClient(this);
+        
+        // Inicializar SyncService
+        syncService = new SyncService(this);
 
         // Inicializar views
         inputNome = findViewById(R.id.input_nome);
@@ -100,14 +110,37 @@ public class RegisterActivity extends AppCompatActivity {
 
         if (hasError) return;
 
-        // Verificar se email já existe
-        Usuario usuarioExistente = db.usuarioDao().buscarPorEmail(email);
-        if (usuarioExistente != null) {
-            inputEmail.setError("Este email já está em uso");
-            return;
-        }
+        // Desabilitar botão para evitar múltiplos cliques
+        btnCriarConta.setEnabled(false);
+        btnCriarConta.setText("Criando conta...");
 
-        // Criar novo usuário
+        // Primeiro tentar criar conta no Firebase
+        firebaseAuth.createUserWithEmailAndPassword(email, senha, new FirebaseAuthClient.AuthCallback() {
+            @Override
+            public void onSuccess(String token, String userId, String userEmail) {
+                // Conta Firebase criada com sucesso, criar usuário local
+                criarUsuarioLocal(nome, email, senha, userId);
+            }
+
+            @Override
+            public void onError(String error) {
+                // Firebase falhou, verificar se é por email já existir
+                Usuario usuarioExistente = db.usuarioDao().buscarPorEmail(email);
+                if (usuarioExistente != null) {
+                    inputEmail.setError("Este email já está em uso");
+                    btnCriarConta.setEnabled(true);
+                    btnCriarConta.setText("Criar Conta");
+                } else {
+                    // Criar apenas localmente (modo offline)
+                    criarUsuarioLocal(nome, email, senha, null);
+                    Toast.makeText(RegisterActivity.this, "Conta criada offline. Será sincronizada quando conectar à internet.", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+
+    private void criarUsuarioLocal(String nome, String email, String senha, String firebaseUserId) {
+        // Criar novo usuário local
         Usuario novoUsuario = new Usuario();
         novoUsuario.nome = nome;
         novoUsuario.email = email;
@@ -123,10 +156,26 @@ public class RegisterActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show();
 
+        // Se tem Firebase user ID, iniciar sincronização
+        if (firebaseUserId != null) {
+            syncService.sincronizarTudo(novoUsuario.id);
+        }
+
         // Ir para MainActivity
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("usuarioId", novoUsuario.id);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (firebaseAuth != null) {
+            firebaseAuth.fechar();
+        }
+        if (syncService != null) {
+            syncService.fechar();
+        }
     }
 }

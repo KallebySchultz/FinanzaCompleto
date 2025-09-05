@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const db = require('../config/database');
+const firebase = require('../config/firebase');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -21,7 +21,8 @@ router.post('/register', async (req, res) => {
     }
 
     // Verificar se email já existe
-    const existingUser = await db.get('SELECT id FROM usuarios WHERE email = ?', [email]);
+    const usuarios = await firebase.get('usuarios');
+    const existingUser = usuarios ? Object.values(usuarios).find(user => user.email === email) : null;
     if (existingUser) {
       return res.status(409).json({ error: 'Email já está em uso' });
     }
@@ -30,25 +31,30 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(senha, 10);
     
     // Criar usuário
-    const result = await db.run(
-      'INSERT INTO usuarios (nome, email, senha, data_criacao) VALUES (?, ?, ?, ?)',
-      [nome, email, hashedPassword, Date.now()]
-    );
+    const userData = {
+      nome,
+      email,
+      senha: hashedPassword,
+      data_criacao: Date.now()
+    };
+    const newUser = await firebase.create('usuarios', userData);
 
     // Criar conta padrão para o usuário
-    await db.run(
-      'INSERT INTO contas (nome, saldo_inicial, usuario_id) VALUES (?, ?, ?)',
-      ['Conta Principal', 0, result.id]
-    );
+    const contaData = {
+      nome: 'Conta Principal',
+      saldo_inicial: 0,
+      usuario_id: newUser.id
+    };
+    await firebase.create('contas', contaData);
 
     // Gerar token
-    const token = jwt.sign({ userId: result.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ userId: newUser.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
 
     res.status(201).json({
       message: 'Usuário criado com sucesso',
       token,
       user: {
-        id: result.id,
+        id: newUser.id,
         nome,
         email
       }
@@ -69,7 +75,8 @@ router.post('/login', async (req, res) => {
     }
 
     // Buscar usuário
-    const user = await db.get('SELECT id, nome, email, senha FROM usuarios WHERE email = ?', [email]);
+    const usuarios = await firebase.get('usuarios');
+    const user = usuarios ? Object.values(usuarios).find(u => u.email === email) : null;
     if (!user) {
       return res.status(401).json({ error: 'Email ou senha incorretos' });
     }

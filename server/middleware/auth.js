@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const db = require('../config/database');
+const firebase = require('../config/firebase');
 
 // Middleware para verificar token JWT
 const authenticateToken = async (req, res, next) => {
@@ -14,7 +14,8 @@ const authenticateToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Verificar se o usuário ainda existe
-    const user = await db.get('SELECT id, nome, email FROM usuarios WHERE id = ?', [decoded.userId]);
+    const usuarios = await firebase.get('usuarios');
+    const user = usuarios ? Object.values(usuarios).find(u => u.id === decoded.userId) : null;
     if (!user) {
       return res.status(401).json({ error: 'Usuário não encontrado' });
     }
@@ -50,26 +51,23 @@ const checkResourceOwnership = (userIdField = 'usuario_id') => {
         return next();
       }
 
-      // Determinar a tabela baseada na rota
-      let table;
+      // Determine the collection and field based on the route
+      let collection, userField = 'usuario_id';
       if (req.route.path.includes('/accounts')) {
-        table = 'contas';
+        collection = 'contas';
       } else if (req.route.path.includes('/transactions')) {
-        table = 'lancamentos';
+        collection = 'lancamentos';
       } else {
         return next();
       }
 
-      const resource = await db.get(
-        `SELECT ${userIdField} FROM ${table} WHERE id = ?`,
-        [resourceId]
-      );
+      const resource = await firebase.get(collection, resourceId);
 
       if (!resource) {
         return res.status(404).json({ error: 'Recurso não encontrado' });
       }
 
-      if (resource[userIdField] !== req.user.id) {
+      if (resource[userField] !== req.user.id) {
         return res.status(403).json({ error: 'Acesso negado' });
       }
 

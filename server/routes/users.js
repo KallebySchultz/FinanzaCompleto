@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const db = require('../config/database');
+const firebase = require('../config/firebase');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -8,16 +8,15 @@ const router = express.Router();
 // Obter perfil do usuário autenticado
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
-    const user = await db.get(
-      'SELECT id, nome, email, data_criacao FROM usuarios WHERE id = ?',
-      [req.user.id]
-    );
+    const user = await firebase.get('usuarios', req.user.id);
 
     if (!user) {
       return res.status(404).json({ error: 'Usuário não encontrado' });
     }
 
-    res.json(user);
+    // Remove password from response
+    const { senha, ...userProfile } = user;
+    res.json(userProfile);
   } catch (error) {
     console.error('Erro ao obter perfil:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
@@ -34,13 +33,13 @@ router.put('/profile', authenticateToken, async (req, res) => {
     }
 
     // Verificar se o email já está em uso por outro usuário
-    const existingUser = await db.get('SELECT id FROM usuarios WHERE email = ? AND id != ?', [email, req.user.id]);
+    const usuarios = await firebase.get('usuarios');
+    const existingUser = usuarios ? Object.values(usuarios).find(u => u.email === email && u.id !== req.user.id) : null;
     if (existingUser) {
       return res.status(409).json({ error: 'Email já está em uso' });
     }
 
-    let updateFields = 'nome = ?, email = ?';
-    let updateValues = [nome, email];
+    let updateData = { nome, email };
 
     // Se quiser alterar a senha
     if (novaSenha) {
@@ -53,7 +52,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
       }
 
       // Verificar senha atual
-      const user = await db.get('SELECT senha FROM usuarios WHERE id = ?', [req.user.id]);
+      const user = await firebase.get('usuarios', req.user.id);
       const isValidPassword = await bcrypt.compare(senhaAtual, user.senha);
       if (!isValidPassword) {
         return res.status(400).json({ error: 'Senha atual incorreta' });
@@ -61,25 +60,17 @@ router.put('/profile', authenticateToken, async (req, res) => {
 
       // Hash da nova senha
       const hashedPassword = await bcrypt.hash(novaSenha, 10);
-      updateFields += ', senha = ?';
-      updateValues.push(hashedPassword);
+      updateData.senha = hashedPassword;
     }
 
-    updateValues.push(req.user.id);
+    await firebase.update('usuarios', req.user.id, updateData);
 
-    await db.run(
-      `UPDATE usuarios SET ${updateFields} WHERE id = ?`,
-      updateValues
-    );
-
-    const updatedUser = await db.get(
-      'SELECT id, nome, email, data_criacao FROM usuarios WHERE id = ?',
-      [req.user.id]
-    );
+    const updatedUser = await firebase.get('usuarios', req.user.id);
+    const { senha, ...userProfile } = updatedUser;
 
     res.json({
       message: 'Perfil atualizado com sucesso',
-      user: updatedUser
+      user: userProfile
     });
   } catch (error) {
     console.error('Erro ao atualizar perfil:', error);
@@ -97,14 +88,27 @@ router.delete('/profile', authenticateToken, async (req, res) => {
     }
 
     // Verificar senha
-    const user = await db.get('SELECT senha FROM usuarios WHERE id = ?', [req.user.id]);
+    const user = await firebase.get('usuarios', req.user.id);
     const isValidPassword = await bcrypt.compare(senha, user.senha);
     if (!isValidPassword) {
       return res.status(400).json({ error: 'Senha incorreta' });
     }
 
-    // Excluir usuário (cascade irá remover contas e lançamentos)
-    await db.run('DELETE FROM usuarios WHERE id = ?', [req.user.id]);
+    // Excluir dados relacionados (Firebase doesn't have CASCADE, so we need to delete manually)
+    const contas = await firebase.query('contas');
+    const contasUsuario = contas.filter(conta => conta.usuario_id === req.user.id);
+    for (const conta of contasUsuario) {
+      await firebase.delete('contas', conta.id);
+    }
+
+    const lancamentos = await firebase.query('lancamentos');
+    const lancamentosUsuario = lancamentos.filter(lancamento => lancamento.usuario_id === req.user.id);
+    for (const lancamento of lancamentosUsuario) {
+      await firebase.delete('lancamentos', lancamento.id);
+    }
+
+    // Excluir usuário
+    await firebase.delete('usuarios', req.user.id);
 
     res.json({ message: 'Conta excluída com sucesso' });
   } catch (error) {
@@ -116,43 +120,45 @@ router.delete('/profile', authenticateToken, async (req, res) => {
 // Obter resumo financeiro do usuário
 router.get('/financial-summary', authenticateToken, async (req, res) => {
   try {
-    // Saldo total das contas
-    const saldoResult = await db.get(`
-      SELECT COALESCE(SUM(saldo_atual), 0) as saldo_total
-      FROM v_saldo_contas 
-      WHERE usuario_id = ?
-    `, [req.user.id]);
+    // Get all accounts for the user
+    const contas = await firebase.query('contas');
+    const contasUsuario = contas.filter(conta => conta.usuario_id === req.user.id);
+    
+    // Get all transactions for the user
+    const lancamentos = await firebase.query('lancamentos');
+    const lancamentosUsuario = lancamentos.filter(lancamento => lancamento.usuario_id === req.user.id);
 
-    // Total de receitas do mês atual
+    // Calculate total balance (initial balance + transactions)
+    let saldo_total = 0;
+    for (const conta of contasUsuario) {
+      saldo_total += conta.saldo_inicial;
+      const transacoesConta = lancamentosUsuario.filter(l => l.conta_id === conta.id);
+      for (const transacao of transacoesConta) {
+        saldo_total += transacao.tipo === 'receita' ? transacao.valor : transacao.valor;
+      }
+    }
+
+    // Calculate monthly totals
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
+    const startTimestamp = startOfMonth.getTime();
+
+    const lancamentosDoMes = lancamentosUsuario.filter(l => l.data >= startTimestamp);
     
-    const receitasResult = await db.get(`
-      SELECT COALESCE(SUM(valor), 0) as total_receitas
-      FROM lancamentos 
-      WHERE usuario_id = ? AND tipo = 'receita' AND data >= ?
-    `, [req.user.id, startOfMonth.getTime()]);
-
-    // Total de despesas do mês atual
-    const despesasResult = await db.get(`
-      SELECT COALESCE(SUM(ABS(valor)), 0) as total_despesas
-      FROM lancamentos 
-      WHERE usuario_id = ? AND tipo = 'despesa' AND data >= ?
-    `, [req.user.id, startOfMonth.getTime()]);
-
-    // Número de contas
-    const contasResult = await db.get(`
-      SELECT COUNT(*) as total_contas
-      FROM contas 
-      WHERE usuario_id = ?
-    `, [req.user.id]);
+    const receitas_mes = lancamentosDoMes
+      .filter(l => l.tipo === 'receita')
+      .reduce((sum, l) => sum + l.valor, 0);
+      
+    const despesas_mes = lancamentosDoMes
+      .filter(l => l.tipo === 'despesa')
+      .reduce((sum, l) => sum + Math.abs(l.valor), 0);
 
     res.json({
-      saldo_total: saldoResult.saldo_total,
-      receitas_mes: receitasResult.total_receitas,
-      despesas_mes: despesasResult.total_despesas,
-      total_contas: contasResult.total_contas
+      saldo_total: saldo_total,
+      receitas_mes: receitas_mes,
+      despesas_mes: despesas_mes,
+      total_contas: contasUsuario.length
     });
   } catch (error) {
     console.error('Erro ao obter resumo financeiro:', error);

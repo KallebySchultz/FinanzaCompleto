@@ -64,6 +64,7 @@ npm --version   # Deve ser v8.0.0 ou superior
 - `verificar_sistema` - Verifica se tudo está configurado
 - `instalar_dependencias` - Instala todas as dependências
 - `descobrir_ip` - Encontra IP para configurar Android
+- `cleanup_files` - Remove arquivos inúteis (economiza ~1.5MB)
 
 ### Execução
 - `iniciar_tudo` - Inicia servidor + cliente + abre navegador

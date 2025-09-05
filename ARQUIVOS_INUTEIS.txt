@@ -1,0 +1,87 @@
+🧹 LISTA COMPLETA DE ARQUIVOS INÚTEIS - FINANZA
+=====================================================
+
+📋 RESUMO EXECUTIVO
+------------------
+Foram identificados 4 arquivos/pastas que podem ser removidos do projeto
+Finanza sem causar nenhum prejuízo ao funcionamento do sistema.
+
+💾 ECONOMIA TOTAL: ~1.6MB de espaço em disco
+
+🗑️ ARQUIVOS PARA EXCLUSÃO
+-------------------------
+
+1. 📦 DESKTOP VERSION.rar (1.5MB) - EXCLUIR ✅
+   • Arquivo comprimido redundante
+   • A pasta "DESKTOP VERSION" já existe descomprimida
+   • Não é referenciado em nenhum script ou código
+   • Economia: 1.5MB
+
+2. 🔧 verify_netbeans.sh (4KB) - EXCLUIR ✅
+   • Script para verificar projetos NetBeans
+   • Não existem projetos NetBeans no repositório
+   • Procura por arquivos que não existem (nbproject/, build.xml)
+   • É um script incorreto/desatualizado
+   • Economia: 4KB
+
+3. 🧪 firebase-test.html (20KB) - EXCLUIR ⚠️
+   • Arquivo de teste/depuração para Firebase
+   • Usado apenas para testes manuais
+   • Mencionado em FIREBASE_SETUP.md como ferramenta de teste
+   • DECISÃO: Pode excluir se a equipe não usa para depuração
+   • Economia: 20KB
+
+4. 🔨 .idea/ (44KB) - EXCLUIR ⚠️
+   • Configurações específicas do IntelliJ IDEA/Android Studio
+   • Contém preferências pessoais do desenvolvedor
+   • Pode ser regenerado automaticamente pela IDE
+   • DECISÃO: Pode excluir para limpeza, mas desenvolvedores precisarão reconfigurar
+   • Economia: 44KB
+
+📊 CLASSIFICAÇÃO POR SEGURANÇA
+-----------------------------
+
+🟢 EXCLUSÃO 100% SEGURA (sem impacto):
+   - DESKTOP VERSION.rar
+   - verify_netbeans.sh
+   Total: 1.504KB (~1.5MB)
+
+🟡 EXCLUSÃO OPCIONAL (pequeno impacto):
+   - firebase-test.html (perda de ferramenta de teste)
+   - .idea/ (reconfiguração de IDE)
+   Total: 64KB
+
+⚡ COMO EXECUTAR A LIMPEZA
+-------------------------
+
+Windows:
+   cleanup_files.bat
+
+Linux/Mac:
+   ./cleanup_files.sh
+
+Ou manualmente:
+   rm "DESKTOP VERSION.rar"
+   rm verify_netbeans.sh
+   rm firebase-test.html      # opcional
+   rm -rf .idea/              # opcional
+
+✅ VERIFICAÇÃO REALIZADA
+-----------------------
+✓ Analisada estrutura completa do projeto
+✓ Verificados todos os scripts de automação
+✓ Checadas dependências entre arquivos
+✓ Confirmada redundância dos arquivos marcados
+✓ Testada integridade do sistema sem os arquivos
+✓ Calculado impacto exato de cada exclusão
+
+🛡️ ARQUIVOS ESSENCIAIS (PRESERVADOS)
+-----------------------------------
+• Todos os scripts .sh/.bat de automação
+• Pastas server/, "DESKTOP VERSION/", app/, database/
+• Arquivos package.json e configurações de build
+• Documentação (README.md, FIREBASE_SETUP.md)
+• Sistema de build Android (gradle/, gradlew, etc.)
+• Configurações Git (.gitignore, .gitattributes)
+
+📁 Para análise detalhada, consulte: CLEANUP_ANALYSIS.md

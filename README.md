@@ -4,12 +4,14 @@ Sistema completo de gestão financeira pessoal com interface web e app Android.
 
 ## ⚡ Início Rápido
 
+> 📖 **[GUIA COMPLETO DE INICIALIZAÇÃO →](COMO_INICIAR_SERVIDOR.md)**
+
 ### 🖥️ Windows
 ```batch
 # 1. Verificar sistema
 verificar_sistema.bat
 
-# 2. Instalar dependências
+# 2. Instalar dependências  
 instalar_dependencias.bat
 
 # 3. Iniciar sistema completo
@@ -26,6 +28,15 @@ iniciar_tudo.bat
 
 # 3. Iniciar sistema completo
 ./iniciar_tudo.sh
+```
+
+### 🚀 Apenas o Servidor
+```bash
+# Linux/Mac
+./iniciar_servidor.sh
+
+# Windows
+iniciar_servidor.bat
 ```
 
 ### 📱 Acesso ao Sistema

@@ -1,0 +1,39 @@
+{
+  "name": "finanza-workspace",
+  "version": "1.0.0",
+  "description": "Finanza Financial Management System - Development Workspace",
+  "scripts": {
+    "setup": "./setup.sh",
+    "dev": "cd server && npm run dev",
+    "start": "cd server && npm start",
+    "server": "cd server && npm start",
+    "install-deps": "cd server && npm install",
+    "health": "curl -s http://localhost:8080/api/health | jq || curl -s http://localhost:8080/api/health",
+    "logs": "cd server && npm run dev",
+    "test-api": "cd server && npm test",
+    "build-android": "./gradlew build",
+    "clean": "rm -rf server/node_modules && ./gradlew clean",
+    "reset-db": "rm -f database/finanza.db && sqlite3 database/finanza.db < database/finanza.sql"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KallebySchultz/Finanza.git"
+  },
+  "keywords": [
+    "finanza",
+    "financial-management",
+    "android",
+    "nodejs",
+    "firebase",
+    "personal-finance"
+  ],
+  "author": "Finanza Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "workspaces": [
+    "server"
+  ]
+}

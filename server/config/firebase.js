@@ -1,5 +1,5 @@
 const { initializeApp } = require('firebase/app');
-const { getDatabase, ref, set, get, push, update, remove, onValue } = require('firebase/database');
+const { getDatabase, ref, set, get, push, update, remove } = require('firebase/database');
 
 class FirebaseConfig {
   constructor() {
@@ -8,115 +8,62 @@ class FirebaseConfig {
       databaseURL: 'https://finanza-2cd68-default-rtdb.firebaseio.com/'
     };
 
-    // Initialize Firebase
-    this.app = initializeApp(firebaseConfig);
-    this.database = getDatabase(this.app);
-    
-    console.log('✅ Firebase Realtime Database inicializado');
-    console.log('🔗 Database URL: https://finanza-2cd68-default-rtdb.firebaseio.com/');
-    
-    this.initializeDefaultData();
-  }
-
-  async initializeDefaultData() {
     try {
-      // Check if we have initial data
-      const usersRef = ref(this.database, 'usuarios');
-      const snapshot = await get(usersRef);
+      // Initialize Firebase
+      this.app = initializeApp(firebaseConfig);
+      this.database = getDatabase(this.app);
       
-      if (!snapshot.exists()) {
-        console.log('🔧 Inicializando dados padrão no Firebase...');
-        await this.createDefaultData();
-      } else {
-        console.log('✅ Dados já existem no Firebase');
-      }
+      console.log('✅ Firebase Realtime Database inicializado');
+      console.log('🔗 Database URL: https://finanza-2cd68-default-rtdb.firebaseio.com/');
+      
+      // Initialize simple test data
+      this.initializeSimpleData().catch(err => {
+        console.log('ℹ️  Dados já existem ou não foi possível inicializar:', err.message);
+      });
     } catch (error) {
-      console.error('❌ Erro ao verificar dados iniciais:', error);
+      console.error('❌ Erro ao inicializar Firebase:', error);
+      throw error;
     }
   }
 
-  async createDefaultData() {
+  async initializeSimpleData() {
     try {
-      // Create default categories
-      const categoriesData = {
-        // Despesas
-        1: { nome: 'Alimentação', cor_hex: '#FF6B6B', tipo: 'despesa' },
-        2: { nome: 'Transporte', cor_hex: '#4ECDC4', tipo: 'despesa' },
-        3: { nome: 'Saúde', cor_hex: '#45B7D1', tipo: 'despesa' },
-        4: { nome: 'Educação', cor_hex: '#96CEB4', tipo: 'despesa' },
-        5: { nome: 'Lazer', cor_hex: '#FFEAA7', tipo: 'despesa' },
-        6: { nome: 'Casa', cor_hex: '#DDA0DD', tipo: 'despesa' },
-        7: { nome: 'Roupas', cor_hex: '#98D8C8', tipo: 'despesa' },
-        8: { nome: 'Tecnologia', cor_hex: '#F7DC6F', tipo: 'despesa' },
-        9: { nome: 'Viagem', cor_hex: '#BB8FCE', tipo: 'despesa' },
-        10: { nome: 'Outros', cor_hex: '#85929E', tipo: 'despesa' },
-        // Receitas
-        11: { nome: 'Salário', cor_hex: '#2ECC71', tipo: 'receita' },
-        12: { nome: 'Freelance', cor_hex: '#3498DB', tipo: 'receita' },
-        13: { nome: 'Investimentos', cor_hex: '#9B59B6', tipo: 'receita' },
-        14: { nome: 'Vendas', cor_hex: '#E67E22', tipo: 'receita' },
-        15: { nome: 'Prêmios', cor_hex: '#F1C40F', tipo: 'receita' },
-        16: { nome: 'Restituição', cor_hex: '#1ABC9C', tipo: 'receita' },
-        17: { nome: 'Outros', cor_hex: '#34495E', tipo: 'receita' }
-      };
-
-      // Create default user (password will be hashed by auth routes)
-      const userData = {
-        1: {
+      // Check if we already have a test user
+      const testRef = ref(this.database, 'usuarios/test');
+      const snapshot = await get(testRef);
+      
+      if (!snapshot.exists()) {
+        console.log('🔧 Criando dados de teste...');
+        
+        // Create simple test data
+        await set(ref(this.database, 'usuarios/test'), {
+          id: 'test',
           nome: 'Administrador',
           email: 'admin@finanza.com',
           senha: 'admin', // This will be hashed in auth routes
           data_criacao: Date.now()
-        }
-      };
+        });
 
-      // Create default accounts
-      const accountsData = {
-        1: { nome: 'Conta Corrente', saldo_inicial: 1000.00, usuario_id: 1 },
-        2: { nome: 'Poupança', saldo_inicial: 5000.00, usuario_id: 1 }
-      };
+        await set(ref(this.database, 'categorias/cat1'), {
+          id: 'cat1',
+          nome: 'Alimentação',
+          cor_hex: '#FF6B6B',
+          tipo: 'despesa'
+        });
 
-      // Create sample transactions
-      const transactionsData = {
-        1: {
-          valor: 3500.00,
-          data: Date.now(),
-          descricao: 'Salário Mensal',
-          conta_id: 1,
-          categoria_id: 11,
-          usuario_id: 1,
+        await set(ref(this.database, 'categorias/cat2'), {
+          id: 'cat2',
+          nome: 'Salário',
+          cor_hex: '#2ECC71',
           tipo: 'receita'
-        },
-        2: {
-          valor: -150.00,
-          data: Date.now(),
-          descricao: 'Supermercado',
-          conta_id: 1,
-          categoria_id: 1,
-          usuario_id: 1,
-          tipo: 'despesa'
-        },
-        3: {
-          valor: -80.00,
-          data: Date.now(),
-          descricao: 'Combustível',
-          conta_id: 1,
-          categoria_id: 2,
-          usuario_id: 1,
-          tipo: 'despesa'
-        }
-      };
+        });
 
-      // Set data in Firebase
-      await set(ref(this.database, 'categorias'), categoriesData);
-      await set(ref(this.database, 'usuarios'), userData);
-      await set(ref(this.database, 'contas'), accountsData);
-      await set(ref(this.database, 'lancamentos'), transactionsData);
-
-      console.log('✅ Dados padrão criados no Firebase com sucesso!');
-      console.log('📧 Usuário padrão: admin@finanza.com | 🔑 Senha: admin');
+        console.log('✅ Dados de teste criados!');
+      } else {
+        console.log('✅ Dados já existem no Firebase');
+      }
     } catch (error) {
-      console.error('❌ Erro ao criar dados padrão:', error);
+      console.error('❌ Erro ao inicializar dados:', error);
     }
   }
 
@@ -124,9 +71,11 @@ class FirebaseConfig {
   async create(path, data) {
     try {
       const newRef = push(ref(this.database, path));
-      await set(newRef, { ...data, id: newRef.key });
-      return { id: newRef.key, ...data };
+      const newData = { ...data, id: newRef.key };
+      await set(newRef, newData);
+      return newData;
     } catch (error) {
+      console.error(`❌ Erro ao criar em ${path}:`, error);
       throw error;
     }
   }
@@ -137,6 +86,7 @@ class FirebaseConfig {
       const snapshot = await get(dbRef);
       return snapshot.exists() ? snapshot.val() : null;
     } catch (error) {
+      console.error(`❌ Erro ao buscar em ${path}:`, error);
       throw error;
     }
   }
@@ -146,6 +96,7 @@ class FirebaseConfig {
       await update(ref(this.database, `${path}/${id}`), data);
       return { id, ...data };
     } catch (error) {
+      console.error(`❌ Erro ao atualizar ${path}/${id}:`, error);
       throw error;
     }
   }
@@ -155,33 +106,22 @@ class FirebaseConfig {
       await remove(ref(this.database, `${path}/${id}`));
       return { success: true };
     } catch (error) {
+      console.error(`❌ Erro ao deletar ${path}/${id}:`, error);
       throw error;
     }
   }
 
-  async query(path, orderBy = null, equalTo = null) {
+  async query(path) {
     try {
       const snapshot = await get(ref(this.database, path));
       if (!snapshot.exists()) return [];
       
       const data = snapshot.val();
-      let results = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-      
-      // Simple filtering (replace with Firebase queries if needed)
-      if (equalTo !== null) {
-        results = results.filter(item => item[orderBy] === equalTo);
-      }
-      
-      return results;
+      return Object.keys(data).map(key => ({ id: key, ...data[key] }));
     } catch (error) {
-      throw error;
+      console.error(`❌ Erro ao consultar ${path}:`, error);
+      return [];
     }
-  }
-
-  // Real-time listener
-  onValue(path, callback) {
-    const dbRef = ref(this.database, path);
-    return onValue(dbRef, callback);
   }
 }
 

@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const db = require('../config/database');
+const firebase = require('../config/firebase');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -14,41 +14,50 @@ router.get('/users', async (req, res) => {
   try {
     const { limit = 50, offset = 0, search = '' } = req.query;
 
-    let whereClause = '';
-    let params = [];
+    // Get all data
+    const usuarios = await firebase.query('usuarios');
+    const contas = await firebase.query('contas');
+    const lancamentos = await firebase.query('lancamentos');
 
+    // Filter users by search if provided
+    let filteredUsers = usuarios;
     if (search) {
-      whereClause = 'WHERE nome LIKE ? OR email LIKE ?';
-      params.push(`%${search}%`, `%${search}%`);
+      filteredUsers = usuarios.filter(u => 
+        u.nome.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())
+      );
     }
 
-    const users = await db.all(`
-      SELECT 
-        u.id,
-        u.nome,
-        u.email,
-        u.data_criacao,
-        COUNT(DISTINCT c.id) as total_contas,
-        COUNT(l.id) as total_transacoes,
-        COALESCE(SUM(CASE WHEN l.tipo = 'receita' THEN l.valor ELSE -l.valor END), 0) as saldo_total
-      FROM usuarios u
-      LEFT JOIN contas c ON u.id = c.usuario_id
-      LEFT JOIN lancamentos l ON u.id = l.usuario_id
-      ${whereClause}
-      GROUP BY u.id, u.nome, u.email, u.data_criacao
-      ORDER BY u.data_criacao DESC
-      LIMIT ? OFFSET ?
-    `, [...params, parseInt(limit), parseInt(offset)]);
+    // Calculate user statistics
+    const users = filteredUsers.map(usuario => {
+      const userContas = contas.filter(c => c.usuario_id === usuario.id);
+      const userLancamentos = lancamentos.filter(l => l.usuario_id === usuario.id);
+      const saldo_total = userLancamentos.reduce((sum, l) => {
+        return sum + (l.tipo === 'receita' ? l.valor : l.valor);
+      }, 0);
 
-    const totalResult = await db.get(`
-      SELECT COUNT(*) as count 
-      FROM usuarios 
-      ${whereClause}
-    `, params);
+      return {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        data_criacao: usuario.data_criacao,
+        total_contas: userContas.length,
+        total_transacoes: userLancamentos.length,
+        saldo_total: saldo_total
+      };
+    });
+
+    // Sort by creation date (newest first)
+    users.sort((a, b) => b.data_criacao - a.data_criacao);
+
+    // Paginate
+    const startIndex = parseInt(offset);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedUsers = users.slice(startIndex, endIndex);
 
     res.json({
-      users,
-      total: totalResult.count,
+      users: paginatedUsers,
+      total: users.length,
       limit: parseInt(limit),
       offset: parseInt(offset)
     });

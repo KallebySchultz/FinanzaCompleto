@@ -1,4 +1,8 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// build.gradle.kts (Project: Finanza)
+
 plugins {
     alias(libs.plugins.android.application) apply false
+    // outros plugins globais também "apply false"
 }
+
+// NÃO coloque bloco "repositories" aqui!

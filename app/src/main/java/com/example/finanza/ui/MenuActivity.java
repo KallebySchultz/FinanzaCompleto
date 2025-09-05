@@ -28,6 +28,7 @@ import com.example.finanza.ui.MovementsActivity;
 import com.example.finanza.ui.CategoriaActivity;
 import com.example.finanza.ui.ReportsActivity;
 import java.util.List;
+
 public class MenuActivity extends AppCompatActivity {
     private FrameLayout categoriasPanel;
     private EditText inputNomeCategoria;
@@ -223,34 +224,34 @@ public class MenuActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Exportar Dados");
         builder.setMessage("Escolha o formato para exportar seus dados financeiros:");
-        
+
         builder.setPositiveButton("Exportar CSV", (dialog, which) -> {
             try {
                 // Create CSV data
                 StringBuilder csvData = new StringBuilder();
                 csvData.append("Tipo,Descrição,Valor,Data,Categoria,Conta\n");
-                
+
                 List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1); // assuming user ID 1
                 java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
-                
+
                 for (Lancamento lanc : lancamentos) {
                     Categoria categoria = db.categoriaDao().buscarPorId(lanc.categoriaId);
                     Conta conta = db.contaDao().buscarPorId(lanc.contaId);
-                    
+
                     csvData.append("\"").append(lanc.tipo).append("\",")
-                           .append("\"").append(lanc.descricao.replace("\"", "\"\"")).append("\",")
-                           .append("\"").append(formatter.format(lanc.valor)).append("\",")
-                           .append("\"").append(new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(lanc.data))).append("\",")
-                           .append("\"").append(categoria != null ? categoria.nome.replace("\"", "\"\"") : "N/A").append("\",")
-                           .append("\"").append(conta != null ? conta.nome.replace("\"", "\"\"") : "N/A").append("\"\n");
+                            .append("\"").append(lanc.descricao.replace("\"", "\"\"")).append("\",")
+                            .append("\"").append(formatter.format(lanc.valor)).append("\",")
+                            .append("\"").append(new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(lanc.data))).append("\",")
+                            .append("\"").append(categoria != null ? categoria.nome.replace("\"", "\"\"") : "N/A").append("\",")
+                            .append("\"").append(conta != null ? conta.nome.replace("\"", "\"\"") : "N/A").append("\"\n");
                 }
-                
+
                 // Store data for later use when file is selected
                 pendingCsvData = csvData;
-                
+
                 // Launch file picker
                 createCsvFile();
-                
+
             } catch (Exception e) {
                 AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
                 errorBuilder.setTitle("Erro na Exportação");
@@ -259,19 +260,19 @@ public class MenuActivity extends AppCompatActivity {
                 errorBuilder.show();
             }
         });
-        
+
         builder.setNeutralButton("Exportar Relatório", (dialog, which) -> {
             try {
                 // Create summary report
                 StringBuilder reportData = new StringBuilder();
                 reportData.append("=== RELATÓRIO FINANCEIRO FINANZA ===\n");
                 reportData.append("Gerado em: ").append(new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date())).append("\n\n");
-                
+
                 // Get summary data
                 List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1);
                 double totalReceitas = 0, totalDespesas = 0;
                 java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
-                
+
                 for (Lancamento lanc : lancamentos) {
                     if ("receita".equals(lanc.tipo)) {
                         totalReceitas += lanc.valor;
@@ -279,13 +280,13 @@ public class MenuActivity extends AppCompatActivity {
                         totalDespesas += lanc.valor;
                     }
                 }
-                
+
                 reportData.append("RESUMO GERAL:\n");
                 reportData.append("Total de Receitas: ").append(formatter.format(totalReceitas)).append("\n");
                 reportData.append("Total de Despesas: ").append(formatter.format(totalDespesas)).append("\n");
                 reportData.append("Saldo Total: ").append(formatter.format(totalReceitas - totalDespesas)).append("\n");
                 reportData.append("Total de Transações: ").append(lancamentos.size()).append("\n\n");
-                
+
                 // Add accounts summary
                 List<Conta> contas = db.contaDao().listarTodos();
                 reportData.append("CONTAS:\n");
@@ -297,13 +298,13 @@ public class MenuActivity extends AppCompatActivity {
                     }
                     reportData.append("- ").append(conta.nome).append(": ").append(formatter.format(saldoConta)).append("\n");
                 }
-                
+
                 // Store data for later use when file is selected
                 pendingReportData = reportData;
-                
+
                 // Launch file picker
                 createReportFile();
-                
+
             } catch (Exception e) {
                 AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
                 errorBuilder.setTitle("Erro na Geração do Relatório");
@@ -312,7 +313,7 @@ public class MenuActivity extends AppCompatActivity {
                 errorBuilder.show();
             }
         });
-        
+
         builder.setNegativeButton("Cancelar", null);
         builder.show();
     }
@@ -365,38 +366,38 @@ public class MenuActivity extends AppCompatActivity {
                 try {
                     if (requestCode == CREATE_CSV_FILE && pendingCsvData != null) {
                         writeToFile(uri, pendingCsvData.toString());
-                        
+
                         // Count records for success message
                         List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1);
-                        
+
                         AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
                         successBuilder.setTitle("Exportação Concluída");
                         successBuilder.setMessage("Arquivo CSV criado com sucesso!\n\n" +
                                 "Registros exportados: " + lancamentos.size() + "\n" +
                                 "Arquivo salvo no local selecionado.");
-                        
+
                         successBuilder.setPositiveButton("Visualizar Dados", (d, w) -> {
                             AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
                             previewBuilder.setTitle("Preview dos Dados CSV");
-                            previewBuilder.setMessage(pendingCsvData.length() > 1000 ? 
-                                pendingCsvData.substring(0, 1000) + "..." : pendingCsvData.toString());
+                            previewBuilder.setMessage(pendingCsvData.length() > 1000 ?
+                                    pendingCsvData.substring(0, 1000) + "..." : pendingCsvData.toString());
                             previewBuilder.setPositiveButton("OK", null);
                             previewBuilder.show();
                         });
-                        
+
                         successBuilder.setNegativeButton("OK", null);
                         successBuilder.show();
-                        
+
                         pendingCsvData = null;
-                        
+
                     } else if (requestCode == CREATE_REPORT_FILE && pendingReportData != null) {
                         writeToFile(uri, pendingReportData.toString());
-                        
+
                         AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
                         successBuilder.setTitle("Relatório Gerado");
                         successBuilder.setMessage("Relatório criado com sucesso!\n\n" +
                                 "Arquivo salvo no local selecionado.");
-                        
+
                         successBuilder.setPositiveButton("Visualizar", (d, w) -> {
                             AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
                             previewBuilder.setTitle("Relatório Financeiro");
@@ -404,13 +405,13 @@ public class MenuActivity extends AppCompatActivity {
                             previewBuilder.setPositiveButton("OK", null);
                             previewBuilder.show();
                         });
-                        
+
                         successBuilder.setNegativeButton("OK", null);
                         successBuilder.show();
-                        
+
                         pendingReportData = null;
                     }
-                    
+
                 } catch (Exception e) {
                     AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
                     errorBuilder.setTitle("Erro ao Salvar Arquivo");
@@ -435,7 +436,7 @@ public class MenuActivity extends AppCompatActivity {
         builder.setMessage("Deseja sincronizar seus dados com o servidor?");
         builder.setPositiveButton("Sincronizar", (dialog, which) -> {
             // Testar conexão primeiro
-            syncService.testarConexao("localhost", 8080);
+            syncService.testarConexao(); // <-- corrigido, sem argumentos!
             // Sincronizar dados do usuário
             syncService.sincronizarTudo(usuarioIdAtual);
         });

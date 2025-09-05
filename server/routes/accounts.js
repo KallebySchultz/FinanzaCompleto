@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../config/database');
+const firebase = require('../config/firebase');
 const { authenticateToken, checkResourceOwnership } = require('../middleware/auth');
 
 const router = express.Router();
@@ -7,20 +7,29 @@ const router = express.Router();
 // Listar todas as contas do usuário
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const accounts = await db.all(`
-      SELECT 
-        c.id,
-        c.nome,
-        c.saldo_inicial,
-        COALESCE(SUM(CASE WHEN l.tipo = 'receita' THEN l.valor ELSE -l.valor END), 0) as movimentacao,
-        c.saldo_inicial + COALESCE(SUM(CASE WHEN l.tipo = 'receita' THEN l.valor ELSE -l.valor END), 0) as saldo_atual
-      FROM contas c
-      LEFT JOIN lancamentos l ON c.id = l.conta_id
-      WHERE c.usuario_id = ?
-      GROUP BY c.id, c.nome, c.saldo_inicial
-      ORDER BY c.nome
-    `, [req.user.id]);
+    // Get all accounts for the user
+    const contas = await firebase.query('contas');
+    const contasUsuario = contas.filter(conta => conta.usuario_id === req.user.id);
+    
+    // Get all transactions to calculate current balance
+    const lancamentos = await firebase.query('lancamentos');
+    
+    const accounts = contasUsuario.map(conta => {
+      const transacoesConta = lancamentos.filter(l => l.conta_id === conta.id);
+      const movimentacao = transacoesConta.reduce((sum, t) => {
+        return sum + (t.tipo === 'receita' ? t.valor : t.valor);
+      }, 0);
+      
+      return {
+        id: conta.id,
+        nome: conta.nome,
+        saldo_inicial: conta.saldo_inicial,
+        movimentacao: movimentacao,
+        saldo_atual: conta.saldo_inicial + movimentacao
+      };
+    });
 
+    accounts.sort((a, b) => a.nome.localeCompare(b.nome));
     res.json(accounts);
   } catch (error) {
     console.error('Erro ao listar contas:', error);
@@ -31,22 +40,26 @@ router.get('/', authenticateToken, async (req, res) => {
 // Obter uma conta específica
 router.get('/:id', authenticateToken, checkResourceOwnership(), async (req, res) => {
   try {
-    const account = await db.get(`
-      SELECT 
-        c.id,
-        c.nome,
-        c.saldo_inicial,
-        COALESCE(SUM(CASE WHEN l.tipo = 'receita' THEN l.valor ELSE -l.valor END), 0) as movimentacao,
-        c.saldo_inicial + COALESCE(SUM(CASE WHEN l.tipo = 'receita' THEN l.valor ELSE -l.valor END), 0) as saldo_atual
-      FROM contas c
-      LEFT JOIN lancamentos l ON c.id = l.conta_id
-      WHERE c.id = ? AND c.usuario_id = ?
-      GROUP BY c.id, c.nome, c.saldo_inicial
-    `, [req.params.id, req.user.id]);
-
-    if (!account) {
+    const conta = await firebase.get('contas', req.params.id);
+    
+    if (!conta || conta.usuario_id !== req.user.id) {
       return res.status(404).json({ error: 'Conta não encontrada' });
     }
+
+    // Get transactions for this account to calculate current balance
+    const lancamentos = await firebase.query('lancamentos');
+    const transacoesConta = lancamentos.filter(l => l.conta_id === conta.id);
+    const movimentacao = transacoesConta.reduce((sum, t) => {
+      return sum + (t.tipo === 'receita' ? t.valor : t.valor);
+    }, 0);
+
+    const account = {
+      id: conta.id,
+      nome: conta.nome,
+      saldo_inicial: conta.saldo_inicial,
+      movimentacao: movimentacao,
+      saldo_atual: conta.saldo_inicial + movimentacao
+    };
 
     res.json(account);
   } catch (error) {
@@ -69,28 +82,29 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     // Verificar se já existe uma conta com esse nome para o usuário
-    const existingAccount = await db.get(
-      'SELECT id FROM contas WHERE nome = ? AND usuario_id = ?',
-      [nome, req.user.id]
-    );
+    const contas = await firebase.query('contas');
+    const existingAccount = contas.find(conta => conta.nome === nome && conta.usuario_id === req.user.id);
 
     if (existingAccount) {
       return res.status(409).json({ error: 'Já existe uma conta com esse nome' });
     }
 
-    const result = await db.run(
-      'INSERT INTO contas (nome, saldo_inicial, usuario_id) VALUES (?, ?, ?)',
-      [nome, saldo_inicial, req.user.id]
-    );
-
-    const newAccount = await db.get(
-      'SELECT id, nome, saldo_inicial, saldo_inicial as saldo_atual FROM contas WHERE id = ?',
-      [result.id]
-    );
+    const contaData = {
+      nome,
+      saldo_inicial,
+      usuario_id: req.user.id
+    };
+    
+    const newAccount = await firebase.create('contas', contaData);
 
     res.status(201).json({
       message: 'Conta criada com sucesso',
-      account: newAccount
+      account: {
+        id: newAccount.id,
+        nome: newAccount.nome,
+        saldo_inicial: newAccount.saldo_inicial,
+        saldo_atual: newAccount.saldo_inicial
+      }
     });
   } catch (error) {
     console.error('Erro ao criar conta:', error);
@@ -112,32 +126,35 @@ router.put('/:id', authenticateToken, checkResourceOwnership(), async (req, res)
     }
 
     // Verificar se já existe outra conta com esse nome para o usuário
-    const existingAccount = await db.get(
-      'SELECT id FROM contas WHERE nome = ? AND usuario_id = ? AND id != ?',
-      [nome, req.user.id, req.params.id]
+    const contas = await firebase.query('contas');
+    const existingAccount = contas.find(conta => 
+      conta.nome === nome && 
+      conta.usuario_id === req.user.id && 
+      conta.id !== req.params.id
     );
 
     if (existingAccount) {
       return res.status(409).json({ error: 'Já existe uma conta com esse nome' });
     }
 
-    await db.run(
-      'UPDATE contas SET nome = ?, saldo_inicial = ? WHERE id = ? AND usuario_id = ?',
-      [nome, saldo_inicial, req.params.id, req.user.id]
-    );
+    const updateData = { nome, saldo_inicial };
+    await firebase.update('contas', req.params.id, updateData);
 
-    const updatedAccount = await db.get(`
-      SELECT 
-        c.id,
-        c.nome,
-        c.saldo_inicial,
-        COALESCE(SUM(CASE WHEN l.tipo = 'receita' THEN l.valor ELSE -l.valor END), 0) as movimentacao,
-        c.saldo_inicial + COALESCE(SUM(CASE WHEN l.tipo = 'receita' THEN l.valor ELSE -l.valor END), 0) as saldo_atual
-      FROM contas c
-      LEFT JOIN lancamentos l ON c.id = l.conta_id
-      WHERE c.id = ?
-      GROUP BY c.id, c.nome, c.saldo_inicial
-    `, [req.params.id]);
+    // Get updated account with current balance
+    const updatedConta = await firebase.get('contas', req.params.id);
+    const lancamentos = await firebase.query('lancamentos');
+    const transacoesConta = lancamentos.filter(l => l.conta_id === req.params.id);
+    const movimentacao = transacoesConta.reduce((sum, t) => {
+      return sum + (t.tipo === 'receita' ? t.valor : t.valor);
+    }, 0);
+
+    const updatedAccount = {
+      id: updatedConta.id,
+      nome: updatedConta.nome,
+      saldo_inicial: updatedConta.saldo_inicial,
+      movimentacao: movimentacao,
+      saldo_atual: updatedConta.saldo_inicial + movimentacao
+    };
 
     res.json({
       message: 'Conta atualizada com sucesso',
@@ -153,21 +170,16 @@ router.put('/:id', authenticateToken, checkResourceOwnership(), async (req, res)
 router.delete('/:id', authenticateToken, checkResourceOwnership(), async (req, res) => {
   try {
     // Verificar se a conta tem transações
-    const transactionCount = await db.get(
-      'SELECT COUNT(*) as count FROM lancamentos WHERE conta_id = ?',
-      [req.params.id]
-    );
+    const lancamentos = await firebase.query('lancamentos');
+    const transactionCount = lancamentos.filter(l => l.conta_id === req.params.id).length;
 
-    if (transactionCount.count > 0) {
+    if (transactionCount > 0) {
       return res.status(400).json({ 
         error: 'Não é possível excluir conta com transações. Exclua as transações primeiro.' 
       });
     }
 
-    await db.run(
-      'DELETE FROM contas WHERE id = ? AND usuario_id = ?',
-      [req.params.id, req.user.id]
-    );
+    await firebase.delete('contas', req.params.id);
 
     res.json({ message: 'Conta excluída com sucesso' });
   } catch (error) {
@@ -181,30 +193,38 @@ router.get('/:id/transactions', authenticateToken, checkResourceOwnership(), asy
   try {
     const { limit = 50, offset = 0 } = req.query;
 
-    const transactions = await db.all(`
-      SELECT 
-        l.id,
-        l.valor,
-        l.data,
-        l.descricao,
-        l.tipo,
-        cat.nome as categoria_nome,
-        cat.cor_hex as categoria_cor
-      FROM lancamentos l
-      LEFT JOIN categorias cat ON l.categoria_id = cat.id
-      WHERE l.conta_id = ? AND l.usuario_id = ?
-      ORDER BY l.data DESC
-      LIMIT ? OFFSET ?
-    `, [req.params.id, req.user.id, parseInt(limit), parseInt(offset)]);
-
-    const total = await db.get(
-      'SELECT COUNT(*) as count FROM lancamentos WHERE conta_id = ? AND usuario_id = ?',
-      [req.params.id, req.user.id]
+    // Get transactions for this account
+    const allLancamentos = await firebase.query('lancamentos');
+    const contaLancamentos = allLancamentos.filter(l => 
+      l.conta_id === req.params.id && l.usuario_id === req.user.id
     );
+
+    // Get categories for lookup
+    const categorias = await firebase.query('categorias');
+    
+    // Sort by date (newest first) and paginate
+    contaLancamentos.sort((a, b) => b.data - a.data);
+    const startIndex = parseInt(offset);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedTransactions = contaLancamentos.slice(startIndex, endIndex);
+
+    // Add category details
+    const transactions = paginatedTransactions.map(l => {
+      const categoria = categorias.find(cat => cat.id === l.categoria_id);
+      return {
+        id: l.id,
+        valor: l.valor,
+        data: l.data,
+        descricao: l.descricao,
+        tipo: l.tipo,
+        categoria_nome: categoria ? categoria.nome : null,
+        categoria_cor: categoria ? categoria.cor_hex : null
+      };
+    });
 
     res.json({
       transactions,
-      total: total.count,
+      total: contaLancamentos.length,
       limit: parseInt(limit),
       offset: parseInt(offset)
     });

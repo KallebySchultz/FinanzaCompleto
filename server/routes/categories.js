@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../config/database');
+const firebase = require('../config/firebase');
 const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
@@ -9,20 +9,26 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const { tipo } = req.query;
 
-    let whereClause = '';
-    let params = [];
-
+    let categorias = await firebase.query('categorias');
+    
     if (tipo && (tipo === 'receita' || tipo === 'despesa')) {
-      whereClause = 'WHERE tipo = ?';
-      params.push(tipo);
+      categorias = categorias.filter(cat => cat.tipo === tipo);
     }
 
-    const categories = await db.all(`
-      SELECT id, nome, cor_hex, tipo
-      FROM categorias 
-      ${whereClause}
-      ORDER BY tipo, nome
-    `, params);
+    // Sort by type and name
+    categorias.sort((a, b) => {
+      if (a.tipo !== b.tipo) {
+        return a.tipo.localeCompare(b.tipo);
+      }
+      return a.nome.localeCompare(b.nome);
+    });
+
+    const categories = categorias.map(cat => ({
+      id: cat.id,
+      nome: cat.nome,
+      cor_hex: cat.cor_hex,
+      tipo: cat.tipo
+    }));
 
     res.json(categories);
   } catch (error) {
@@ -34,14 +40,18 @@ router.get('/', authenticateToken, async (req, res) => {
 // Obter uma categoria específica
 router.get('/:id', authenticateToken, async (req, res) => {
   try {
-    const category = await db.get(
-      'SELECT id, nome, cor_hex, tipo FROM categorias WHERE id = ?',
-      [req.params.id]
-    );
+    const categoria = await firebase.get('categorias', req.params.id);
 
-    if (!category) {
+    if (!categoria) {
       return res.status(404).json({ error: 'Categoria não encontrada' });
     }
+
+    const category = {
+      id: categoria.id,
+      nome: categoria.nome,
+      cor_hex: categoria.cor_hex,
+      tipo: categoria.tipo
+    };
 
     res.json(category);
   } catch (error) {
@@ -66,28 +76,29 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 
     // Verificar se já existe uma categoria com esse nome e tipo
-    const existingCategory = await db.get(
-      'SELECT id FROM categorias WHERE nome = ? AND tipo = ?',
-      [nome, tipo]
-    );
+    const categorias = await firebase.query('categorias');
+    const existingCategory = categorias.find(cat => cat.nome === nome && cat.tipo === tipo);
 
     if (existingCategory) {
       return res.status(409).json({ error: 'Já existe uma categoria com esse nome e tipo' });
     }
 
-    const result = await db.run(
-      'INSERT INTO categorias (nome, cor_hex, tipo) VALUES (?, ?, ?)',
-      [nome, cor_hex || '#666666', tipo]
-    );
+    const categoriaData = {
+      nome,
+      cor_hex: cor_hex || '#666666',
+      tipo
+    };
 
-    const newCategory = await db.get(
-      'SELECT id, nome, cor_hex, tipo FROM categorias WHERE id = ?',
-      [result.id]
-    );
+    const newCategory = await firebase.create('categorias', categoriaData);
 
     res.status(201).json({
       message: 'Categoria criada com sucesso',
-      category: newCategory
+      category: {
+        id: newCategory.id,
+        nome: newCategory.nome,
+        cor_hex: newCategory.cor_hex,
+        tipo: newCategory.tipo
+      }
     });
   } catch (error) {
     console.error('Erro ao criar categoria:', error);

@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul
 color 0B
+cls
 echo ========================================
 echo   🖥️ FINANZA - CLIENTE DESKTOP
 echo ========================================

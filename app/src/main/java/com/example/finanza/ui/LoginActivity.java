@@ -14,11 +14,15 @@ import com.example.finanza.MainActivity;
 import com.example.finanza.R;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Usuario;
+import com.example.finanza.network.FirebaseAuthClient;
+import com.example.finanza.network.SyncService;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class LoginActivity extends AppCompatActivity {
 
     private AppDatabase db;
+    private FirebaseAuthClient firebaseAuth;
+    private SyncService syncService;
     private TextInputEditText inputEmail, inputSenha;
     private Button btnLogin;
     private TextView txtCriarConta;
@@ -40,16 +44,38 @@ public class LoginActivity extends AppCompatActivity {
                 .allowMainThreadQueries()
                 .build();
 
-        // Verificar se já está logado
-        SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
-        int usuarioLogado = prefs.getInt("usuarioId", -1);
-        if (usuarioLogado != -1) {
-            // Usuário já está logado, ir para MainActivity
+        // Inicializar Firebase Auth
+        firebaseAuth = new FirebaseAuthClient(this);
+        
+        // Inicializar SyncService
+        syncService = new SyncService(this);
+
+        // Verificar se já está logado (prioritizando Firebase Auth)
+        if (firebaseAuth.isUserLoggedIn()) {
+            // Usuário já está logado no Firebase, ir para MainActivity
+            String firebaseUserId = firebaseAuth.getSavedUserId();
+            String firebaseEmail = firebaseAuth.getSavedUserEmail();
+            
+            // Criar ou buscar usuário local correspondente
+            Usuario usuarioLocal = criarOuBuscarUsuarioLocal(firebaseEmail, firebaseUserId);
+            
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("usuarioId", usuarioLogado);
+            intent.putExtra("usuarioId", usuarioLocal.id);
             startActivity(intent);
             finish();
             return;
+        } else {
+            // Verificar login local (para funcionamento offline)
+            SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
+            int usuarioLogado = prefs.getInt("usuarioId", -1);
+            if (usuarioLogado != -1) {
+                // Usuário está logado localmente, ir para MainActivity
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra("usuarioId", usuarioLogado);
+                startActivity(intent);
+                finish();
+                return;
+            }
         }
 
         // Inicializar views
@@ -87,20 +113,84 @@ public class LoginActivity extends AppCompatActivity {
 
         if (hasError) return;
 
-        // Tentar fazer login
-        Usuario usuario = db.usuarioDao().login(email, senha);
-        if (usuario != null) {
-            // Login bem-sucedido
-            SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
-            prefs.edit().putInt("usuarioId", usuario.id).apply();
+        // Desabilitar botão para evitar múltiplos cliques
+        btnLogin.setEnabled(false);
+        btnLogin.setText("Entrando...");
 
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("usuarioId", usuario.id);
-            startActivity(intent);
-            finish();
-        } else {
-            // Login falhou
-            Toast.makeText(this, "Email ou senha incorretos", Toast.LENGTH_SHORT).show();
+        // Tentar login com Firebase primeiro (para sincronização online)
+        firebaseAuth.signInWithEmailAndPassword(email, senha, new FirebaseAuthClient.AuthCallback() {
+            @Override
+            public void onSuccess(String token, String userId, String email) {
+                // Login Firebase bem-sucedido
+                Usuario usuarioLocal = criarOuBuscarUsuarioLocal(email, userId);
+                
+                // Salvar sessão local também
+                SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
+                prefs.edit().putInt("usuarioId", usuarioLocal.id).apply();
+
+                // Iniciar sincronização
+                syncService.sincronizarTudo(usuarioLocal.id);
+
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                intent.putExtra("usuarioId", usuarioLocal.id);
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(String error) {
+                // Firebase login falhou, tentar login local (para modo offline)
+                Usuario usuario = db.usuarioDao().login(email, senha);
+                if (usuario != null) {
+                    // Login local bem-sucedido
+                    SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
+                    prefs.edit().putInt("usuarioId", usuario.id).apply();
+
+                    Toast.makeText(LoginActivity.this, "Login offline realizado", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    intent.putExtra("usuarioId", usuario.id);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    // Ambos os logins falharam
+                    Toast.makeText(LoginActivity.this, "Email ou senha incorretos", Toast.LENGTH_SHORT).show();
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText("Entrar");
+                }
+            }
+        });
+    }
+
+    /**
+     * Cria ou busca usuário local correspondente ao usuário Firebase
+     */
+    private Usuario criarOuBuscarUsuarioLocal(String email, String firebaseUserId) {
+        Usuario usuarioLocal = db.usuarioDao().buscarPorEmail(email);
+        
+        if (usuarioLocal == null) {
+            // Criar novo usuário local
+            usuarioLocal = new Usuario();
+            usuarioLocal.email = email;
+            usuarioLocal.nome = email.split("@")[0]; // Nome padrão baseado no email
+            usuarioLocal.senha = ""; // Não precisamos da senha para usuários Firebase
+            usuarioLocal.dataCriacao = System.currentTimeMillis();
+            
+            long id = db.usuarioDao().inserir(usuarioLocal);
+            usuarioLocal.id = (int) id;
+        }
+        
+        return usuarioLocal;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (firebaseAuth != null) {
+            firebaseAuth.fechar();
+        }
+        if (syncService != null) {
+            syncService.fechar();
         }
     }
 }

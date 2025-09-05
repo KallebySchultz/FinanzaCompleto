@@ -53,13 +53,10 @@
         };
         firebase.initializeApp(firebaseConfig);
 
-        // Só redireciona se já está logado E na página login
+        // Redireciona direto pro dashboard se já está logado
         firebase.auth().onAuthStateChanged(function(user) {
             if (user) {
-                // Pequeno delay para evitar loop
-                setTimeout(() => {
-                    window.location.href = "dashboard.html";
-                }, 200);
+                window.location.href = "dashboard.html";
             }
         });
 

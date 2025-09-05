@@ -11,15 +11,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <style>
-        .sidebar .nav-icon img {
-            width: 24px;
-            height: 24px;
-            vertical-align: middle;
-            margin-right: 6px;
-            filter: drop-shadow(0 0 2px #48bb78);
-        }
-    </style>
 </head>
 <body>
     <div class="app-container">
@@ -115,51 +106,13 @@
                         <span>${user?.email || 'Usuário'}</span>
                     </div>
                     <ul class="nav-menu">
-                        <li class="nav-item">
-                            <a href="dashboard.html" class="nav-link">
-                                <span class="nav-icon">
-                                    <img src="../icons/ícone home.png" alt="Dashboard" />
-                                </span>
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="accounts.html" class="nav-link">
-                                <span class="nav-icon">
-                                    <img src="../icons/ícone banco.png" alt="Contas" />
-                                </span>
-                                Contas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="transactions.html" class="nav-link active">
-                                <span class="nav-icon">
-                                    <img src="../icons/ícone movimentações.png" alt="Transações" />
-                                </span>
-                                Transações
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="categories.html" class="nav-link">
-                                <span class="nav-icon">
-                                    <img src="../icons/ícone menu.png" alt="Categorias" />
-                                </span>
-                                Categorias
-                            </a>
-                        </li>
-                        <li class="nav-item"><a href="profile.html" class="nav-link">
-                            <span class="nav-icon">
-                                <svg width="24" height="24" fill="none"><circle cx="12" cy="8" r="4" stroke="#764ba2" stroke-width="2"/><path d="M4 20v-2a4 4 0 014-4h8a4 4 0 014 4v2" stroke="#667eea" stroke-width="2"/></svg>
-                            </span>
-                            Perfil
-                        </a></li>
+                        <li class="nav-item"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li class="nav-item"><a href="accounts.html" class="nav-link">Contas</a></li>
+                        <li class="nav-item"><a href="transactions.html" class="nav-link active">Transações</a></li>
+                        <li class="nav-item"><a href="categories.html" class="nav-link">Categorias</a></li>
+                        <li class="nav-item"><a href="profile.html" class="nav-link">Perfil</a></li>
                         ${isAdmin ? `<li class="nav-item"><a href="admin.html" class="nav-link">Admin</a></li>` : ""}
-                        <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn">
-                            <span class="nav-icon">
-                                <svg width="24" height="24" fill="none"><path d="M16 17l5-5m0 0l-5-5m5 5H9" stroke="#f56565" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4h7v16H4V4z" stroke="#718096" stroke-width="2"/></svg>
-                            </span>
-                            Sair
-                        </a></li>
+                        <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn">Sair</a></li>
                     </ul>
                 </div>
             `;
@@ -183,8 +136,6 @@
                 }
                 currentUser = user;
                 document.getElementById('sidebar').innerHTML = generateSidebar(user);
-                // REMOVIDO O HEADER DO TOPO
-                // document.getElementById('header').innerHTML = generateHeader('Transações', user);
 
                 document.getElementById('logoutBtn').addEventListener('click', async (e) => {
                     e.preventDefault();

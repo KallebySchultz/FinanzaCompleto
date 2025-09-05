@@ -12,25 +12,13 @@
     <div class="auth-container">
         <div class="auth-card">
             <div class="logo">F</div>
-            <h1>Redirecionando...</h1>
+            <h1>Redirecionando para login...</h1>
             <div class="loading"></div>
         </div>
     </div>
-
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
     <script>
-        // Initialize authentication and redirect appropriately
-        const auth = new FinanzaAuth();
-        
-        // Check if user is already authenticated
-        if (auth.isAuthenticated()) {
-            // Redirect to dashboard
-            window.location.href = 'html/dashboard.html';
-        } else {
-            // Redirect to login
-            window.location.href = 'html/login.html';
-        }
+        // Sempre redireciona para login.html
+        window.location.href = "html/login.html";
     </script>
 </body>
 </html>

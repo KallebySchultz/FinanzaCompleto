@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul
 color 0D
+cls
 echo ========================================
 echo  🚀 FINANZA - INICIALIZACAO COMPLETA
 echo ========================================

@@ -10,32 +10,38 @@
     <!-- Firebase SDK compat -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 2rem auto 1rem auto;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar -->
         <div id="sidebar"></div>
         
         <div class="main-content">
-            <!-- Header -->
-            <div id="header"></div>
-            
             <!-- Estatísticas/resumo financeiro -->
             <div class="stats-grid" id="statsGrid">
                 <div class="stat-card">
-                    <div class="stat-value stat-balance">R$ 5.000,00</div>
+                    <div class="stat-value stat-balance" id="saldoTotal">R$ 0,00</div>
                     <div class="stat-label">Saldo Total</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value stat-income">R$ 2.500,00</div>
+                    <div class="stat-value stat-income" id="receitasMes">R$ 0,00</div>
                     <div class="stat-label">Receitas do Mês</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value stat-expense">R$ 1.200,00</div>
+                    <div class="stat-value stat-expense" id="despesasMes">R$ 0,00</div>
                     <div class="stat-label">Despesas do Mês</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value stat-accounts">3</div>
+                    <div class="stat-value stat-accounts" id="contasCadastradas">0</div>
                     <div class="stat-label">Contas cadastradas</div>
                 </div>
             </div>
@@ -45,16 +51,19 @@
                     <h2 class="card-title">Resumo Financeiro</h2>
                 </div>
                 <div id="financialSummary">
-                    <p>Você possui <strong>3</strong> contas cadastradas.</p>
-                    <p>Neste mês você teve <strong>R$ 2.500,00</strong> em receitas e <strong>R$ 1.200,00</strong> em despesas.</p>
-                    <p>Seu saldo atual é de <strong>R$ 5.000,00</strong>.</p>
+                    <p id="contasResumo">Você possui <strong>0</strong> contas cadastradas.</p>
+                    <p id="receitaResumo">Neste mês você teve <strong>R$ 0,00</strong> em receitas e <strong>R$ 0,00</strong> em despesas.</p>
+                    <p id="saldoResumo">Seu saldo atual é de <strong>R$ 0,00</strong>.</p>
+                </div>
+                <!-- Gráfico de despesas por categoria -->
+                <div class="chart-container">
+                    <canvas id="despesasPorCategoriaChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuração real do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAtmg3jhdlvF_GJmfLRt_bHCGRw_nWSMCo",
             authDomain: "finanza-2cd68.firebaseapp.com",
@@ -67,8 +76,11 @@
         };
         firebase.initializeApp(firebaseConfig);
 
-        // Sidebar com botões navegáveis e ícones SVG
+        const adminEmails = ["admin@finanza.com", "seu_email_admin@dominio.com"];
+
         function generateSidebar(user) {
+            const isAdmin = user && adminEmails.includes(user.email);
+
             return `
                 <div class="sidebar">
                     <div class="sidebar-logo">
@@ -79,71 +91,138 @@
                         <span>${user?.email || 'Usuário'}</span>
                     </div>
                     <ul class="nav-menu">
-                        <li class="nav-item">
-                            <a href="dashboard.html" class="nav-link active">
-                                <span class="nav-icon">
-                                    <!-- Dashboard icon -->
-                                    <svg width="24" height="24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2" fill="#667eea"/><rect x="14" y="3" width="7" height="7" rx="2" fill="#667eea"/><rect x="14" y="14" width="7" height="7" rx="2" fill="#667eea"/><rect x="3" y="14" width="7" height="7" rx="2" fill="#667eea"/></svg>
-                                </span>
-                                Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="accounts.html" class="nav-link">
-                                <span class="nav-icon">
-                                    <!-- Accounts icon -->
-                                    <svg width="24" height="24" fill="none"><path d="M12 4a4 4 0 110 8 4 4 0 010-8z" stroke="#48bb78" stroke-width="2"/><path d="M4 20v-2a4 4 0 014-4h8a4 4 0 014 4v2" stroke="#667eea" stroke-width="2"/></svg>
-                                </span>
-                                Contas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="transactions.html" class="nav-link">
-                                <span class="nav-icon">
-                                    <!-- Transactions icon -->
-                                    <svg width="24" height="24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="#ed8936" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                </span>
-                                Transações
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="profile.html" class="nav-link">
-                                <span class="nav-icon">
-                                    <!-- Profile icon -->
-                                    <svg width="24" height="24" fill="none"><circle cx="12" cy="8" r="4" stroke="#764ba2" stroke-width="2"/><path d="M4 20v-2a4 4 0 014-4h8a4 4 0 014 4v2" stroke="#667eea" stroke-width="2"/></svg>
-                                </span>
-                                Perfil
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="admin.html" class="nav-link">
-                                <span class="nav-icon">
-                                    <!-- Admin icon -->
-                                    <svg width="24" height="24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c53030" stroke-width="2"/><path d="M12 6v6l4 2" stroke="#c53030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                </span>
-                                Admin
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link" id="logoutBtn">
-                                <span class="nav-icon">
-                                    <!-- Logout icon -->
-                                    <svg width="24" height="24" fill="none"><path d="M16 17l5-5m0 0l-5-5m5 5H9" stroke="#f56565" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4h7v16H4V4z" stroke="#718096" stroke-width="2"/></svg>
-                                </span>
-                                Sair
-                            </a>
-                        </li>
+                        <li class="nav-item"><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+                        <li class="nav-item"><a href="accounts.html" class="nav-link">Contas</a></li>
+                        <li class="nav-item"><a href="transactions.html" class="nav-link">Transações</a></li>
+                        <li class="nav-item"><a href="categories.html" class="nav-link">Categorias</a></li>
+                        <li class="nav-item"><a href="profile.html" class="nav-link">Perfil</a></li>
+                        ${isAdmin ? `<li class="nav-item"><a href="admin.html" class="nav-link">Admin</a></li>` : ""}
+                        <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn">Sair</a></li>
                     </ul>
                 </div>
             `;
         }
-        function generateHeader(title, user) {
-            return `
-                <div class="header">
-                    <h1>${title}</h1>
-                    <span>${user?.email || 'Usuário'}</span>
-                </div>
-            `;
+
+        // Função para buscar dados reais do Firebase Database
+        function atualizarDashboard(user) {
+            // Atualiza contas cadastradas
+            const contasRef = firebase.database().ref('contas/' + user.uid);
+            contasRef.on('value', snapshot => {
+                const contas = [];
+                snapshot.forEach(child => {
+                    const conta = child.val();
+                    contas.push({ id: child.key, ...conta });
+                });
+
+                document.getElementById('contasCadastradas').textContent = contas.length;
+                document.getElementById('contasResumo').innerHTML = `Você possui <strong>${contas.length}</strong> contas cadastradas.`;
+            });
+
+            // Atualiza receitas/despesas, saldo total e gráfico de despesas
+            const transRef = firebase.database().ref('transacoes/' + user.uid);
+            const categoriasRef = firebase.database().ref('categorias/' + user.uid);
+
+            const now = new Date();
+            const mesAtual = now.getMonth();
+            const anoAtual = now.getFullYear();
+
+            let categorias = {};
+            categoriasRef.once('value').then(snapshot => {
+                snapshot.forEach(child => {
+                    categorias[child.key] = child.val().nome;
+                });
+            });
+
+            transRef.on('value', snapshot => {
+                let receitas = 0;
+                let despesas = 0;
+                let receitasMes = 0;
+                let despesasMes = 0;
+
+                // Para gráfico de despesas por categoria
+                let despesasPorCategoria = {};
+
+                snapshot.forEach(child => {
+                    const trans = child.val();
+                    const valor = trans.valor || 0;
+                    if (trans.tipo === 'receita') receitas += valor;
+                    if (trans.tipo === 'despesa') despesas += valor;
+
+                    // Gráfico: soma despesas por categoria
+                    if (trans.tipo === 'despesa' && trans.categoria_id) {
+                        const categoriaId = trans.categoria_id;
+                        despesasPorCategoria[categoriaId] = (despesasPorCategoria[categoriaId] || 0) + valor;
+                    }
+
+                    const data = new Date(trans.data);
+                    if (data.getMonth() === mesAtual && data.getFullYear() === anoAtual) {
+                        if (trans.tipo === 'receita') receitasMes += valor;
+                        if (trans.tipo === 'despesa') despesasMes += valor;
+                    }
+                });
+
+                const saldoTotal = receitas - despesas;
+
+                document.getElementById('saldoTotal').textContent = 'R$ ' + saldoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById('saldoResumo').innerHTML = `Seu saldo atual é de <strong>R$ ${saldoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>.`;
+
+                document.getElementById('receitasMes').textContent = 'R$ ' + receitasMes.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById('despesasMes').textContent = 'R$ ' + despesasMes.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                document.getElementById('receitaResumo').innerHTML = `Neste mês você teve <strong>R$ ${receitasMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong> em receitas e <strong>R$ ${despesasMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong> em despesas.`;
+
+                // Monta dados para gráfico de despesas por categoria
+                categoriasRef.once('value').then(catSnapshot => {
+                    let labels = [];
+                    let values = [];
+                    catSnapshot.forEach(catChild => {
+                        const catId = catChild.key;
+                        const catName = catChild.val().nome;
+                        if (despesasPorCategoria[catId]) {
+                            labels.push(catName);
+                            values.push(despesasPorCategoria[catId]);
+                        }
+                    });
+                    renderDespesasPorCategoriaChart(labels, values);
+                });
+            });
+        }
+
+        let despesasChartInstance = null;
+        function renderDespesasPorCategoriaChart(labels, values) {
+            const ctx = document.getElementById('despesasPorCategoriaChart').getContext('2d');
+
+            if (despesasChartInstance) {
+                despesasChartInstance.data.labels = labels;
+                despesasChartInstance.data.datasets[0].data = values;
+                despesasChartInstance.update();
+                return;
+            }
+
+            despesasChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Gastos por despesa (R$)',
+                        data: values,
+                        backgroundColor: '#f56565'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: labels.length > 0,
+                            text: 'Gastos por Categoria de Despesa'
+                        }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Categoria' } },
+                        y: { title: { display: true, text: 'Valor (R$)' }, beginAtZero: true }
+                    }
+                }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -155,13 +234,15 @@
                     return;
                 }
                 document.getElementById('sidebar').innerHTML = generateSidebar(user);
-                document.getElementById('header').innerHTML = generateHeader('Dashboard', user);
 
                 document.getElementById('logoutBtn').addEventListener('click', async (e) => {
                     e.preventDefault();
                     await firebase.auth().signOut();
                     window.location.href = "login.html";
                 });
+
+                // Chama atualização do dashboard com dados reais
+                atualizarDashboard(user);
             });
         });
     </script>

@@ -6,17 +6,17 @@
     <title>Perfil - Finanza Desktop</title>
     <link rel="stylesheet" href="../css/common.css">
     <link rel="stylesheet" href="../css/dashboard.css">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23667eea'/><text x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-weight='bold'>F</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%234477d7'/><text x='50' y='60' text-anchor='middle' fill='white' font-size='40' font-weight='bold'>F</text></svg>">
+    <!-- Firebase SDK compat -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="app-container">
-        <!-- Sidebar will be loaded here -->
         <div id="sidebar"></div>
-        
         <div class="main-content">
-            <!-- Header will be loaded here -->
-            <div id="header"></div>
-            
+            <!-- Removido o header do topo -->
             <div class="card">
                 <div class="card-header">
                     <h2 class="card-title">Meu Perfil</h2>
@@ -60,49 +60,91 @@
         </div>
     </div>
 
-    <script src="../js/api.js"></script>
-    <script src="../js/auth.js"></script>
-    <script src="../js/navigation.js"></script>
     <script>
-        // Initialize components
-        const auth = new FinanzaAuth();
-        const nav = new FinanzaNavigation();
-        let currentUser = null;
-        
-        // Check authentication
-        if (!auth.requireAuth()) {
-            return;
+        // Configuração Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAtmg3jhdlvF_GJmfLRt_bHCGRw_nWSMCo",
+            authDomain: "finanza-2cd68.firebaseapp.com",
+            databaseURL: "https://finanza-2cd68-default-rtdb.firebaseio.com",
+            projectId: "finanza-2cd68",
+            storageBucket: "finanza-2cd68.appspot.com",
+            messagingSenderId: "991299806624",
+            appId: "1:991299806624:web:12782bf4a0ab6ed52630c5",
+            measurementId: "G-M1TCD97PRW"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const adminEmails = ["admin@finanza.com", "seu_email_admin@dominio.com"];
+        function generateSidebar(user) {
+            const isAdmin = user && adminEmails.includes(user.email);
+            return `
+                <div class="sidebar">
+                    <div class="sidebar-logo">
+                        <img src="../IMAGENS/logo.png" alt="Logo Finanza" class="logo-small" />
+                        <h2>Finanza</h2>
+                    </div>
+                    <div class="sidebar-user mb-4">
+                        <span>${user?.email || 'Usuário'}</span>
+                    </div>
+                    <ul class="nav-menu">
+                        <li class="nav-item"><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+                        <li class="nav-item"><a href="accounts.html" class="nav-link">Contas</a></li>
+                        <li class="nav-item"><a href="transactions.html" class="nav-link">Transações</a></li>
+                        <li class="nav-item"><a href="profile.html" class="nav-link active">Perfil</a></li>
+                        ${isAdmin ? `<li class="nav-item"><a href="admin.html" class="nav-link">Admin</a></li>` : ""}
+                        <li class="nav-item"><a href="#" class="nav-link" id="logoutBtn">Sair</a></li>
+                    </ul>
+                </div>
+            `;
         }
-        
-        // Initialize page
-        async function initProfilePage() {
-            try {
-                currentUser = await auth.getCurrentUser();
-                if (!currentUser) {
-                    auth.logout();
+
+        let currentUser = null;
+
+        function formatCurrency(value) {
+            return "R$ " + Number(value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            firebase.auth().onAuthStateChanged(async function(user) {
+                if (!user) {
+                    window.location.href = "login.html";
                     return;
                 }
-                
-                document.getElementById('sidebar').innerHTML = nav.generateSidebar(currentUser);
-                document.getElementById('header').innerHTML = nav.generateHeader('Perfil', currentUser);
-                
+                currentUser = user;
+                document.getElementById('sidebar').innerHTML = generateSidebar(user);
+                // Removido: document.getElementById('header').innerHTML = generateHeader('Perfil', user);
+
+                document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await firebase.auth().signOut();
+                    window.location.href = "login.html";
+                });
+
                 loadProfileContent();
-                
-            } catch (error) {
-                console.error('Error initializing profile page:', error);
-            }
-        }
-        
-        // Load profile content
-        function loadProfileContent() {
-            const createdDate = new Date(currentUser.created_at || Date.now()).toLocaleDateString('pt-BR');
-            
+            });
+        });
+
+        // Exibe perfil
+        async function loadProfileContent() {
+            let nome = currentUser.displayName || "";
+            let criadoEm = currentUser.metadata.creationTime || "";
+
+            let extraData = {};
+            try {
+                const snap = await firebase.database().ref('usuarios/' + currentUser.uid).once('value');
+                extraData = snap.val() || {};
+                if (extraData.nome) nome = extraData.nome;
+                if (extraData.criadoEm) criadoEm = extraData.criadoEm;
+            } catch {}
+
+            const createdDate = criadoEm ? new Date(criadoEm).toLocaleDateString('pt-BR') : "-";
+
             document.getElementById('profileContent').innerHTML = `
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
                     <div>
                         <h3>Informações Pessoais</h3>
                         <div style="margin-top: 1rem;">
-                            <p><strong>Nome:</strong> ${currentUser.nome}</p>
+                            <p><strong>Nome:</strong> ${nome || "-"}</p>
                             <p><strong>Email:</strong> ${currentUser.email}</p>
                             <p><strong>Membro desde:</strong> ${createdDate}</p>
                         </div>
@@ -112,7 +154,6 @@
                             </button>
                         </div>
                     </div>
-                    
                     <div>
                         <h3>Estatísticas</h3>
                         <div id="userStats" style="margin-top: 1rem;">
@@ -121,101 +162,87 @@
                     </div>
                 </div>
             `;
-            
             loadUserStats();
         }
-        
-        // Load user statistics
+
         async function loadUserStats() {
             try {
-                // Get accounts and transactions count
-                const [accounts, transactions] = await Promise.all([
-                    auth.api.getAccounts(),
-                    auth.api.getTransactions()
-                ]);
-                
+                const contasSnap = await firebase.database().ref('contas/' + currentUser.uid).once('value');
+                let contas = [];
+                contasSnap.forEach(child => contas.push(child.val()));
+
+                const transSnap = await firebase.database().ref('transacoes/' + currentUser.uid).once('value');
+                let transacoes = [];
+                transSnap.forEach(child => transacoes.push(child.val()));
+
                 document.getElementById('userStats').innerHTML = `
                     <div class="stats-grid" style="grid-template-columns: 1fr;">
                         <div class="stat-card">
-                            <div class="stat-value stat-accounts">${accounts.length}</div>
+                            <div class="stat-value stat-accounts">${contas.length}</div>
                             <div class="stat-label">Contas Cadastradas</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value stat-income">${transactions.length}</div>
+                            <div class="stat-value stat-income">${transacoes.length}</div>
                             <div class="stat-label">Transações Realizadas</div>
                         </div>
                     </div>
                 `;
-                
             } catch (error) {
-                console.error('Error loading user stats:', error);
-                document.getElementById('userStats').innerHTML = `
-                    <p>Erro ao carregar estatísticas</p>
-                `;
+                document.getElementById('userStats').innerHTML = `<p>Erro ao carregar estatísticas</p>`;
             }
         }
-        
-        // Show edit profile modal
+
         function showEditProfileModal() {
-            document.getElementById('profileName').value = currentUser.nome;
+            firebase.database().ref('usuarios/' + currentUser.uid).once('value').then(snap => {
+                const dados = snap.val() || {};
+                document.getElementById('profileName').value = dados.nome || currentUser.displayName || "";
+            });
             document.getElementById('profileEmail').value = currentUser.email;
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmNewPassword').value = '';
             document.getElementById('profileModal').classList.remove('hidden');
         }
-        
-        // Close profile modal
+        window.showEditProfileModal = showEditProfileModal;
+
         function closeProfileModal() {
             document.getElementById('profileModal').classList.add('hidden');
         }
-        
-        // Handle profile form submission
-        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+        window.closeProfileModal = closeProfileModal;
+
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const name = document.getElementById('profileName').value;
             const email = document.getElementById('profileEmail').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-            
+
             try {
-                // Validate password confirmation if password is being changed
                 if (newPassword && newPassword !== confirmNewPassword) {
-                    throw new Error('Senhas não coincidem');
+                    alert('Senhas não coincidem');
+                    return;
                 }
-                
-                const updateData = {
-                    nome: name,
-                    email: email
-                };
-                
+
+                await firebase.database().ref('usuarios/' + currentUser.uid).update({ nome: name });
+                await currentUser.updateProfile({ displayName: name });
+
+                if (email !== currentUser.email) {
+                    await currentUser.updateEmail(email);
+                }
+
                 if (newPassword) {
-                    updateData.senha = newPassword;
+                    await currentUser.updatePassword(newPassword);
                 }
-                
-                await auth.api.updateProfile(updateData);
-                
-                // Update current user data
-                currentUser.nome = name;
-                currentUser.email = email;
-                
+
                 closeProfileModal();
                 loadProfileContent();
-                
-                // Update sidebar with new user info
-                document.getElementById('sidebar').innerHTML = nav.generateSidebar(currentUser);
-                document.getElementById('header').innerHTML = nav.generateHeader('Perfil', currentUser);
-                
+
+                document.getElementById('sidebar').innerHTML = generateSidebar(currentUser);
+
                 alert('Perfil atualizado com sucesso!');
-                
             } catch (error) {
-                console.error('Error updating profile:', error);
-                auth.showError(error.message);
+                alert('Erro ao atualizar perfil: ' + (error.message || error));
             }
         });
-        
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initProfilePage);
     </script>
 </body>
 </html>

@@ -18,7 +18,7 @@ import androidx.room.Room;
  */
 public class SyncService {
     private Context context;
-    private ServerClient serverClient;
+    private FirebaseClient firebaseClient;
     private AppDatabase localDb;
     private Handler autoSyncHandler;
     private Runnable autoSyncRunnable;
@@ -27,7 +27,7 @@ public class SyncService {
 
     public SyncService(Context context) {
         this.context = context;
-        this.serverClient = new ServerClient(context);
+        this.firebaseClient = new FirebaseClient(context);
         this.localDb = Room.databaseBuilder(context,
                         AppDatabase.class, "finanza-db")
                 .fallbackToDestructiveMigration()
@@ -103,8 +103,8 @@ public class SyncService {
     }
 
     // REMOVIDO O MÉTODO DUPLICADO! Mantido apenas este:
-    public void testarConexao(String host, int port) {
-        serverClient.conectar(host, port, new ServerClient.ServerCallback<String>() {
+    public void testarConexao() {
+        firebaseClient.testarConexao(new FirebaseClient.FirebaseCallback<String>() {
             @Override
             public void onSuccess(String result) {
                 Toast.makeText(context, result, Toast.LENGTH_LONG).show();

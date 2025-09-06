@@ -665,19 +665,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSyncStarted() {
                 // Pode mostrar indicador de sync se necessário
+                Log.d("MainActivity", "Sincronização iniciada...");
             }
 
             @Override
             public void onSyncCompleted(boolean success, String message) {
-                // Log ou notificação discreta se necessário
-                if (success && syncService.isOnline()) {
-                    // Dados sincronizados com sucesso
-                }
+                Log.d("MainActivity", "Sincronização concluída: " + message);
+                
+                // Atualiza a UI na thread principal após sincronização
+                runOnUiThread(() -> {
+                    atualizarValores(findViewById(R.id.tvSaldo), findViewById(R.id.tvReceita), findViewById(R.id.tvDespesa));
+                    updateHomeContent();
+                });
             }
 
             @Override
             public void onSyncProgress(String operation) {
-                // Opcional: mostrar progresso
+                Log.d("MainActivity", "Sincronização: " + operation);
             }
         });
     }

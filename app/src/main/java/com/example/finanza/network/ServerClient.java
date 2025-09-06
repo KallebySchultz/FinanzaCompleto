@@ -191,7 +191,8 @@ public class ServerClient {
             public void onSuccess(String result) {
                 String[] partes = Protocol.parseCommand(result);
                 if (partes.length > 0 && Protocol.STATUS_OK.equals(partes[0])) {
-                    callback.onSuccess("Login realizado com sucesso");
+                    Log.d(TAG, "Login bem-sucedido, mantendo conexão para sincronização");
+                    callback.onSuccess(result); // Retorna a resposta completa para parsing posterior
                 } else if (partes.length > 1) {
                     callback.onError(partes[1]);
                 } else {
@@ -269,5 +270,45 @@ public class ServerClient {
                 callback.onError(error);
             }
         });
+    }
+    
+    /**
+     * Lista contas do usuário
+     */
+    public void listarContas(ServerCallback<String> callback) {
+        String comando = Protocol.buildCommand(Protocol.CMD_LIST_CONTAS);
+        enviarComando(comando, callback);
+    }
+    
+    /**
+     * Lista categorias do usuário
+     */
+    public void listarCategorias(ServerCallback<String> callback) {
+        String comando = Protocol.buildCommand(Protocol.CMD_LIST_CATEGORIAS);
+        enviarComando(comando, callback);
+    }
+    
+    /**
+     * Lista categorias por tipo
+     */
+    public void listarCategoriasPorTipo(String tipo, ServerCallback<String> callback) {
+        String comando = Protocol.buildCommand(Protocol.CMD_LIST_CATEGORIAS_TIPO, tipo);
+        enviarComando(comando, callback);
+    }
+    
+    /**
+     * Lista movimentações do usuário
+     */
+    public void listarMovimentacoes(ServerCallback<String> callback) {
+        String comando = Protocol.buildCommand(Protocol.CMD_LIST_MOVIMENTACOES);
+        enviarComando(comando, callback);
+    }
+    
+    /**
+     * Obtém perfil do usuário
+     */
+    public void obterPerfil(ServerCallback<String> callback) {
+        String comando = Protocol.buildCommand(Protocol.CMD_GET_PERFIL);
+        enviarComando(comando, callback);
     }
 }

@@ -53,47 +53,102 @@ public class AuthManager {
         // Verifica primeiro localmente
         Usuario usuarioLocal = buscarUsuarioLocal(email, senha);
         
-        if (serverClient.isConnected()) {
-            // Tenta autenticar no servidor
-            serverClient.login(email, senha, new ServerClient.ServerCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(TAG, "Login no servidor bem-sucedido");
-                    
-                    // Se login servidor OK, salva/atualiza localmente
-                    Usuario usuario = usuarioLocal != null ? usuarioLocal : criarUsuarioLocal(email, senha);
-                    if (usuario != null) {
-                        salvarSessao(usuario);
-                        callback.onSuccess(usuario);
-                    } else {
-                        callback.onError("Erro ao salvar dados locais");
-                    }
-                }
+        // Primeiro tenta conectar ao servidor
+        serverClient.conectar(new ServerClient.ServerCallback<String>() {
+            @Override
+            public void onSuccess(String connectionResult) {
+                Log.d(TAG, "Conectado ao servidor, tentando login...");
                 
-                @Override
-                public void onError(String error) {
-                    Log.d(TAG, "Login no servidor falhou: " + error);
-                    
-                    // Fallback para autenticação local
-                    if (usuarioLocal != null) {
-                        Log.d(TAG, "Usando autenticação local offline");
-                        salvarSessao(usuarioLocal);
-                        callback.onSuccess(usuarioLocal);
-                    } else {
-                        callback.onError("Credenciais inválidas (offline)");
+                // Agora faz login
+                serverClient.login(email, senha, new ServerClient.ServerCallback<String>() {
+                    @Override
+                    public void onSuccess(String result) {
+                        Log.d(TAG, "Login no servidor bem-sucedido: " + result);
+                        
+                        // Parse da resposta do servidor para obter dados do usuário
+                        String[] partes = Protocol.parseCommand(result);
+                        Usuario usuario = usuarioLocal;
+                        
+                        if (partes.length > 1) {
+                            // Resposta: OK|userId;nome;email
+                            String[] userData = partes[1].split(";");
+                            if (userData.length >= 3) {
+                                String nome = userData[1];
+                                String emailServidor = userData[2];
+                                
+                                // Atualiza ou cria usuário local com dados do servidor
+                                if (usuario == null) {
+                                    usuario = criarUsuarioLocal(nome, emailServidor, senha);
+                                } else {
+                                    usuario.nome = nome;
+                                    usuario.email = emailServidor;
+                                    database.usuarioDao().atualizar(usuario);
+                                }
+                            }
+                        }
+                        
+                        if (usuario == null) {
+                            usuario = usuarioLocal != null ? usuarioLocal : criarUsuarioLocal("", email, senha);
+                        }
+                        
+                        if (usuario != null) {
+                            salvarSessao(usuario);
+                            
+                            // Iniciar sincronização de dados após login bem-sucedido
+                            SyncService syncService = SyncService.getInstance(context);
+                            syncService.sincronizarTudo(usuario.id, new SyncService.SyncCallback() {
+                                @Override
+                                public void onSyncStarted() {
+                                    Log.d(TAG, "Iniciando sincronização pós-login...");
+                                }
+
+                                @Override
+                                public void onSyncCompleted(boolean success, String message) {
+                                    Log.d(TAG, "Sincronização pós-login concluída: " + message);
+                                }
+
+                                @Override
+                                public void onSyncProgress(String operation) {
+                                    Log.d(TAG, "Sincronização: " + operation);
+                                }
+                            });
+                            
+                            callback.onSuccess(usuario);
+                        } else {
+                            callback.onError("Erro ao salvar dados locais");
+                        }
                     }
-                }
-            });
-        } else {
-            // Modo offline - só autenticação local
-            if (usuarioLocal != null) {
-                Log.d(TAG, "Login offline bem-sucedido");
-                salvarSessao(usuarioLocal);
-                callback.onSuccess(usuarioLocal);
-            } else {
-                callback.onError("Credenciais inválidas (modo offline)");
+                    
+                    @Override
+                    public void onError(String error) {
+                        Log.d(TAG, "Login no servidor falhou: " + error);
+                        
+                        // Fallback para autenticação local
+                        if (usuarioLocal != null) {
+                            Log.d(TAG, "Usando autenticação local offline");
+                            salvarSessao(usuarioLocal);
+                            callback.onSuccess(usuarioLocal);
+                        } else {
+                            callback.onError("Credenciais inválidas (offline)");
+                        }
+                    }
+                });
             }
-        }
+            
+            @Override
+            public void onError(String error) {
+                Log.d(TAG, "Falha na conexão com servidor: " + error);
+                
+                // Fallback para autenticação local
+                if (usuarioLocal != null) {
+                    Log.d(TAG, "Usando autenticação local offline");
+                    salvarSessao(usuarioLocal);
+                    callback.onSuccess(usuarioLocal);
+                } else {
+                    callback.onError("Credenciais inválidas (modo offline)");
+                }
+            }
+        });
     }
     
     /**

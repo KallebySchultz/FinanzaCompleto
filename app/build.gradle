@@ -1,15 +1,13 @@
-plugins {
-    id 'com.android.application'
-}
+apply plugin: 'com.android.application'
 
 android {
     namespace "com.example.finanza"
-    compileSdk 36 // Atualizado para 36
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.finanza"
         minSdk 24
-        targetSdk 36 // Atualizado para 36
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 

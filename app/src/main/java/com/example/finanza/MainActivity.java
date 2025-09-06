@@ -686,7 +686,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Tenta sincronizar sempre que volta para a tela principal
-        if (syncService != null && syncService.isOnline()) {
+        // Não precisa verificar isOnline() porque a sincronização já trata isso internamente
+        if (syncService != null) {
             inicializarSincronizacao();
         }
     }
@@ -694,9 +695,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Libera recursos do sync service
-        if (syncService != null) {
-            syncService.shutdown();
-        }
+        // SyncService é singleton e deve persistir entre Activities
+        // Não fazemos shutdown aqui para evitar RejectedExecutionException
+        // quando a app é reaberta
     }
 }

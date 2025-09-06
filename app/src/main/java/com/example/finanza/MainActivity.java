@@ -25,6 +25,8 @@ import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Usuario;
 import com.example.finanza.model.Conta;
 import com.example.finanza.model.Categoria;
+import com.example.finanza.network.AuthManager;
+import com.example.finanza.network.SyncService;
 import com.example.finanza.ui.MenuActivity;
 import com.example.finanza.ui.MovementsActivity;
 
@@ -35,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean saldoVisivel = true;
     private AppDatabase db;
+    private AuthManager authManager;
+    private SyncService syncService;
     private int usuarioIdAtual;
     private int contaPadraoId;
     private int categoriaReceitaId;
@@ -61,8 +65,16 @@ public class MainActivity extends AppCompatActivity {
                 .allowMainThreadQueries()
                 .build();
 
+        // Inicializar serviços
+        authManager = AuthManager.getInstance(this);
+        syncService = SyncService.getInstance(this);
+
         // Obter usuário autenticado
         usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
+        if (usuarioIdAtual == -1) {
+            usuarioIdAtual = authManager.getLoggedUserId();
+        }
+        
         if (usuarioIdAtual == -1) {
             // Usuário não autenticado, voltar para login
             Intent loginIntent = new Intent(this, com.example.finanza.ui.LoginActivity.class);
@@ -265,6 +277,9 @@ public class MainActivity extends AppCompatActivity {
             navAdd.setImageResource(R.drawable.ic_add);
             showAddTransactionDialog(false);
         });
+        
+        // Inicializar sincronização em background
+        inicializarSincronizacao();
     }
 
     // Mostra o modal de adicionar transação
@@ -374,10 +389,35 @@ public class MainActivity extends AppCompatActivity {
                     lancamento.categoriaId = categoriaSelecionada[0].id;
                     lancamento.usuarioId = usuarioIdAtual;
                     lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
-                    db.lancamentoDao().inserir(lancamento);
-                    atualizarValores(findViewById(R.id.tvSaldo), findViewById(R.id.tvReceita), findViewById(R.id.tvDespesa));
-                    updateHomeContent();
-                    dialog.dismiss();
+                    
+                    // Usar sync service para salvar e sincronizar
+                    syncService.adicionarLancamento(lancamento, new SyncService.SyncCallback() {
+                        @Override
+                        public void onSyncStarted() {
+                            // Opcional: mostrar loading
+                        }
+
+                        @Override
+                        public void onSyncCompleted(boolean success, String message) {
+                            runOnUiThread(() -> {
+                                if (success) {
+                                    atualizarValores(findViewById(R.id.tvSaldo), findViewById(R.id.tvReceita), findViewById(R.id.tvDespesa));
+                                    updateHomeContent();
+                                    dialog.dismiss();
+                                } else {
+                                    // Mesmo com erro de sync, a operação local foi feita
+                                    atualizarValores(findViewById(R.id.tvSaldo), findViewById(R.id.tvReceita), findViewById(R.id.tvDespesa));
+                                    updateHomeContent();
+                                    dialog.dismiss();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onSyncProgress(String operation) {
+                            // Opcional: mostrar progresso
+                        }
+                    });
                 } catch (NumberFormatException e) {
                     inputValor.setError("Valor inválido! Use apenas números e ponto para decimais.");
                 }
@@ -387,16 +427,6 @@ public class MainActivity extends AppCompatActivity {
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        final TextView tvSaldo = findViewById(R.id.tvSaldo);
-        final TextView tvReceita = findViewById(R.id.tvReceita);
-        final TextView tvDespesa = findViewById(R.id.tvDespesa);
-        atualizarValores(tvSaldo, tvReceita, tvDespesa);
-        updateHomeContent();
     }
 
     private void atualizarValores(TextView tvSaldo, TextView tvReceita, TextView tvDespesa) {
@@ -624,5 +654,49 @@ public class MainActivity extends AppCompatActivity {
         double totalDespesas = despesas != null ? despesas : 0.0;
 
         return conta.saldoInicial + totalReceitas - totalDespesas;
+    }
+    
+    /**
+     * Inicializa sincronização em background
+     */
+    private void inicializarSincronizacao() {
+        // Tenta sincronizar dados se conectado
+        syncService.sincronizarTudo(usuarioIdAtual, new SyncService.SyncCallback() {
+            @Override
+            public void onSyncStarted() {
+                // Pode mostrar indicador de sync se necessário
+            }
+
+            @Override
+            public void onSyncCompleted(boolean success, String message) {
+                // Log ou notificação discreta se necessário
+                if (success && syncService.isOnline()) {
+                    // Dados sincronizados com sucesso
+                }
+            }
+
+            @Override
+            public void onSyncProgress(String operation) {
+                // Opcional: mostrar progresso
+            }
+        });
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Tenta sincronizar sempre que volta para a tela principal
+        if (syncService != null && syncService.isOnline()) {
+            inicializarSincronizacao();
+        }
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Libera recursos do sync service
+        if (syncService != null) {
+            syncService.shutdown();
+        }
     }
 }

@@ -2,14 +2,12 @@ package com.example.finanza.ui;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.finanza.R;
-import com.example.finanza.network.ServerClient;
 
 /**
  * Atividade de configurações do aplicativo
@@ -22,7 +20,6 @@ public class SettingsActivity extends AppCompatActivity {
     private Button btnTest;
     private Button btnBack;
     private TextView statusText;
-    private ServerClient serverClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +30,6 @@ public class SettingsActivity extends AppCompatActivity {
         setupListeners();
         loadCurrentSettings();
         
-        serverClient = new ServerClient(this);
     }
 
     private void initViews() {

@@ -12,21 +12,16 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Button;
 import android.widget.RadioGroup;
-import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.room.Room;
 import com.example.finanza.R;
-import com.example.finanza.ui.AccountsActivity;
-import com.example.finanza.ui.SettingsActivity;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Categoria;
 import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Conta;
-import com.example.finanza.network.SyncService;
-import com.example.finanza.ui.MovementsActivity;
-import com.example.finanza.ui.CategoriaActivity;
-import com.example.finanza.ui.ReportsActivity;
+
 import java.util.List;
 public class MenuActivity extends AppCompatActivity {
     private FrameLayout categoriasPanel;

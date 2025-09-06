@@ -199,7 +199,12 @@ public class SyncService {
                         
                         @Override
                         public void onError(String error) {
-                            Log.e(TAG, "Erro ao sincronizar conta " + conta.nome + ": " + error);
+                            // Não logar como erro se conta já existe (duplicata)
+                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
+                                Log.d(TAG, "Conta já existe no servidor: " + conta.nome);
+                            } else {
+                                Log.e(TAG, "Erro ao sincronizar conta " + conta.nome + ": " + error);
+                            }
                         }
                     });
                 }
@@ -242,7 +247,12 @@ public class SyncService {
                         
                         @Override
                         public void onError(String error) {
-                            Log.e(TAG, "Erro ao sincronizar lançamento " + lancamento.descricao + ": " + error);
+                            // Não logar como erro se lançamento já existe (duplicata)
+                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
+                                Log.d(TAG, "Lançamento já existe no servidor: " + lancamento.descricao);
+                            } else {
+                                Log.e(TAG, "Erro ao sincronizar lançamento " + lancamento.descricao + ": " + error);
+                            }
                         }
                     });
                 }
@@ -345,7 +355,12 @@ public class SyncService {
                         
                         @Override
                         public void onError(String error) {
-                            Log.e(TAG, "Erro ao sincronizar conta com servidor: " + error);
+                            // Não logar como erro se conta já existe (duplicata)
+                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
+                                Log.d(TAG, "Conta já existe no servidor: " + conta.nome);
+                            } else {
+                                Log.e(TAG, "Erro ao sincronizar conta com servidor: " + error);
+                            }
                         }
                     });
                 }
@@ -416,7 +431,12 @@ public class SyncService {
                         
                         @Override
                         public void onError(String error) {
-                            Log.e(TAG, "Erro ao sincronizar lançamento com servidor: " + error);
+                            // Não logar como erro se lançamento já existe (duplicata)
+                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
+                                Log.d(TAG, "Lançamento já existe no servidor: " + lancamento.descricao);
+                            } else {
+                                Log.e(TAG, "Erro ao sincronizar lançamento com servidor: " + error);
+                            }
                         }
                     });
                 }

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ServidorFinanza" default="run" basedir=".">
+    
+    <description>Finanza Desktop - Servidor</description>
+    
+    <!-- Propriedades do projeto -->
+    <property name="src.dir" value="src/main/java"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="main.class" value="com.finanza.servidor.ServidorFinanza"/>
+    
+    <!-- Configuração do classpath -->
+    <path id="classpath">
+        <fileset dir="${lib.dir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+    
+    <!-- Target de inicialização -->
+    <target name="init">
+        <echo message="=== Finanza Desktop - Servidor ==="/>
+        <echo message="Inicializando servidor..."/>
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+        <mkdir dir="${lib.dir}"/>
+    </target>
+    
+    <!-- Target para baixar dependências -->
+    <target name="download-deps" depends="init">
+        <!-- Download MySQL Connector/J (newer coordinates) -->
+        <get src="https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar" 
+             dest="${lib.dir}/mysql-connector-j-8.0.33.jar" 
+             skipexisting="true"/>
+        
+        <!-- Download JSON library -->
+        <get src="https://repo1.maven.org/maven2/org/json/json/20230618/json-20230618.jar" 
+             dest="${lib.dir}/json-20230618.jar" 
+             skipexisting="true"/>
+             
+        <echo message="Dependências baixadas com sucesso!"/>
+    </target>
+    
+    <!-- Target de compilação -->
+    <target name="compile" depends="download-deps">
+        <javac srcdir="${src.dir}" 
+               destdir="${classes.dir}" 
+               classpathref="classpath"
+               includeantruntime="false"
+               encoding="UTF-8">
+            <compilerarg value="-Xlint:unchecked"/>
+        </javac>
+        <echo message="Compilação concluída!"/>
+    </target>
+    
+    <!-- Target para criar JAR -->
+    <target name="jar" depends="compile">
+        <jar destfile="${build.dir}/servidor-finanza.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+                <attribute name="Class-Path" value="lib/mysql-connector-j-8.0.33.jar lib/json-20230618.jar"/>
+            </manifest>
+        </jar>
+        <echo message="JAR criado: ${build.dir}/servidor-finanza.jar"/>
+    </target>
+    
+    <!-- Target para executar -->
+    <target name="run" depends="jar">
+        <java classname="${main.class}" fork="true" classpathref="classpath">
+            <classpath>
+                <pathelement location="${classes.dir}"/>
+            </classpath>
+        </java>
+    </target>
+    
+    <!-- Target para limpeza -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <echo message="Build limpo!"/>
+    </target>
+    
+</project>

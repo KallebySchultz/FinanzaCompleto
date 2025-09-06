@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         contaPadraoId = contaPadrao.id;
         contaSelecionada = contaPadrao;
 
-        // Categorias padrão receita
+        // Categorias padrão receita - só criar se não existirem
         String[][] categoriasReceitaPadrao = {
                 {"Receita", "#22BB33"},
                 {"Salário", "#22BB33"},
@@ -122,23 +122,19 @@ public class MainActivity extends AppCompatActivity {
                 {"Reajuste de saldo", "#22BB33"}
         };
         List<Categoria> receitasCats = db.categoriaDao().listarPorTipo("receita");
-        for (String[] catPadrao : categoriasReceitaPadrao) {
-            boolean existe = false;
-            for (Categoria cat : receitasCats) {
-                if (cat.nome.equalsIgnoreCase(catPadrao[0])) {
-                    existe = true;
-                    break;
-                }
-            }
-            if (!existe) {
+        
+        // Só criar categorias se não existir nenhuma categoria de receita
+        if (receitasCats.isEmpty()) {
+            for (String[] catPadrao : categoriasReceitaPadrao) {
                 Categoria nova = new Categoria();
                 nova.nome = catPadrao[0];
                 nova.corHex = catPadrao[1];
                 nova.tipo = "receita";
                 db.categoriaDao().inserir(nova);
             }
+            receitasCats = db.categoriaDao().listarPorTipo("receita");
         }
-        receitasCats = db.categoriaDao().listarPorTipo("receita");
+        
         Categoria catReceita = null;
         for (Categoria cat : receitasCats) {
             if ("Receita".equalsIgnoreCase(cat.nome)) {
@@ -151,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
         }
         categoriaReceitaId = catReceita != null ? catReceita.id : -1;
 
-        // Categorias padrão despesa
+        // Categorias padrão despesa - só criar se não existirem  
         String[][] categoriasDespesaPadrao = {
                 {"Despesa", "#FF2222"},
                 {"Alimentação", "#FF2222"},
@@ -168,23 +164,19 @@ public class MainActivity extends AppCompatActivity {
                 {"Viagem", "#FF2222"}
         };
         List<Categoria> despesaCats = db.categoriaDao().listarPorTipo("despesa");
-        for (String[] catPadrao : categoriasDespesaPadrao) {
-            boolean existe = false;
-            for (Categoria cat : despesaCats) {
-                if (cat.nome.equalsIgnoreCase(catPadrao[0])) {
-                    existe = true;
-                    break;
-                }
-            }
-            if (!existe) {
+        
+        // Só criar categorias se não existir nenhuma categoria de despesa
+        if (despesaCats.isEmpty()) {
+            for (String[] catPadrao : categoriasDespesaPadrao) {
                 Categoria nova = new Categoria();
                 nova.nome = catPadrao[0];
                 nova.corHex = catPadrao[1];
                 nova.tipo = "despesa";
                 db.categoriaDao().inserir(nova);
             }
+            despesaCats = db.categoriaDao().listarPorTipo("despesa");
         }
-        despesaCats = db.categoriaDao().listarPorTipo("despesa");
+        
         Categoria catDespesa = null;
         for (Categoria cat : despesaCats) {
             if ("Despesa".equalsIgnoreCase(cat.nome)) {

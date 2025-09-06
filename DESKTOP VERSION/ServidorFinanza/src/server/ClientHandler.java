@@ -243,6 +243,12 @@ public class ClientHandler extends Thread {
         
         if (usuarioDAO.inserir(novoUsuario)) {
             this.usuarioLogado = novoUsuario;
+            
+            // Inserir categorias padrão para o novo usuário apenas uma vez
+            if (!testMode) {
+                categoriaDAO.inserirCategoriasPadrao(novoUsuario.getId());
+            }
+            
             String dadosUsuario = novoUsuario.getId() + Protocol.FIELD_SEPARATOR + 
                                  novoUsuario.getNome() + Protocol.FIELD_SEPARATOR + 
                                  novoUsuario.getEmail();
@@ -367,7 +373,7 @@ public class ClientHandler extends Thread {
             return;
         }
         
-        if (partes.length < 4) {
+        if (partes.length < 3) {
             enviarResposta(Protocol.createErrorResponse("Dados insuficientes para criar conta"));
             return;
         }
@@ -385,8 +391,18 @@ public class ClientHandler extends Thread {
         
         try {
             String nome = partes[1];
-            String tipoStr = partes[2];
-            double saldoInicial = Double.parseDouble(partes[3]);
+            String tipoStr = partes.length > 3 ? partes[2] : "corrente"; // Tipo padrão se não especificado
+            double saldoInicial;
+            
+            // Determinar qual parâmetro é o saldo baseado no número de parâmetros
+            if (partes.length == 3) {
+                // Formato: ADD_CONTA|nome|saldoInicial (sem tipo)
+                saldoInicial = Double.parseDouble(partes[2]);
+                tipoStr = "corrente"; // Tipo padrão
+            } else {
+                // Formato: ADD_CONTA|nome|tipo|saldoInicial
+                saldoInicial = Double.parseDouble(partes[3]);
+            }
             
             if (nome == null || nome.trim().isEmpty()) {
                 enviarResposta(Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Nome da conta é obrigatório"));
@@ -835,11 +851,22 @@ public class ClientHandler extends Thread {
         
         try {
             double valor = Double.parseDouble(partes[1]);
-            Date data = Date.valueOf(partes[2]);
+            
+            // Tentar parsear a data - pode ser timestamp em milissegundos ou string de data
+            Date data;
+            try {
+                // Primeiro tenta como timestamp em milissegundos
+                long timestamp = Long.parseLong(partes[2]);
+                data = new Date(timestamp);
+            } catch (NumberFormatException e) {
+                // Se falhar, tenta como string de data no formato yyyy-MM-dd
+                data = Date.valueOf(partes[2]);
+            }
+            
             String descricao = partes[3];
-            String tipoStr = partes[4];
-            int idConta = Integer.parseInt(partes[5]);
-            int idCategoria = Integer.parseInt(partes[6]);
+            int idConta = Integer.parseInt(partes[4]);
+            int idCategoria = Integer.parseInt(partes[5]);
+            String tipoStr = partes[6];
             
             if (valor <= 0) {
                 enviarResposta(Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Valor deve ser maior que zero"));

@@ -18,6 +18,12 @@ public class CategoriaDAO {
      * @return true se inserido com sucesso
      */
     public boolean inserir(Categoria categoria) {
+        // Verificar se já existe uma categoria com o mesmo nome e tipo para o usuário
+        if (existeCategoria(categoria.getNome(), categoria.getTipo(), categoria.getIdUsuario())) {
+            System.out.println("Categoria já existe: " + categoria.getNome() + " (" + categoria.getTipo().getValor() + ")");
+            return true; // Retorna true para não interromper o fluxo, mas não insere duplicata
+        }
+        
         String sql = "INSERT INTO categoria (nome, tipo, id_usuario) VALUES (?, ?, ?)";
         
         try (Connection conn = DatabaseUtil.getConnection();
@@ -199,6 +205,36 @@ public class CategoriaDAO {
             
         } catch (SQLException e) {
             System.err.println("Erro ao verificar uso da categoria: " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Verifica se já existe uma categoria com o mesmo nome e tipo para o usuário
+     * @param nome nome da categoria
+     * @param tipo tipo da categoria
+     * @param idUsuario ID do usuário
+     * @return true se já existe
+     */
+    private boolean existeCategoria(String nome, Categoria.TipoCategoria tipo, int idUsuario) {
+        String sql = "SELECT COUNT(*) FROM categoria WHERE nome = ? AND tipo = ? AND id_usuario = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, nome);
+            stmt.setString(2, tipo.getValor());
+            stmt.setInt(3, idUsuario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao verificar existência da categoria: " + e.getMessage());
         }
         
         return false;

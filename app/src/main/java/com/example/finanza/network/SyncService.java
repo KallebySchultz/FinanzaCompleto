@@ -138,8 +138,8 @@ public class SyncService {
                 String comando = Protocol.buildCommand(
                     Protocol.CMD_ADD_CATEGORIA,
                     categoria.nome,
-                    categoria.tipo,
-                    categoria.corHex
+                    categoria.tipo
+                    // Removido corHex - servidor não espera este parâmetro
                 );
                 
                 Log.d(TAG, "Sincronizando categoria: " + categoria.nome);
@@ -178,6 +178,7 @@ public class SyncService {
                 String comando = Protocol.buildCommand(
                     Protocol.CMD_ADD_CONTA,
                     conta.nome,
+                    "corrente", // tipo padrão se não especificado
                     String.valueOf(conta.saldoInicial)
                 );
                 
@@ -269,8 +270,8 @@ public class SyncService {
                     String comando = Protocol.buildCommand(
                         Protocol.CMD_ADD_CATEGORIA,
                         categoria.nome,
-                        categoria.tipo,
-                        categoria.corHex
+                        categoria.tipo
+                        // Removido corHex - servidor não espera este parâmetro
                     );
                     
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
@@ -327,6 +328,7 @@ public class SyncService {
                     String comando = Protocol.buildCommand(
                         Protocol.CMD_ADD_CONTA,
                         conta.nome,
+                        "corrente", // tipo padrão
                         String.valueOf(conta.saldoInicial)
                     );
                     

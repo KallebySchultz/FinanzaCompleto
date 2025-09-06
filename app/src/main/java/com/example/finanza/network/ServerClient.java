@@ -148,8 +148,16 @@ public class ServerClient {
                     return null;
                 }
                 
+                if (socket == null || socket.isClosed() || !socket.isConnected()) {
+                    errorMessage = "Conexão inválida";
+                    connected = false;
+                    return null;
+                }
+                
                 try {
                     output.println(command);
+                    output.flush(); // Garante que o comando seja enviado
+                    
                     String response = input.readLine();
                     
                     if (response == null) {
@@ -166,6 +174,11 @@ public class ServerClient {
                 } catch (IOException e) {
                     errorMessage = "Erro na comunicação: " + e.getMessage();
                     connected = false;
+                    Log.e(TAG, "Erro IO ao enviar comando: " + e.getMessage());
+                    return null;
+                } catch (Exception e) {
+                    errorMessage = "Erro inesperado: " + e.getMessage();
+                    Log.e(TAG, "Erro inesperado ao enviar comando: " + e.getMessage());
                     return null;
                 }
             }
@@ -175,7 +188,7 @@ public class ServerClient {
                 if (result != null) {
                     callback.onSuccess(result);
                 } else {
-                    callback.onError(errorMessage);
+                    callback.onError(errorMessage != null ? errorMessage : "Erro desconhecido");
                 }
             }
         }.execute(comando);

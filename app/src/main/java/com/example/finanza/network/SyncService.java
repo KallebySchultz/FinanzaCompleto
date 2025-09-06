@@ -154,7 +154,12 @@ public class SyncService {
                         
                         @Override
                         public void onError(String error) {
-                            Log.e(TAG, "Erro ao sincronizar categoria " + categoria.nome + ": " + error);
+                            // Não logar como erro se categoria já existe (duplicata)
+                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
+                                Log.d(TAG, "Categoria já existe no servidor: " + categoria.nome);
+                            } else {
+                                Log.e(TAG, "Erro ao sincronizar categoria " + categoria.nome + ": " + error);
+                            }
                         }
                     });
                 }
@@ -178,6 +183,7 @@ public class SyncService {
                 String comando = Protocol.buildCommand(
                     Protocol.CMD_ADD_CONTA,
                     conta.nome,
+                    "corrente", // tipo padrão
                     String.valueOf(conta.saldoInicial)
                 );
                 
@@ -217,11 +223,11 @@ public class SyncService {
                 String comando = Protocol.buildCommand(
                     Protocol.CMD_ADD_MOVIMENTACAO,
                     String.valueOf(lancamento.valor),
-                    String.valueOf(lancamento.data),
+                    new java.sql.Date(lancamento.data).toString(), // formato correto YYYY-MM-DD
                     lancamento.descricao,
+                    lancamento.tipo,
                     String.valueOf(lancamento.contaId),
-                    String.valueOf(lancamento.categoriaId),
-                    lancamento.tipo
+                    String.valueOf(lancamento.categoriaId)
                 );
                 
                 Log.d(TAG, "Sincronizando lançamento: " + lancamento.descricao);
@@ -327,6 +333,7 @@ public class SyncService {
                     String comando = Protocol.buildCommand(
                         Protocol.CMD_ADD_CONTA,
                         conta.nome,
+                        "corrente", // tipo padrão
                         String.valueOf(conta.saldoInicial)
                     );
                     
@@ -394,11 +401,11 @@ public class SyncService {
                     String comando = Protocol.buildCommand(
                         Protocol.CMD_ADD_MOVIMENTACAO,
                         String.valueOf(lancamento.valor),
-                        String.valueOf(lancamento.data),
+                        new java.sql.Date(lancamento.data).toString(), // formato correto YYYY-MM-DD
                         lancamento.descricao,
+                        lancamento.tipo,
                         String.valueOf(lancamento.contaId),
-                        String.valueOf(lancamento.categoriaId),
-                        lancamento.tipo
+                        String.valueOf(lancamento.categoriaId)
                     );
                     
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {

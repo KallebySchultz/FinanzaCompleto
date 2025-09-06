@@ -13,11 +13,49 @@ import java.util.List;
 public class CategoriaDAO {
     
     /**
+     * Verifica se uma categoria já existe para o usuário
+     * @param nome nome da categoria
+     * @param tipo tipo da categoria
+     * @param idUsuario ID do usuário
+     * @return Categoria existente ou null se não existe
+     */
+    public Categoria buscarPorNomeETipo(String nome, Categoria.TipoCategoria tipo, int idUsuario) {
+        String sql = "SELECT * FROM categoria WHERE nome = ? AND tipo = ? AND id_usuario = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, nome);
+            stmt.setString(2, tipo.getValor());
+            stmt.setInt(3, idUsuario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToCategoria(rs);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar categoria por nome e tipo: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
      * Insere uma nova categoria no banco de dados
      * @param categoria objeto Categoria a ser inserido
      * @return true se inserido com sucesso
      */
     public boolean inserir(Categoria categoria) {
+        // Verifica se a categoria já existe
+        Categoria existente = buscarPorNomeETipo(categoria.getNome(), categoria.getTipo(), categoria.getIdUsuario());
+        if (existente != null) {
+            // Categoria já existe, definir o ID e retornar true
+            categoria.setId(existente.getId());
+            return true;
+        }
+        
         String sql = "INSERT INTO categoria (nome, tipo, id_usuario) VALUES (?, ?, ?)";
         
         try (Connection conn = DatabaseUtil.getConnection();

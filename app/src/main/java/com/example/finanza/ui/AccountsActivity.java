@@ -28,6 +28,7 @@ import com.example.finanza.model.Conta;
 import com.example.finanza.model.Usuario;
 import com.example.finanza.model.Lancamento;
 import com.example.finanza.MainActivity;
+import com.example.finanza.network.SyncService;
 
 import java.util.List;
 
@@ -38,6 +39,7 @@ public class AccountsActivity extends AppCompatActivity {
 
     private AppDatabase db;
     private int usuarioIdAtual;
+    private SyncService syncService;
 
     // Views principais
     private TextView txtSaldoAtual;
@@ -61,10 +63,13 @@ public class AccountsActivity extends AppCompatActivity {
         getWindow().getDecorView().setSystemUiVisibility(0);
 
         db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-db")
+                        AppDatabase.class, "finanza-database")
                 .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
                 .allowMainThreadQueries()
                 .build();
+
+        // Inicializar sync service
+        syncService = SyncService.getInstance(this);
 
         // Obter usuário da intent ou de SharedPreferences
         usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
@@ -354,5 +359,30 @@ public class AccountsActivity extends AppCompatActivity {
     private String formatarMoeda(double valor) {
         java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
         return formatter.format(valor);
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Sincroniza dados e atualiza UI
+        if (syncService != null) {
+            syncService.sincronizarTudo(usuarioIdAtual, new SyncService.SyncCallback() {
+                @Override
+                public void onSyncStarted() {
+                    // Opcional: mostrar indicador de sync
+                }
+
+                @Override
+                public void onSyncCompleted(boolean success, String message) {
+                    // Atualiza UI na thread principal após sincronização
+                    runOnUiThread(() -> updateAccounts());
+                }
+
+                @Override
+                public void onSyncProgress(String operation) {
+                    // Opcional: mostrar progresso
+                }
+            });
+        }
     }
 }

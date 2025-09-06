@@ -82,29 +82,36 @@ public class SyncService {
                 boolean success = true;
                 StringBuilder message = new StringBuilder();
                 
-                // Sincronizar categorias
+                // Primeiro buscar dados do servidor
+                if (callback != null) callback.onSyncProgress("Baixando dados do servidor...");
+                if (!buscarDadosDoServidor(usuarioId)) {
+                    Log.w(TAG, "Erro ao buscar dados do servidor, mas continuando...");
+                    message.append("Aviso: alguns dados podem não estar atualizados. ");
+                }
+                
+                // Depois sincronizar dados locais para o servidor
                 if (callback != null) callback.onSyncProgress("Sincronizando categorias...");
                 if (!sincronizarCategorias(usuarioId)) {
                     success = false;
                     message.append("Erro ao sincronizar categorias. ");
                 }
                 
-                // Sincronizar contas
                 if (callback != null) callback.onSyncProgress("Sincronizando contas...");
                 if (!sincronizarContas(usuarioId)) {
                     success = false;
                     message.append("Erro ao sincronizar contas. ");
                 }
                 
-                // Sincronizar lançamentos
                 if (callback != null) callback.onSyncProgress("Sincronizando movimentações...");
                 if (!sincronizarLancamentos(usuarioId)) {
                     success = false;
                     message.append("Erro ao sincronizar movimentações. ");
                 }
                 
-                if (success) {
+                if (success && message.length() == 0) {
                     message.append("Sincronização concluída com sucesso");
+                } else if (success) {
+                    message.append("Sincronização concluída com avisos");
                 }
                 
                 if (callback != null) {
@@ -403,6 +410,284 @@ public class SyncService {
     public void shutdown() {
         if (executor != null && !executor.isShutdown()) {
             executor.shutdown();
+        }
+    }
+    
+    /**
+     * Busca todos os dados do servidor e armazena localmente
+     */
+    private boolean buscarDadosDoServidor(int usuarioId) {
+        try {
+            Log.d(TAG, "Iniciando busca de dados do servidor...");
+            
+            // Buscar categorias do servidor
+            final boolean[] categoriasOk = {false};
+            final boolean[] contasOk = {false};
+            final boolean[] movimentacoesOk = {false};
+            final Object lock = new Object();
+            final int[] completed = {0};
+            
+            // Buscar categorias
+            serverClient.listarCategorias(new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.d(TAG, "Categorias recebidas do servidor: " + result);
+                    if (processarCategoriasDoServidor(result, usuarioId)) {
+                        categoriasOk[0] = true;
+                    }
+                    synchronized (lock) {
+                        completed[0]++;
+                        lock.notifyAll();
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Erro ao buscar categorias: " + error);
+                    synchronized (lock) {
+                        completed[0]++;
+                        lock.notifyAll();
+                    }
+                }
+            });
+            
+            // Buscar contas
+            serverClient.listarContas(new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.d(TAG, "Contas recebidas do servidor: " + result);
+                    if (processarContasDoServidor(result, usuarioId)) {
+                        contasOk[0] = true;
+                    }
+                    synchronized (lock) {
+                        completed[0]++;
+                        lock.notifyAll();
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Erro ao buscar contas: " + error);
+                    synchronized (lock) {
+                        completed[0]++;
+                        lock.notifyAll();
+                    }
+                }
+            });
+            
+            // Buscar movimentações
+            serverClient.listarMovimentacoes(new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.d(TAG, "Movimentações recebidas do servidor: " + result);
+                    if (processarMovimentacoesDoServidor(result, usuarioId)) {
+                        movimentacoesOk[0] = true;
+                    }
+                    synchronized (lock) {
+                        completed[0]++;
+                        lock.notifyAll();
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Erro ao buscar movimentações: " + error);
+                    synchronized (lock) {
+                        completed[0]++;
+                        lock.notifyAll();
+                    }
+                }
+            });
+            
+            // Aguardar todas as operações completarem (com timeout)
+            synchronized (lock) {
+                while (completed[0] < 3) {
+                    try {
+                        lock.wait(10000); // 10 segundos timeout
+                        break; // Sai do loop mesmo se não completou tudo
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
+            
+            Log.d(TAG, "Busca de dados concluída - Categorias: " + categoriasOk[0] + 
+                       ", Contas: " + contasOk[0] + ", Movimentações: " + movimentacoesOk[0]);
+            
+            return categoriasOk[0] || contasOk[0] || movimentacoesOk[0]; // Sucesso se pelo menos uma operação funcionou
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao buscar dados do servidor: " + e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    /**
+     * Processa categorias recebidas do servidor
+     */
+    private boolean processarCategoriasDoServidor(String response, int usuarioId) {
+        try {
+            String[] partes = Protocol.parseCommand(response);
+            if (partes.length < 2 || !Protocol.STATUS_OK.equals(partes[0])) {
+                Log.w(TAG, "Resposta inválida para categorias: " + response);
+                return false;
+            }
+            
+            String dados = partes[1];
+            if (dados == null || dados.trim().isEmpty()) {
+                Log.d(TAG, "Nenhuma categoria no servidor");
+                return true; // Não é erro, apenas não há dados
+            }
+            
+            String[] categorias = Protocol.parseFields(dados);
+            Log.d(TAG, "Processando " + categorias.length + " categorias do servidor");
+            
+            for (String categoriaData : categorias) {
+                String[] campos = categoriaData.split(",");
+                if (campos.length >= 3) {
+                    // Format: id,nome,tipo,cor
+                    String nome = campos[1];
+                    String tipo = campos[2];
+                    String cor = campos.length > 3 ? campos[3] : "#666666";
+                    
+                    // Verifica se categoria já existe localmente
+                    List<Categoria> existentes = database.categoriaDao().listarPorTipo(tipo);
+                    boolean existe = false;
+                    for (Categoria cat : existentes) {
+                        if (cat.nome.equals(nome)) {
+                            existe = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!existe) {
+                        Categoria categoria = new Categoria();
+                        categoria.nome = nome;
+                        categoria.tipo = tipo;
+                        categoria.corHex = cor;
+                        database.categoriaDao().inserir(categoria);
+                        Log.d(TAG, "Categoria adicionada localmente: " + nome);
+                    }
+                }
+            }
+            
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao processar categorias: " + e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    /**
+     * Processa contas recebidas do servidor
+     */
+    private boolean processarContasDoServidor(String response, int usuarioId) {
+        try {
+            String[] partes = Protocol.parseCommand(response);
+            if (partes.length < 2 || !Protocol.STATUS_OK.equals(partes[0])) {
+                Log.w(TAG, "Resposta inválida para contas: " + response);
+                return false;
+            }
+            
+            String dados = partes[1];
+            if (dados == null || dados.trim().isEmpty()) {
+                Log.d(TAG, "Nenhuma conta no servidor");
+                return true;
+            }
+            
+            String[] contas = Protocol.parseFields(dados);
+            Log.d(TAG, "Processando " + contas.length + " contas do servidor");
+            
+            for (String contaData : contas) {
+                String[] campos = contaData.split(",");
+                if (campos.length >= 3) {
+                    // Format: id,nome,saldo
+                    String nome = campos[1];
+                    double saldo = Double.parseDouble(campos[2]);
+                    
+                    // Verifica se conta já existe localmente
+                    List<Conta> existentes = database.contaDao().listarPorUsuario(usuarioId);
+                    boolean existe = false;
+                    for (Conta conta : existentes) {
+                        if (conta.nome.equals(nome)) {
+                            existe = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!existe) {
+                        Conta conta = new Conta();
+                        conta.nome = nome;
+                        conta.saldoInicial = saldo;
+                        conta.usuarioId = usuarioId;
+                        database.contaDao().inserir(conta);
+                        Log.d(TAG, "Conta adicionada localmente: " + nome);
+                    }
+                }
+            }
+            
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao processar contas: " + e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    /**
+     * Processa movimentações recebidas do servidor
+     */
+    private boolean processarMovimentacoesDoServidor(String response, int usuarioId) {
+        try {
+            String[] partes = Protocol.parseCommand(response);
+            if (partes.length < 2 || !Protocol.STATUS_OK.equals(partes[0])) {
+                Log.w(TAG, "Resposta inválida para movimentações: " + response);
+                return false;
+            }
+            
+            String dados = partes[1];
+            if (dados == null || dados.trim().isEmpty()) {
+                Log.d(TAG, "Nenhuma movimentação no servidor");
+                return true;
+            }
+            
+            String[] movimentacoes = Protocol.parseFields(dados);
+            Log.d(TAG, "Processando " + movimentacoes.length + " movimentações do servidor");
+            
+            for (String movData : movimentacoes) {
+                String[] campos = movData.split(",");
+                if (campos.length >= 6) {
+                    // Format: id,valor,data,descricao,contaId,categoriaId,tipo
+                    try {
+                        double valor = Double.parseDouble(campos[1]);
+                        long data = Long.parseLong(campos[2]);
+                        String descricao = campos[3];
+                        int contaId = Integer.parseInt(campos[4]);
+                        int categoriaId = Integer.parseInt(campos[5]);
+                        String tipo = campos.length > 6 ? campos[6] : "despesa";
+                        
+                        // Criar movimentação local (não verifica duplicatas por simplicidade)
+                        Lancamento lancamento = new Lancamento();
+                        lancamento.valor = valor;
+                        lancamento.data = data;
+                        lancamento.descricao = descricao;
+                        lancamento.contaId = contaId;
+                        lancamento.categoriaId = categoriaId;
+                        lancamento.usuarioId = usuarioId;
+                        lancamento.tipo = tipo;
+                        
+                        database.lancamentoDao().inserir(lancamento);
+                        Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
+                    } catch (NumberFormatException e) {
+                        Log.w(TAG, "Erro ao converter dados da movimentação: " + movData);
+                    }
+                }
+            }
+            
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao processar movimentações: " + e.getMessage(), e);
+            return false;
         }
     }
 }

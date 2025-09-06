@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.finanza.R;
 import com.example.finanza.network.ServerClient;
+import com.example.finanza.network.SyncService;
 
 /**
  * Atividade de configurações do aplicativo
@@ -23,6 +24,7 @@ public class SettingsActivity extends AppCompatActivity {
     private TextView statusText;
     
     private ServerClient serverClient;
+    private SyncService syncService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,6 +32,7 @@ public class SettingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_settings);
 
         serverClient = ServerClient.getInstance(this);
+        syncService = SyncService.getInstance(this);
         
         initViews();
         setupListeners();
@@ -59,6 +62,15 @@ public class SettingsActivity extends AppCompatActivity {
         
         editServerHost.setText(host);
         editServerPort.setText(String.valueOf(port));
+        
+        // Mostrar status atual
+        if (syncService.isOnline()) {
+            statusText.setText("🟢 Conectado ao servidor");
+            statusText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+        } else {
+            statusText.setText("🔴 Modo offline");
+            statusText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+        }
     }
 
     private void saveSettings() {

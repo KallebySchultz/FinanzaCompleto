@@ -15,11 +15,13 @@ import androidx.room.Room;
 import com.example.finanza.R;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Usuario;
+import com.example.finanza.network.AuthManager;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class ProfileActivity extends AppCompatActivity {
 
     private AppDatabase db;
+    private AuthManager authManager;
     private int usuarioIdAtual;
     private Usuario usuarioAtual;
     
@@ -28,6 +30,7 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView txtDataCriacao;
     private Button btnEditarPerfil;
     private Button btnExcluirConta;
+    private Button btnSair;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,25 +42,27 @@ public class ProfileActivity extends AppCompatActivity {
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().getDecorView().setSystemUiVisibility(0);
 
-        // Inicializar database
+        // Inicializar database e AuthManager
         db = Room.databaseBuilder(getApplicationContext(),
                         AppDatabase.class, "finanza-db")
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();
+                
+        authManager = AuthManager.getInstance(this);
 
-        // Obter usuário da intent ou de SharedPreferences
+        // Obter usuário da intent ou do AuthManager
         usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
         if (usuarioIdAtual == -1) {
-            SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
-            usuarioIdAtual = prefs.getInt("usuarioId", -1);
-            if (usuarioIdAtual == -1) {
-                // Usuário não autenticado, voltar para login
-                Intent loginIntent = new Intent(this, LoginActivity.class);
-                startActivity(loginIntent);
-                finish();
-                return;
-            }
+            usuarioIdAtual = authManager.getLoggedUserId();
+        }
+        
+        if (usuarioIdAtual == -1) {
+            // Usuário não autenticado, voltar para login
+            Intent loginIntent = new Intent(this, LoginActivity.class);
+            startActivity(loginIntent);
+            finish();
+            return;
         }
 
         // Inicializar views
@@ -66,6 +71,7 @@ public class ProfileActivity extends AppCompatActivity {
         txtDataCriacao = findViewById(R.id.txt_data_criacao);
         btnEditarPerfil = findViewById(R.id.btn_editar_perfil);
         btnExcluirConta = findViewById(R.id.btn_excluir_conta);
+        btnSair = findViewById(R.id.btn_sair);
 
         // Carregar dados do usuário
         carregarDadosUsuario();
@@ -73,6 +79,11 @@ public class ProfileActivity extends AppCompatActivity {
         // Configurar listeners
         btnEditarPerfil.setOnClickListener(v -> mostrarDialogEditarPerfil());
         btnExcluirConta.setOnClickListener(v -> confirmarExclusaoConta());
+        
+        // Adicionar listener para logout se o botão existir
+        if (btnSair != null) {
+            btnSair.setOnClickListener(v -> confirmarLogout());
+        }
 
         // Configurar navegação
         configurarNavegacao();
@@ -227,9 +238,8 @@ public class ProfileActivity extends AppCompatActivity {
             // Excluir o usuário
             db.usuarioDao().deletar(usuarioAtual);
 
-            // Limpar dados de autenticação
-            SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
-            prefs.edit().clear().apply();
+            // Fazer logout usando AuthManager
+            authManager.logout();
 
             Toast.makeText(this, "Conta excluída com sucesso", Toast.LENGTH_SHORT).show();
 
@@ -242,6 +252,29 @@ public class ProfileActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(this, "Erro ao excluir conta: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+    
+    /**
+     * Confirma logout do usuário
+     */
+    private void confirmarLogout() {
+        new AlertDialog.Builder(this)
+            .setTitle("Sair da conta")
+            .setMessage("Deseja realmente sair da sua conta?")
+            .setPositiveButton("Sair", (dialog, which) -> {
+                // Fazer logout usando AuthManager
+                authManager.logout();
+                
+                Toast.makeText(this, "Logout realizado com sucesso", Toast.LENGTH_SHORT).show();
+                
+                // Voltar para tela de login
+                Intent intent = new Intent(this, LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                finish();
+            })
+            .setNegativeButton("Cancelar", null)
+            .show();
     }
 
     private void configurarNavegacao() {

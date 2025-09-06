@@ -420,24 +420,26 @@ public class SyncService {
         try {
             Log.d(TAG, "Iniciando busca de dados do servidor...");
             
-            // Buscar categorias do servidor
-            final boolean[] categoriasOk = {false};
-            final boolean[] contasOk = {false};
-            final boolean[] movimentacoesOk = {false};
+            final boolean[] allCompleted = {false};
+            final boolean[] success = {true};
             final Object lock = new Object();
-            final int[] completed = {0};
+            final int[] completedRequests = {0};
+            final int totalRequests = 3;
             
-            // Buscar categorias
+            // Buscar categorias do servidor
             serverClient.listarCategorias(new ServerClient.ServerCallback<String>() {
                 @Override
                 public void onSuccess(String result) {
                     Log.d(TAG, "Categorias recebidas do servidor: " + result);
-                    if (processarCategoriasDoServidor(result, usuarioId)) {
-                        categoriasOk[0] = true;
+                    if (!processarCategoriasDoServidor(result, usuarioId)) {
+                        success[0] = false;
                     }
                     synchronized (lock) {
-                        completed[0]++;
-                        lock.notifyAll();
+                        completedRequests[0]++;
+                        if (completedRequests[0] >= totalRequests) {
+                            allCompleted[0] = true;
+                            lock.notifyAll();
+                        }
                     }
                 }
                 
@@ -445,8 +447,11 @@ public class SyncService {
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar categorias: " + error);
                     synchronized (lock) {
-                        completed[0]++;
-                        lock.notifyAll();
+                        completedRequests[0]++;
+                        if (completedRequests[0] >= totalRequests) {
+                            allCompleted[0] = true;
+                            lock.notifyAll();
+                        }
                     }
                 }
             });
@@ -456,12 +461,15 @@ public class SyncService {
                 @Override
                 public void onSuccess(String result) {
                     Log.d(TAG, "Contas recebidas do servidor: " + result);
-                    if (processarContasDoServidor(result, usuarioId)) {
-                        contasOk[0] = true;
+                    if (!processarContasDoServidor(result, usuarioId)) {
+                        success[0] = false;
                     }
                     synchronized (lock) {
-                        completed[0]++;
-                        lock.notifyAll();
+                        completedRequests[0]++;
+                        if (completedRequests[0] >= totalRequests) {
+                            allCompleted[0] = true;
+                            lock.notifyAll();
+                        }
                     }
                 }
                 
@@ -469,8 +477,11 @@ public class SyncService {
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar contas: " + error);
                     synchronized (lock) {
-                        completed[0]++;
-                        lock.notifyAll();
+                        completedRequests[0]++;
+                        if (completedRequests[0] >= totalRequests) {
+                            allCompleted[0] = true;
+                            lock.notifyAll();
+                        }
                     }
                 }
             });
@@ -480,12 +491,15 @@ public class SyncService {
                 @Override
                 public void onSuccess(String result) {
                     Log.d(TAG, "Movimentações recebidas do servidor: " + result);
-                    if (processarMovimentacoesDoServidor(result, usuarioId)) {
-                        movimentacoesOk[0] = true;
+                    if (!processarMovimentacoesDoServidor(result, usuarioId)) {
+                        success[0] = false;
                     }
                     synchronized (lock) {
-                        completed[0]++;
-                        lock.notifyAll();
+                        completedRequests[0]++;
+                        if (completedRequests[0] >= totalRequests) {
+                            allCompleted[0] = true;
+                            lock.notifyAll();
+                        }
                     }
                 }
                 
@@ -493,29 +507,33 @@ public class SyncService {
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar movimentações: " + error);
                     synchronized (lock) {
-                        completed[0]++;
-                        lock.notifyAll();
+                        completedRequests[0]++;
+                        if (completedRequests[0] >= totalRequests) {
+                            allCompleted[0] = true;
+                            lock.notifyAll();
+                        }
                     }
                 }
             });
             
             // Aguardar todas as operações completarem (com timeout)
             synchronized (lock) {
-                while (completed[0] < 3) {
+                long startTime = System.currentTimeMillis();
+                while (!allCompleted[0] && (System.currentTimeMillis() - startTime) < 15000) { // 15 segundos timeout
                     try {
-                        lock.wait(10000); // 10 segundos timeout
-                        break; // Sai do loop mesmo se não completou tudo
+                        lock.wait(1000); // Verifica a cada segundo
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
+                        Log.w(TAG, "Thread interrompida durante sincronização");
                         break;
                     }
                 }
             }
             
-            Log.d(TAG, "Busca de dados concluída - Categorias: " + categoriasOk[0] + 
-                       ", Contas: " + contasOk[0] + ", Movimentações: " + movimentacoesOk[0]);
+            Log.d(TAG, "Busca de dados concluída - Completadas: " + completedRequests[0] + 
+                       "/" + totalRequests + ", Sucesso: " + success[0]);
             
-            return categoriasOk[0] || contasOk[0] || movimentacoesOk[0]; // Sucesso se pelo menos uma operação funcionou
+            return success[0] && completedRequests[0] >= totalRequests;
             
         } catch (Exception e) {
             Log.e(TAG, "Erro ao buscar dados do servidor: " + e.getMessage(), e);

@@ -20,6 +20,7 @@ import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Categoria;
 import com.example.finanza.model.Lancamento;
 import com.example.finanza.MainActivity;
+import com.example.finanza.network.SyncService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ import java.util.List;
 public class CategoriaActivity extends AppCompatActivity {
 
     private AppDatabase db;
+    private SyncService syncService;
     private LinearLayout categoriasList;
     private Button btnAdicionarCategoria, btnMostrarReceitas, btnMostrarDespesas;
     private List<Categoria> todasCategorias;
@@ -45,9 +47,12 @@ public class CategoriaActivity extends AppCompatActivity {
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
 
         db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-db")
+                        AppDatabase.class, "finanza-database")
                 .allowMainThreadQueries()
                 .build();
+
+        // Inicializar sync service  
+        syncService = SyncService.getInstance(this);
 
         categoriasList = findViewById(R.id.categorias_list);
         btnAdicionarCategoria = findViewById(R.id.btnAdicionarCategoria);
@@ -314,5 +319,31 @@ public class CategoriaActivity extends AppCompatActivity {
         });
 
         btnCancelar.setOnClickListener(v -> dialog.dismiss());
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Sincroniza dados e atualiza UI - mas para categorias, só precisamos atualizar se não há usuário específico
+        // CategoriaActivity parece não ter usuário específico, então só atualiza se houver algum usuário logado
+        if (syncService != null) {
+            syncService.sincronizarTudo(1, new SyncService.SyncCallback() { // Usando ID 1 como padrão
+                @Override
+                public void onSyncStarted() {
+                    // Opcional: mostrar indicador de sync
+                }
+
+                @Override
+                public void onSyncCompleted(boolean success, String message) {
+                    // Atualiza UI na thread principal após sincronização
+                    runOnUiThread(() -> carregarCategorias());
+                }
+
+                @Override
+                public void onSyncProgress(String operation) {
+                    // Opcional: mostrar progresso
+                }
+            });
+        }
     }
 }

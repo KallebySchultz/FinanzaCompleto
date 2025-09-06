@@ -28,6 +28,7 @@ import com.example.finanza.model.Categoria;
 import com.example.finanza.ui.AccountsActivity;
 import com.example.finanza.MainActivity;
 import com.example.finanza.ui.MenuActivity;
+import com.example.finanza.network.SyncService;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -39,6 +40,7 @@ public class MovementsActivity extends AppCompatActivity {
 
     private AppDatabase db;
     private int usuarioIdAtual;
+    private SyncService syncService;
 
     // Para navegação de mês/ano
     private Calendar currentMonth;
@@ -63,10 +65,13 @@ public class MovementsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_movements);
 
         db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-db")
+                        AppDatabase.class, "finanza-database")
                 .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
                 .allowMainThreadQueries()
                 .build();
+
+        // Inicializar sync service
+        syncService = SyncService.getInstance(this);
 
         // Obter usuário da intent ou de SharedPreferences
         usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
@@ -625,5 +630,30 @@ public class MovementsActivity extends AppCompatActivity {
     private String formatarMoeda(double valor) {
         java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
         return formatter.format(valor);
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Sincroniza dados e atualiza UI
+        if (syncService != null) {
+            syncService.sincronizarTudo(usuarioIdAtual, new SyncService.SyncCallback() {
+                @Override
+                public void onSyncStarted() {
+                    // Opcional: mostrar indicador de sync
+                }
+
+                @Override
+                public void onSyncCompleted(boolean success, String message) {
+                    // Atualiza UI na thread principal após sincronização
+                    runOnUiThread(() -> updateMovements());
+                }
+
+                @Override
+                public void onSyncProgress(String operation) {
+                    // Opcional: mostrar progresso
+                }
+            });
+        }
     }
 }

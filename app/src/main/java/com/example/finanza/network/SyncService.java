@@ -306,6 +306,16 @@ public class SyncService {
         ensureExecutorAvailable();
         executor.execute(() -> {
             try {
+                // Validar se o usuário existe antes de inserir a conta
+                Usuario usuario = database.usuarioDao().buscarPorId(conta.usuarioId);
+                if (usuario == null) {
+                    Log.e(TAG, "Erro: Usuário não existe (ID: " + conta.usuarioId + ")");
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Usuário não encontrado");
+                    }
+                    return;
+                }
+                
                 long id = database.contaDao().inserir(conta);
                 conta.id = (int) id;
                 
@@ -353,6 +363,26 @@ public class SyncService {
         ensureExecutorAvailable();
         executor.execute(() -> {
             try {
+                // Validar foreign keys antes de inserir
+                Usuario usuario = database.usuarioDao().buscarPorId(lancamento.usuarioId);
+                Conta conta = database.contaDao().buscarPorId(lancamento.contaId);
+                
+                if (usuario == null) {
+                    Log.e(TAG, "Erro: Usuário não existe (ID: " + lancamento.usuarioId + ")");
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Usuário não encontrado");
+                    }
+                    return;
+                }
+                
+                if (conta == null) {
+                    Log.e(TAG, "Erro: Conta não existe (ID: " + lancamento.contaId + ")");
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Conta não encontrada");
+                    }
+                    return;
+                }
+                
                 long id = database.lancamentoDao().inserir(lancamento);
                 lancamento.id = (int) id;
                 
@@ -656,12 +686,18 @@ public class SyncService {
                     }
                     
                     if (!existe) {
-                        Conta conta = new Conta();
-                        conta.nome = nome;
-                        conta.saldoInicial = saldo;
-                        conta.usuarioId = usuarioId;
-                        database.contaDao().inserir(conta);
-                        Log.d(TAG, "Conta adicionada localmente: " + nome);
+                        // Verificar se o usuário existe antes de criar a conta
+                        Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
+                        if (usuario != null) {
+                            Conta conta = new Conta();
+                            conta.nome = nome;
+                            conta.saldoInicial = saldo;
+                            conta.usuarioId = usuarioId;
+                            database.contaDao().inserir(conta);
+                            Log.d(TAG, "Conta adicionada localmente: " + nome);
+                        } else {
+                            Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
+                        }
                     }
                 }
             }
@@ -705,18 +741,27 @@ public class SyncService {
                         int categoriaId = Integer.parseInt(campos[5]);
                         String tipo = campos.length > 6 ? campos[6] : "despesa";
                         
-                        // Criar movimentação local (não verifica duplicatas por simplicidade)
-                        Lancamento lancamento = new Lancamento();
-                        lancamento.valor = valor;
-                        lancamento.data = data;
-                        lancamento.descricao = descricao;
-                        lancamento.contaId = contaId;
-                        lancamento.categoriaId = categoriaId;
-                        lancamento.usuarioId = usuarioId;
-                        lancamento.tipo = tipo;
+                        // Verificar se todas as foreign keys existem antes de criar a movimentação
+                        Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
+                        Conta conta = database.contaDao().buscarPorId(contaId);
+                        // Categoria pode ser null, permitindo categoriaId = 0
                         
-                        database.lancamentoDao().inserir(lancamento);
-                        Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
+                        if (usuario != null && conta != null) {
+                            Lancamento lancamento = new Lancamento();
+                            lancamento.valor = valor;
+                            lancamento.data = data;
+                            lancamento.descricao = descricao;
+                            lancamento.contaId = contaId;
+                            lancamento.categoriaId = categoriaId;
+                            lancamento.usuarioId = usuarioId;
+                            lancamento.tipo = tipo;
+                            
+                            database.lancamentoDao().inserir(lancamento);
+                            Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
+                        } else {
+                            Log.w(TAG, "Não é possível criar movimentação - referências inválidas. Usuario: " + 
+                                (usuario != null) + ", Conta: " + (conta != null));
+                        }
                     } catch (NumberFormatException e) {
                         Log.w(TAG, "Erro ao converter dados da movimentação: " + movData);
                     }

@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         getWindow().getDecorView().setSystemUiVisibility(0);
 
         db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-db")
+                        AppDatabase.class, "finanza-database")
                 .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
                 .allowMainThreadQueries()
                 .build();
@@ -78,6 +78,17 @@ public class MainActivity extends AppCompatActivity {
         
         if (usuarioIdAtual == -1) {
             // Usuário não autenticado, voltar para login
+            Intent loginIntent = new Intent(this, com.example.finanza.ui.LoginActivity.class);
+            startActivity(loginIntent);
+            finish();
+            return;
+        }
+        
+        // Validar se o usuário realmente existe no banco de dados
+        Usuario usuarioAtual = db.usuarioDao().buscarPorId(usuarioIdAtual);
+        if (usuarioAtual == null) {
+            // Usuário não existe no banco, limpar sessão e voltar para login
+            authManager.logout();
             Intent loginIntent = new Intent(this, com.example.finanza.ui.LoginActivity.class);
             startActivity(loginIntent);
             finish();

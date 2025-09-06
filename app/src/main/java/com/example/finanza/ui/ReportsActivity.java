@@ -38,7 +38,7 @@ public class ReportsActivity extends AppCompatActivity {
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
 
         db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-db")
+                        AppDatabase.class, "finanza-database")
                 .allowMainThreadQueries()
                 .build();
 

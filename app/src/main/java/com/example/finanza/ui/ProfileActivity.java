@@ -46,7 +46,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Inicializar database e AuthManager
         db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-db")
+                        AppDatabase.class, "finanza-database")
                 .fallbackToDestructiveMigration()
                 .allowMainThreadQueries()
                 .build();

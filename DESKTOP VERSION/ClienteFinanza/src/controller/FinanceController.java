@@ -64,6 +64,20 @@ public class FinanceController {
         if (valor == null || valor.trim().isEmpty()) {
             return 0.0;
         }
+        
+        // Trim whitespace and handle edge cases
+        valor = valor.trim();
+        
+        // Handle malformed cases like ",0" where integer part is missing
+        if (valor.startsWith(",")) {
+            valor = "0" + valor;
+        }
+        
+        // Handle cases like "10," where decimal part is missing
+        if (valor.endsWith(",")) {
+            valor = valor + "0";
+        }
+        
         // Substitui vírgula por ponto para parsing correto
         return Double.parseDouble(valor.replace(",", "."));
     }
@@ -390,7 +404,21 @@ public class FinanceController {
                             int id = Integer.parseInt(campos[0]);
                             
                             // Reconstruct valor from Brazilian decimal format: valor_inteiro,valor_decimal
-                            String valorStr = campos[1] + "," + campos[2]; // Reconstruct Brazilian decimal
+                            // Handle edge cases where integer or decimal parts might be empty
+                            String valorInteiro = campos[1].trim();
+                            String valorDecimal = campos[2].trim();
+                            
+                            // If integer part is empty, default to "0"
+                            if (valorInteiro.isEmpty()) {
+                                valorInteiro = "0";
+                            }
+                            
+                            // If decimal part is empty, default to "0"
+                            if (valorDecimal.isEmpty()) {
+                                valorDecimal = "0";
+                            }
+                            
+                            String valorStr = valorInteiro + "," + valorDecimal;
                             double valor = parsePortugueseDouble(valorStr);
                             
                             Date data = Date.valueOf(campos[3]);
@@ -401,6 +429,8 @@ public class FinanceController {
                             
                             Movimentacao movimentacao = new Movimentacao(id, valor, data, descricao, tipo, idConta, idCategoria);
                             movimentacoes.add(movimentacao);
+                        } else {
+                            System.err.println("Formato inválido de movimentação (campos insuficientes): " + movStr);
                         }
                     } catch (Exception e) {
                         // Log the error for debugging but continue processing other records

@@ -13,11 +13,47 @@ import java.util.List;
 public class ContaDAO {
     
     /**
+     * Verifica se uma conta já existe para o usuário
+     * @param nome nome da conta
+     * @param idUsuario ID do usuário
+     * @return Conta existente ou null se não existe
+     */
+    public Conta buscarPorNomeEUsuario(String nome, int idUsuario) {
+        String sql = "SELECT * FROM conta WHERE nome = ? AND id_usuario = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, nome);
+            stmt.setInt(2, idUsuario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToConta(rs);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar conta por nome e usuário: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
      * Insere uma nova conta no banco de dados
      * @param conta objeto Conta a ser inserido
      * @return true se inserido com sucesso
      */
     public boolean inserir(Conta conta) {
+        // Verifica se a conta já existe
+        Conta existente = buscarPorNomeEUsuario(conta.getNome(), conta.getIdUsuario());
+        if (existente != null) {
+            // Conta já existe, definir o ID e retornar true
+            conta.setId(existente.getId());
+            return true;
+        }
+        
         String sql = "INSERT INTO conta (nome, tipo, saldo_inicial, id_usuario) VALUES (?, ?, ?, ?)";
         
         try (Connection conn = DatabaseUtil.getConnection();

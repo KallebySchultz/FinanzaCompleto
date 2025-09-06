@@ -13,11 +13,59 @@ import java.util.List;
 public class MovimentacaoDAO {
     
     /**
+     * Verifica se uma movimentação já existe
+     * @param valor valor da movimentação
+     * @param data data da movimentação
+     * @param descricao descrição da movimentação
+     * @param idConta ID da conta
+     * @param idUsuario ID do usuário
+     * @return Movimentacao existente ou null se não existe
+     */
+    public Movimentacao buscarDuplicata(double valor, Date data, String descricao, int idConta, int idUsuario) {
+        String sql = "SELECT * FROM movimentacao WHERE valor = ? AND data = ? AND descricao = ? AND id_conta = ? AND id_usuario = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setDouble(1, valor);
+            stmt.setDate(2, data);
+            stmt.setString(3, descricao);
+            stmt.setInt(4, idConta);
+            stmt.setInt(5, idUsuario);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToMovimentacao(rs);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar movimentação duplicata: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
      * Insere uma nova movimentação no banco de dados
      * @param movimentacao objeto Movimentacao a ser inserido
      * @return true se inserido com sucesso
      */
     public boolean inserir(Movimentacao movimentacao) {
+        // Verifica se a movimentação já existe (evita duplicatas)
+        Movimentacao existente = buscarDuplicata(
+            movimentacao.getValor(), 
+            movimentacao.getData(), 
+            movimentacao.getDescricao(),
+            movimentacao.getIdConta(),
+            movimentacao.getIdUsuario()
+        );
+        if (existente != null) {
+            // Movimentação já existe, definir o ID e retornar true
+            movimentacao.setId(existente.getId());
+            return true;
+        }
+        
         String sql = "INSERT INTO movimentacao (valor, data, descricao, tipo, id_conta, id_categoria, id_usuario) VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = DatabaseUtil.getConnection();

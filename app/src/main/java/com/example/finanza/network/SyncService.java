@@ -52,6 +52,16 @@ public class SyncService {
     }
     
     /**
+     * Garante que o executor está disponível e funcionando
+     */
+    private void ensureExecutorAvailable() {
+        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
+            executor = Executors.newSingleThreadExecutor();
+            Log.d(TAG, "Executor recriado após shutdown");
+        }
+    }
+    
+    /**
      * Sincroniza todos os dados com o servidor se conectado
      */
     public void sincronizarTudo(int usuarioId, SyncCallback callback) {
@@ -59,6 +69,7 @@ public class SyncService {
             callback.onSyncStarted();
         }
         
+        ensureExecutorAvailable();
         executor.execute(() -> {
             try {
                 if (!serverClient.isConnected()) {
@@ -125,9 +136,22 @@ public class SyncService {
                     categoria.corHex
                 );
                 
-                // TODO: Implementar envio síncrono para sincronização
-                // Por enquanto só registra
-                Log.d(TAG, "Categoria a sincronizar: " + categoria.nome);
+                Log.d(TAG, "Sincronizando categoria: " + categoria.nome);
+                
+                // Enviar comando para o servidor se conectado
+                if (serverClient.isConnected()) {
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Categoria sincronizada: " + categoria.nome);
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar categoria " + categoria.nome + ": " + error);
+                        }
+                    });
+                }
             }
             
             return true;
@@ -151,7 +175,22 @@ public class SyncService {
                     String.valueOf(conta.saldoInicial)
                 );
                 
-                Log.d(TAG, "Conta a sincronizar: " + conta.nome);
+                Log.d(TAG, "Sincronizando conta: " + conta.nome);
+                
+                // Enviar comando para o servidor se conectado
+                if (serverClient.isConnected()) {
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Conta sincronizada: " + conta.nome);
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar conta " + conta.nome + ": " + error);
+                        }
+                    });
+                }
             }
             
             return true;
@@ -179,7 +218,22 @@ public class SyncService {
                     lancamento.tipo
                 );
                 
-                Log.d(TAG, "Lançamento a sincronizar: " + lancamento.descricao);
+                Log.d(TAG, "Sincronizando lançamento: " + lancamento.descricao);
+                
+                // Enviar comando para o servidor se conectado
+                if (serverClient.isConnected()) {
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Lançamento sincronizado: " + lancamento.descricao);
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar lançamento " + lancamento.descricao + ": " + error);
+                        }
+                    });
+                }
             }
             
             return true;
@@ -193,6 +247,7 @@ public class SyncService {
      * Adiciona categoria localmente e sincroniza se online
      */
     public void adicionarCategoria(Categoria categoria, SyncCallback callback) {
+        ensureExecutorAvailable();
         executor.execute(() -> {
             try {
                 // Salva localmente primeiro
@@ -203,8 +258,26 @@ public class SyncService {
                 
                 // Tenta sincronizar se conectado
                 if (serverClient.isConnected()) {
-                    // TODO: Implementar sincronização em tempo real
                     Log.d(TAG, "Sincronizando categoria com servidor...");
+                    
+                    String comando = Protocol.buildCommand(
+                        Protocol.CMD_ADD_CATEGORIA,
+                        categoria.nome,
+                        categoria.tipo,
+                        categoria.corHex
+                    );
+                    
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Categoria sincronizada com servidor: " + categoria.nome);
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar categoria com servidor: " + error);
+                        }
+                    });
                 }
                 
                 if (callback != null) {
@@ -224,6 +297,7 @@ public class SyncService {
      * Adiciona conta localmente e sincroniza se online
      */
     public void adicionarConta(Conta conta, SyncCallback callback) {
+        ensureExecutorAvailable();
         executor.execute(() -> {
             try {
                 long id = database.contaDao().inserir(conta);
@@ -233,6 +307,24 @@ public class SyncService {
                 
                 if (serverClient.isConnected()) {
                     Log.d(TAG, "Sincronizando conta com servidor...");
+                    
+                    String comando = Protocol.buildCommand(
+                        Protocol.CMD_ADD_CONTA,
+                        conta.nome,
+                        String.valueOf(conta.saldoInicial)
+                    );
+                    
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Conta sincronizada com servidor: " + conta.nome);
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar conta com servidor: " + error);
+                        }
+                    });
                 }
                 
                 if (callback != null) {
@@ -252,6 +344,7 @@ public class SyncService {
      * Adiciona lançamento localmente e sincroniza se online
      */
     public void adicionarLancamento(Lancamento lancamento, SyncCallback callback) {
+        ensureExecutorAvailable();
         executor.execute(() -> {
             try {
                 long id = database.lancamentoDao().inserir(lancamento);
@@ -261,6 +354,28 @@ public class SyncService {
                 
                 if (serverClient.isConnected()) {
                     Log.d(TAG, "Sincronizando lançamento com servidor...");
+                    
+                    String comando = Protocol.buildCommand(
+                        Protocol.CMD_ADD_MOVIMENTACAO,
+                        String.valueOf(lancamento.valor),
+                        String.valueOf(lancamento.data),
+                        lancamento.descricao,
+                        String.valueOf(lancamento.contaId),
+                        String.valueOf(lancamento.categoriaId),
+                        lancamento.tipo
+                    );
+                    
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Lançamento sincronizado com servidor: " + lancamento.descricao);
+                        }
+                        
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar lançamento com servidor: " + error);
+                        }
+                    });
                 }
                 
                 if (callback != null) {

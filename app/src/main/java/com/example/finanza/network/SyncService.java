@@ -546,28 +546,47 @@ public class SyncService {
      */
     private boolean processarCategoriasDoServidor(String response, int usuarioId) {
         try {
+            if (response == null || response.trim().isEmpty()) {
+                Log.w(TAG, "Resposta vazia para categorias");
+                return true; // Não é erro, apenas não há dados
+            }
+            
             String[] partes = Protocol.parseCommand(response);
-            if (partes.length < 2 || !Protocol.STATUS_OK.equals(partes[0])) {
-                Log.w(TAG, "Resposta inválida para categorias: " + response);
+            if (partes.length < 1) {
+                Log.w(TAG, "Resposta mal formada para categorias: " + response);
                 return false;
             }
             
-            String dados = partes[1];
-            if (dados == null || dados.trim().isEmpty()) {
+            if (!Protocol.STATUS_OK.equals(partes[0])) {
+                Log.w(TAG, "Status não OK para categorias: " + response);
+                return false;
+            }
+            
+            if (partes.length < 2 || partes[1] == null || partes[1].trim().isEmpty()) {
                 Log.d(TAG, "Nenhuma categoria no servidor");
                 return true; // Não é erro, apenas não há dados
             }
             
+            String dados = partes[1];
             String[] categorias = Protocol.parseFields(dados);
             Log.d(TAG, "Processando " + categorias.length + " categorias do servidor");
             
             for (String categoriaData : categorias) {
+                if (categoriaData == null || categoriaData.trim().isEmpty()) {
+                    continue;
+                }
+                
                 String[] campos = categoriaData.split(",");
                 if (campos.length >= 3) {
                     // Format: id,nome,tipo,cor
-                    String nome = campos[1];
-                    String tipo = campos[2];
-                    String cor = campos.length > 3 ? campos[3] : "#666666";
+                    String nome = campos[1].trim();
+                    String tipo = campos[2].trim();
+                    String cor = campos.length > 3 ? campos[3].trim() : "#666666";
+                    
+                    if (nome.isEmpty() || tipo.isEmpty()) {
+                        Log.w(TAG, "Categoria com dados inválidos: " + categoriaData);
+                        continue;
+                    }
                     
                     // Verifica se categoria já existe localmente
                     List<Categoria> existentes = database.categoriaDao().listarPorTipo(tipo);
@@ -587,6 +606,8 @@ public class SyncService {
                         database.categoriaDao().inserir(categoria);
                         Log.d(TAG, "Categoria adicionada localmente: " + nome);
                     }
+                } else {
+                    Log.w(TAG, "Categoria com formato inválido: " + categoriaData);
                 }
             }
             

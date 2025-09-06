@@ -1,7 +1,6 @@
 package com.example.finanza.ui;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.widget.Button;
@@ -9,17 +8,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.room.Room;
 
 import com.example.finanza.MainActivity;
 import com.example.finanza.R;
-import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Usuario;
+import com.example.finanza.network.AuthManager;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    private AppDatabase db;
+    private AuthManager authManager;
     private TextInputEditText inputNome, inputEmail, inputSenha, inputConfirmarSenha;
     private Button btnCriarConta;
     private TextView txtFazerLogin;
@@ -34,12 +32,8 @@ public class RegisterActivity extends AppCompatActivity {
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().getDecorView().setSystemUiVisibility(0);
 
-        // Inicializar database
-        db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-db")
-                .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
-                .allowMainThreadQueries()
-                .build();
+        // Inicializar AuthManager
+        authManager = AuthManager.getInstance(this);
 
         // Inicializar views
         inputNome = findViewById(R.id.input_nome);
@@ -100,33 +94,32 @@ public class RegisterActivity extends AppCompatActivity {
 
         if (hasError) return;
 
-        // Verificar se email já existe
-        Usuario usuarioExistente = db.usuarioDao().buscarPorEmail(email);
-        if (usuarioExistente != null) {
-            inputEmail.setError("Este email já está em uso");
-            return;
-        }
+        // Desabilitar botão durante registro
+        btnCriarConta.setEnabled(false);
+        btnCriarConta.setText("Criando conta...");
 
-        // Criar novo usuário
-        Usuario novoUsuario = new Usuario();
-        novoUsuario.nome = nome;
-        novoUsuario.email = email;
-        novoUsuario.senha = senha;
-        novoUsuario.dataCriacao = System.currentTimeMillis();
+        // Registrar usando AuthManager
+        authManager.registrar(nome, email, senha, new AuthManager.AuthCallback() {
+            @Override
+            public void onSuccess(Usuario usuario) {
+                runOnUiThread(() -> {
+                    Toast.makeText(RegisterActivity.this, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show();
+                    
+                    Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+                    intent.putExtra("usuarioId", usuario.id);
+                    startActivity(intent);
+                    finish();
+                });
+            }
 
-        long usuarioId = db.usuarioDao().inserir(novoUsuario);
-        novoUsuario.id = (int) usuarioId;
-
-        // Salvar login
-        SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
-        prefs.edit().putInt("usuarioId", novoUsuario.id).apply();
-
-        Toast.makeText(this, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show();
-
-        // Ir para MainActivity
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("usuarioId", novoUsuario.id);
-        startActivity(intent);
-        finish();
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    btnCriarConta.setEnabled(true);
+                    btnCriarConta.setText("Criar Conta");
+                    Toast.makeText(RegisterActivity.this, error, Toast.LENGTH_LONG).show();
+                });
+            }
+        });
     }
 }

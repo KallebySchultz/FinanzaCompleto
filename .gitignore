@@ -55,3 +55,6 @@ server-java/*.jar
 /DESKTOP VERSION/Cliente-Finanza/dist/
 /DESKTOP VERSION/Servidor-Finanza/build/
 /DESKTOP VERSION/Servidor-Finanza/dist/
+/DESKTOP VERSION/ServidorFinanza/nbproject/private/
+/DESKTOP VERSION/ServidorFinanza/dist/
+/DESKTOP VERSION/ServidorFinanza/build/

@@ -1,5 +1,6 @@
 package com.example.finanza.ui;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -32,6 +33,7 @@ public class ProfileActivity extends AppCompatActivity {
     private Button btnExcluirConta;
     private Button btnSair;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

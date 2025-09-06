@@ -4,7 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.room.Room;
-
+import com.example.finanza.network.SyncService;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Categoria;
 import com.example.finanza.model.Conta;

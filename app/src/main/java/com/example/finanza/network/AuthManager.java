@@ -1,0 +1,259 @@
+package com.example.finanza.network;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
+
+import androidx.room.Room;
+
+import com.example.finanza.db.AppDatabase;
+import com.example.finanza.model.Usuario;
+
+/**
+ * Gerenciador de autenticação que suporta modo offline e online
+ * Prioriza autenticação local, sincroniza com servidor quando disponível
+ */
+public class AuthManager {
+    
+    private static final String TAG = "AuthManager";
+    private static final String PREFS_NAME = "FinanzaAuth";
+    private static final String PREF_USER_ID = "usuarioId";
+    private static final String PREF_USER_EMAIL = "userEmail";
+    private static final String PREF_IS_LOGGED_IN = "isLoggedIn";
+    
+    private Context context;
+    private AppDatabase database;
+    private ServerClient serverClient;
+    private static AuthManager instance;
+    
+    public interface AuthCallback {
+        void onSuccess(Usuario usuario);
+        void onError(String error);
+    }
+    
+    private AuthManager(Context context) {
+        this.context = context.getApplicationContext();
+        this.database = Room.databaseBuilder(context, AppDatabase.class, "finanza-database")
+                .allowMainThreadQueries() // Para operações simples de auth
+                .build();
+        this.serverClient = ServerClient.getInstance(context);
+    }
+    
+    public static synchronized AuthManager getInstance(Context context) {
+        if (instance == null) {
+            instance = new AuthManager(context);
+        }
+        return instance;
+    }
+    
+    /**
+     * Faz login - tenta servidor primeiro, fallback para local
+     */
+    public void login(String email, String senha, AuthCallback callback) {
+        // Verifica primeiro localmente
+        Usuario usuarioLocal = buscarUsuarioLocal(email, senha);
+        
+        if (serverClient.isConnected()) {
+            // Tenta autenticar no servidor
+            serverClient.login(email, senha, new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.d(TAG, "Login no servidor bem-sucedido");
+                    
+                    // Se login servidor OK, salva/atualiza localmente
+                    Usuario usuario = usuarioLocal != null ? usuarioLocal : criarUsuarioLocal(email, senha);
+                    if (usuario != null) {
+                        salvarSessao(usuario);
+                        callback.onSuccess(usuario);
+                    } else {
+                        callback.onError("Erro ao salvar dados locais");
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.d(TAG, "Login no servidor falhou: " + error);
+                    
+                    // Fallback para autenticação local
+                    if (usuarioLocal != null) {
+                        Log.d(TAG, "Usando autenticação local offline");
+                        salvarSessao(usuarioLocal);
+                        callback.onSuccess(usuarioLocal);
+                    } else {
+                        callback.onError("Credenciais inválidas (offline)");
+                    }
+                }
+            });
+        } else {
+            // Modo offline - só autenticação local
+            if (usuarioLocal != null) {
+                Log.d(TAG, "Login offline bem-sucedido");
+                salvarSessao(usuarioLocal);
+                callback.onSuccess(usuarioLocal);
+            } else {
+                callback.onError("Credenciais inválidas (modo offline)");
+            }
+        }
+    }
+    
+    /**
+     * Registra novo usuário
+     */
+    public void registrar(String nome, String email, String senha, AuthCallback callback) {
+        // Verifica se usuário já existe localmente
+        if (buscarUsuarioLocal(email, senha) != null) {
+            callback.onError("Usuário já existe localmente");
+            return;
+        }
+        
+        if (serverClient.isConnected()) {
+            // Registra no servidor primeiro
+            serverClient.registrar(nome, email, senha, new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.d(TAG, "Registro no servidor bem-sucedido");
+                    
+                    // Cria usuário local
+                    Usuario usuario = criarUsuarioLocal(nome, email, senha);
+                    if (usuario != null) {
+                        salvarSessao(usuario);
+                        callback.onSuccess(usuario);
+                    } else {
+                        callback.onError("Erro ao criar usuário local");
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.d(TAG, "Registro no servidor falhou: " + error);
+                    
+                    // Ainda assim cria localmente para uso offline
+                    Usuario usuario = criarUsuarioLocal(nome, email, senha);
+                    if (usuario != null) {
+                        Log.d(TAG, "Usuário criado localmente (será sincronizado depois)");
+                        salvarSessao(usuario);
+                        callback.onSuccess(usuario);
+                    } else {
+                        callback.onError("Erro ao criar usuário: " + error);
+                    }
+                }
+            });
+        } else {
+            // Modo offline - cria só localmente
+            Usuario usuario = criarUsuarioLocal(nome, email, senha);
+            if (usuario != null) {
+                Log.d(TAG, "Usuário criado offline");
+                salvarSessao(usuario);
+                callback.onSuccess(usuario);
+            } else {
+                callback.onError("Erro ao criar usuário offline");
+            }
+        }
+    }
+    
+    /**
+     * Busca usuário local por email
+     */
+    private Usuario buscarUsuarioLocal(String email, String senha) {
+        try {
+            // Busca por email primeiro
+            return database.usuarioDao().buscarPorEmail(email);
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao buscar usuário local: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Cria usuário local
+     */
+    private Usuario criarUsuarioLocal(String nome, String email, String senha) {
+        try {
+            Usuario usuario = new Usuario();
+            usuario.nome = nome;
+            usuario.email = email;
+            usuario.senha = senha; // Em produção, deveria ser hash
+            usuario.dataCriacao = System.currentTimeMillis();
+            
+            long id = database.usuarioDao().inserir(usuario);
+            usuario.id = (int) id;
+            
+            return usuario;
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao criar usuário local: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Sobrecarga para usuários existentes
+     */
+    private Usuario criarUsuarioLocal(String email, String senha) {
+        return criarUsuarioLocal("", email, senha);
+    }
+    
+    /**
+     * Salva sessão do usuário
+     */
+    private void salvarSessao(Usuario usuario) {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+             .putInt(PREF_USER_ID, usuario.id)
+             .putString(PREF_USER_EMAIL, usuario.email)
+             .putBoolean(PREF_IS_LOGGED_IN, true)
+             .apply();
+             
+        Log.d(TAG, "Sessão salva para usuário: " + usuario.email);
+    }
+    
+    /**
+     * Verifica se usuário está logado
+     */
+    public boolean isLoggedIn() {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(PREF_IS_LOGGED_IN, false);
+    }
+    
+    /**
+     * Obtém ID do usuário logado
+     */
+    public int getLoggedUserId() {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getInt(PREF_USER_ID, -1);
+    }
+    
+    /**
+     * Obtém email do usuário logado
+     */
+    public String getLoggedUserEmail() {
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getString(PREF_USER_EMAIL, "");
+    }
+    
+    /**
+     * Faz logout
+     */
+    public void logout() {
+        // Desconecta do servidor se conectado
+        if (serverClient.isConnected()) {
+            serverClient.disconnect();
+        }
+        
+        // Limpa sessão local
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().clear().apply();
+        
+        Log.d(TAG, "Logout realizado");
+    }
+    
+    /**
+     * Obtém dados do usuário logado
+     */
+    public Usuario getLoggedUser() {
+        int userId = getLoggedUserId();
+        if (userId != -1) {
+            return database.usuarioDao().buscarPorId(userId);
+        }
+        return null;
+    }
+}

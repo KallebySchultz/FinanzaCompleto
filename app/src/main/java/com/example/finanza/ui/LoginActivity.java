@@ -8,17 +8,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.room.Room;
 
 import com.example.finanza.MainActivity;
 import com.example.finanza.R;
-import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Usuario;
+import com.example.finanza.network.AuthManager;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private AppDatabase db;
+    private AuthManager authManager;
     private TextInputEditText inputEmail, inputSenha;
     private Button btnLogin;
     private TextView txtCriarConta;
@@ -33,20 +32,14 @@ public class LoginActivity extends AppCompatActivity {
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().getDecorView().setSystemUiVisibility(0);
 
-        // Inicializar database
-        db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-db")
-                .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
-                .allowMainThreadQueries()
-                .build();
+        // Inicializar AuthManager
+        authManager = AuthManager.getInstance(this);
 
         // Verificar se já está logado
-        SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
-        int usuarioLogado = prefs.getInt("usuarioId", -1);
-        if (usuarioLogado != -1) {
+        if (authManager.isLoggedIn()) {
             // Usuário já está logado, ir para MainActivity
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("usuarioId", usuarioLogado);
+            intent.putExtra("usuarioId", authManager.getLoggedUserId());
             startActivity(intent);
             finish();
             return;
@@ -87,20 +80,32 @@ public class LoginActivity extends AppCompatActivity {
 
         if (hasError) return;
 
-        // Tentar fazer login
-        Usuario usuario = db.usuarioDao().login(email, senha);
-        if (usuario != null) {
-            // Login bem-sucedido
-            SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
-            prefs.edit().putInt("usuarioId", usuario.id).apply();
+        // Desabilitar botão durante login
+        btnLogin.setEnabled(false);
+        btnLogin.setText("Entrando...");
 
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.putExtra("usuarioId", usuario.id);
-            startActivity(intent);
-            finish();
-        } else {
-            // Login falhou
-            Toast.makeText(this, "Email ou senha incorretos", Toast.LENGTH_SHORT).show();
-        }
+        // Tentar fazer login usando AuthManager
+        authManager.login(email, senha, new AuthManager.AuthCallback() {
+            @Override
+            public void onSuccess(Usuario usuario) {
+                runOnUiThread(() -> {
+                    Toast.makeText(LoginActivity.this, "Login realizado com sucesso!", Toast.LENGTH_SHORT).show();
+                    
+                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                    intent.putExtra("usuarioId", usuario.id);
+                    startActivity(intent);
+                    finish();
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
+                    btnLogin.setEnabled(true);
+                    btnLogin.setText("Entrar");
+                    Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
+                });
+            }
+        });
     }
 }

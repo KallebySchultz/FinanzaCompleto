@@ -11,7 +11,7 @@ import com.example.finanza.model.*;
 
 @Database(
         entities = {Usuario.class, Conta.class, Categoria.class, Lancamento.class},
-        version = 3,
+        version = 4,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -22,6 +22,17 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ContaDao contaDao();
     public abstract CategoriaDao categoriaDao();
     public abstract LancamentoDao lancamentoDao();
+
+    /**
+     * Migration from version 3 to 4 - Add tipo field to Conta
+     */
+    static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            // Add tipo field to Conta table
+            database.execSQL("ALTER TABLE Conta ADD COLUMN tipo TEXT DEFAULT 'corrente'");
+        }
+    };
 
     /**
      * Migration from version 2 to 3 - Adiciona apenas colunas novas!
@@ -83,7 +94,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "finanza-database")
-                            .addMigrations(MIGRATION_2_3)
+                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
                             .allowMainThreadQueries() // Somente para testes/dev!
                             .build();
                 }

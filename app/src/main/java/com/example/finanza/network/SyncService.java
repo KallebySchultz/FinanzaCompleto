@@ -187,7 +187,7 @@ public class SyncService {
                 String comando = Protocol.buildCommand(
                         Protocol.CMD_ADD_CONTA,
                         conta.nome,
-                        "corrente", // tipo padrão
+                        conta.tipo != null ? conta.tipo : "corrente",
                         String.valueOf(conta.saldoInicial)
                 );
 
@@ -347,7 +347,7 @@ public class SyncService {
                     String comando = Protocol.buildCommand(
                             Protocol.CMD_ADD_CONTA,
                             conta.nome,
-                            "corrente", // tipo padrão
+                            conta.tipo != null ? conta.tipo : "corrente",
                             String.valueOf(conta.saldoInicial)
                     );
 
@@ -720,9 +720,19 @@ public class SyncService {
                 String[] campos = contaData.split(",");
                 if (campos.length >= 3) {
                     try {
-                        // Format: id,nome,saldo
+                        // Format: id,nome,saldo OR id,nome,tipo,saldo
                         String nome = campos[1].trim();
-                        double saldo = Double.parseDouble(campos[2]);
+                        String tipo = "corrente"; // default
+                        double saldo;
+                        
+                        if (campos.length >= 4) {
+                            // Format with tipo: id,nome,tipo,saldo
+                            tipo = campos[2].trim();
+                            saldo = Double.parseDouble(campos[3]);
+                        } else {
+                            // Format without tipo: id,nome,saldo
+                            saldo = Double.parseDouble(campos[2]);
+                        }
 
                         if (nome.isEmpty()) {
                             Log.w(TAG, "Conta com nome vazio: " + contaData);
@@ -745,11 +755,12 @@ public class SyncService {
                             if (usuario != null) {
                                 Conta conta = new Conta();
                                 conta.nome = nome;
+                                conta.tipo = tipo;
                                 conta.saldoInicial = saldo;
                                 conta.usuarioId = usuarioId;
                                 database.contaDao().inserir(conta);
                                 contasProcessadas++;
-                                Log.d(TAG, "Conta adicionada localmente: " + nome);
+                                Log.d(TAG, "Conta adicionada localmente: " + nome + " (tipo: " + tipo + ")");
                             } else {
                                 Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
                             }

@@ -17,6 +17,8 @@ public class Conta {
     @PrimaryKey(autoGenerate = true)
     public int id;
     public String nome;
+    @ColumnInfo(defaultValue = "corrente")
+    public String tipo; // "corrente", "poupanca", "cartao", "investimento", "dinheiro"
     public double saldoInicial;
     public int usuarioId;
     
@@ -39,6 +41,7 @@ public class Conta {
         this.syncStatus = 2; // needs_sync by default
         this.lastSyncTime = 0;
         this.serverHash = "";
+        this.tipo = "corrente"; // default account type
     }
     
     public void markAsModified() {
@@ -55,7 +58,7 @@ public class Conta {
      * Generate hash for duplicate detection and conflict resolution
      */
     public String generateDataHash() {
-        String data = nome + "|" + saldoInicial + "|" + usuarioId;
+        String data = nome + "|" + (tipo != null ? tipo : "corrente") + "|" + saldoInicial + "|" + usuarioId;
         return String.valueOf(data.hashCode());
     }
 }

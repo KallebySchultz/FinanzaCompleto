@@ -101,14 +101,7 @@ Finanza-Mobile/
 │   │   ├── server/                       # Lógica do servidor
 │   │   └── util/                         # Utilitários
 │   └── banco/                            # Scripts do banco
-├── screenshots/                           # Screenshots das aplicações
-│   ├── mobile/                           # Capturas do app Android
-│   ├── desktop/                          # Capturas do app Desktop
-│   └── setup/                            # Capturas de configuração
-├── docs/                                 # Documentação técnica
-├── Modelo Incremental.md                 # Documentação do modelo de desenvolvimento
-├── TRABALHO INTERDISCIPLINAR 2025 - DESCRIÇÃO.md  # Descrição acadêmica do projeto
-└── Modelo Trab. Interdisciplinar.md      # Framework de trabalho interdisciplinar
+└── docs/                                 # Documentação
 
 ```
 
@@ -272,38 +265,6 @@ Finanza-Mobile/
    - Visualize gráficos
    - Gerencie usuários
 
-## 📷 Screenshots das Aplicações
-
-### 📱 **Aplicação Mobile (Android)**
-
-| Tela | Descrição | Screenshot |
-|------|-----------|------------|
-| **Login** | Autenticação com Material Design | ![Login Mobile](screenshots/mobile/mobile_login.png) |
-| **Dashboard** | Resumo financeiro e gráficos | ![Dashboard Mobile](screenshots/mobile/mobile_dashboard.png) |
-| **Contas** | Gerenciamento de contas bancárias | ![Contas Mobile](screenshots/mobile/mobile_accounts.png) |
-| **Movimentações** | Registro de receitas e despesas | ![Movimentações Mobile](screenshots/mobile/mobile_movements.png) |
-| **Sincronização** | Status de conexão com desktop | ![Sync Mobile](screenshots/mobile/mobile_sync.png) |
-
-### 🖥️ **Aplicação Desktop (Java)**
-
-| Tela | Descrição | Screenshot |
-|------|-----------|------------|
-| **Login** | Interface Swing de autenticação | ![Login Desktop](screenshots/desktop/desktop_login.png) |
-| **Dashboard** | Dashboard completo com relatórios | ![Dashboard Desktop](screenshots/desktop/desktop_dashboard.png) |
-| **Usuários** | Administração de usuários | ![Usuários Desktop](screenshots/desktop/desktop_users.png) |
-| **Monitor TCP** | Monitor de sincronização | ![Monitor Desktop](screenshots/desktop/desktop_sync_monitor.png) |
-| **Relatórios** | Geração e exportação de dados | ![Relatórios Desktop](screenshots/desktop/desktop_reports.png) |
-
-### 🔧 **Processo de Instalação**
-
-| Etapa | Descrição | Screenshot |
-|-------|-----------|------------|
-| **Banco de Dados** | Configuração do MySQL | ![Config BD](screenshots/setup/setup_database.png) |
-| **Primeiro Acesso** | Tela inicial do sistema | ![First Run](screenshots/setup/setup_first_run.png) |
-| **Configuração de Rede** | Setup de IP e porta TCP | ![Network Config](screenshots/setup/setup_network.png) |
-
-> 📋 **Nota**: Para visualizar as screenshots completas, consulte o diretório `/screenshots/` ou execute as aplicações conforme o guia de instalação.
-
 ## 🔧 Configuração Avançada
 
 ### 🌐 **Servidor TCP**
@@ -432,139 +393,6 @@ System.out.println("Comando recebido: " + comando);
 3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
-
-## 🎓 Contexto Acadêmico e Interdisciplinaridade
-
-### **Trabalho Interdisciplinar 2025**
-
-Este projeto representa um **Trabalho Interdisciplinar** que integra conhecimentos e competências de múltiplas disciplinas do curso de Computação, demonstrando a aplicação prática de conceitos teóricos em um sistema real e funcional.
-
-#### **Disciplinas Integradas:**
-
-| Disciplina | Aplicação no Projeto | Conceitos Utilizados |
-|------------|---------------------|---------------------|
-| **🔧 Programação Orientada a Objetos** | Modelagem de entidades e arquitetura | Classes, herança, polimorfismo, encapsulamento |
-| **🗄️ Banco de Dados** | Persistência e consultas | Modelagem relacional, SQL, transações, normalização |
-| **⚙️ Engenharia de Software** | Processo e qualidade | Modelo incremental, MVC, documentação, testes |
-| **🌐 Redes de Computadores** | Comunicação TCP/IP | Sockets, protocolos, sincronização distribuída |
-| **🎨 Interface Humano-Computador** | Design de experiência | Material Design, usabilidade, acessibilidade |
-| **💻 Sistemas Operacionais** | Multiplataforma | Android OS, threads, recursos do sistema |
-
-#### **Metodologia Incremental Aplicada:**
-
-O projeto foi desenvolvido seguindo o **Modelo Incremental**, dividido em 5 incrementos principais que permitiram entregas funcionais progressivas e validação contínua. Cada incremento adicionou funcionalidades específicas mantendo a qualidade e estabilidade do sistema.
-
-📋 **Documentação Detalhada**: Consulte [`Modelo Incremental.md`](Modelo%20Incremental.md) para análise completa da metodologia aplicada.
-
-#### **Inovações Técnicas:**
-
-- 🔄 **Sincronização Híbrida**: Sistema offline-first com sincronização automática
-- 🏗️ **Arquitetura Multiplataforma**: Integração Android + Java Desktop via TCP
-- 🛡️ **Resolução de Conflitos**: Sistema automático baseado em timestamps
-- 📊 **Interface Adaptativa**: Material Design (mobile) + Swing (desktop)
-
-### **Valor Acadêmico e Profissional**
-
-Este projeto demonstra:
-- ✅ **Integração Efetiva** de conceitos multidisciplinares
-- ✅ **Aplicação Prática** de teorias em sistema real
-- ✅ **Qualidade Profissional** de código e documentação
-- ✅ **Complexidade Adequada** para trabalho de graduação
-- ✅ **Potencial de Expansão** para projetos futuros
-
-## 📚 Documentação Completa
-
-### 📋 **Documentação Principal**
-- 📄 [`README.md`](README.md) - Documentação completa do projeto
-- 📄 [`ARCHITECTURE.md`](ARCHITECTURE.md) - Arquitetura detalhada do sistema
-- 📄 [`USER_MANUAL.md`](USER_MANUAL.md) - Manual completo do usuário
-- 📄 [`SETUP_GUIDE.md`](SETUP_GUIDE.md) - Guia de instalação e configuração
-
-### 🎓 **Documentação Acadêmica**
-- 📄 [`Modelo Incremental.md`](Modelo%20Incremental.md) - Modelo de desenvolvimento aplicado
-- 📄 [`TRABALHO INTERDISCIPLINAR 2025 - DESCRIÇÃO.md`](TRABALHO%20INTERDISCIPLINAR%202025%20-%20DESCRIÇÃO.md) - Descrição do projeto interdisciplinar
-- 📄 [`Modelo Trab. Interdisciplinar.md`](Modelo%20Trab.%20Interdisciplinar.md) - Framework de trabalho interdisciplinar
-
-### 🔧 **Documentação Técnica**
-- 📁 [`DESKTOP VERSION/docs/`](DESKTOP%20VERSION/docs/) - Documentação específica do desktop
-- 📁 [`screenshots/`](screenshots/) - Screenshots das aplicações
-- 📄 [`SYNC_GUIDE.md`](SYNC_GUIDE.md) - Guia de sincronização
-- 📄 [`CODE_QUALITY.md`](CODE_QUALITY.md) - Padrões de qualidade de código
-
-## 🎯 Competências Desenvolvidas e Resultados de Aprendizado
-
-### **Competências Técnicas Adquiridas**
-
-#### 📱 **Desenvolvimento Mobile**
-- ✅ **Android SDK**: Domínio da plataforma Android e suas APIs
-- ✅ **Room Database**: ORM para SQLite com migrações e relacionamentos
-- ✅ **Material Design**: Implementação de interfaces modernas e responsivas
-- ✅ **Architecture Components**: ViewModel, LiveData, Navigation
-
-#### 🖥️ **Desenvolvimento Desktop**
-- ✅ **Java Swing**: Criação de interfaces gráficas robustas
-- ✅ **JDBC**: Conectividade e operações com banco MySQL
-- ✅ **Padrão MVC**: Separação de responsabilidades e manutenibilidade
-- ✅ **Sockets TCP**: Programação de rede cliente-servidor
-
-#### 🔄 **Integração de Sistemas**
-- ✅ **Protocolo de Comunicação**: Design de protocolo customizado
-- ✅ **Sincronização de Dados**: Resolução de conflitos e consistência
-- ✅ **Arquitetura Distribuída**: Coordenação entre aplicações heterogêneas
-- ✅ **Persistência Multiplataforma**: SQLite + MySQL com UUIDs universais
-
-### **Competências Metodológicas**
-
-#### 🛠️ **Engenharia de Software**
-- ✅ **Modelo Incremental**: Planejamento e execução por incrementos
-- ✅ **Documentação Técnica**: Especificações, manuais e guias
-- ✅ **Controle de Versão**: Git com branching e merge strategies
-- ✅ **Testes de Software**: Validação funcional e de integração
-
-#### 📊 **Gestão de Projeto**
-- ✅ **Planejamento**: Definição de escopo e cronograma
-- ✅ **Monitoramento**: Acompanhamento de progresso e qualidade
-- ✅ **Entrega**: Deployment e documentação de release
-- ✅ **Manutenção**: Suporte e evolução contínua
-
-### **Competências Transversais**
-
-#### 🧠 **Resolução de Problemas**
-- ✅ **Análise Sistemática**: Decomposição de problemas complexos
-- ✅ **Pensamento Crítico**: Avaliação de alternativas e trade-offs
-- ✅ **Inovação**: Criação de soluções criativas e eficientes
-- ✅ **Adaptabilidade**: Flexibilidade para mudanças de requisitos
-
-#### 📚 **Aprendizado Contínuo**
-- ✅ **Pesquisa Técnica**: Busca e avaliação de tecnologias
-- ✅ **Experimentação**: Prototipagem e validação de conceitos
-- ✅ **Documentação**: Registro e compartilhamento de conhecimento
-- ✅ **Mentoria**: Capacidade de ensinar e transferir conhecimento
-
-### **Métricas de Qualidade Alcançadas**
-
-| Aspecto | Métrica | Resultado |
-|---------|---------|-----------|
-| **Funcionalidade** | Features implementadas | 100% dos requisitos |
-| **Qualidade de Código** | Padrões de codificação | Google Java Style |
-| **Cobertura de Testes** | Testes funcionais | > 80% |
-| **Documentação** | Completude | 100% documentado |
-| **Performance** | Tempo de resposta | < 2 segundos |
-| **Usabilidade** | Interface intuitiva | Material Design + Swing |
-
-### **Impacto e Aplicabilidade**
-
-#### 🏢 **Relevância Profissional**
-- **Portfolio Técnico**: Projeto demonstra competências de mercado
-- **Experiência Completa**: Ciclo completo de desenvolvimento
-- **Tecnologias Atuais**: Stack tecnológico relevante
-- **Qualidade Comercial**: Padrões de software profissional
-
-#### 🎓 **Contribuição Acadêmica**
-- **Integração Disciplinar**: Demonstração prática de conceitos
-- **Metodologia Aplicada**: Validação do modelo incremental
-- **Documentação Exemplar**: Referência para futuros projetos
-- **Inovação Técnica**: Soluções criativas para problemas reais
 
 ## 📈 Roadmap
 

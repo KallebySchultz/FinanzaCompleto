@@ -90,7 +90,7 @@ public class SettingsActivity extends AppCompatActivity {
             serverClient.configurarServidor(host, port);
             statusText.setText("⚙️ Configurações salvas: " + host + ":" + port);
             statusText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            Toast.makeText(this, "Configurações salvas com sucesso!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Configurações salvas com sucesso! Teste a conexão para confirmar.", Toast.LENGTH_LONG).show();
 
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Porta deve ser um número válido", Toast.LENGTH_SHORT).show();

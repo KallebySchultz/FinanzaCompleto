@@ -659,8 +659,9 @@ public class SyncService {
                         categoria.nome = nome;
                         categoria.tipo = tipo;
                         categoria.corHex = cor;
-                        database.categoriaDao().inserir(categoria);
-                        Log.d(TAG, "Categoria adicionada localmente: " + nome);
+                        // Use enhanced upsert method that handles duplicates intelligently
+                        long id = database.categoriaDao().inserirSeguro(categoria);
+                        Log.d(TAG, "Categoria adicionada/atualizada localmente: " + nome + " (id: " + id + ")");
                     }
                 } else {
                     Log.w(TAG, "Categoria com formato inválido: " + categoriaData);
@@ -719,8 +720,9 @@ public class SyncService {
                             conta.nome = nome;
                             conta.saldoInicial = saldo;
                             conta.usuarioId = usuarioId;
-                            database.contaDao().inserir(conta);
-                            Log.d(TAG, "Conta adicionada localmente: " + nome);
+                            // Use enhanced upsert method that handles duplicates intelligently
+                            long id = database.contaDao().inserirSeguro(conta);
+                            Log.d(TAG, "Conta adicionada/atualizada localmente: " + nome + " (id: " + id + ")");
                         } else {
                             Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
                         }

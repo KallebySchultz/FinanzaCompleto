@@ -98,7 +98,23 @@ public class LoginActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     btnLogin.setEnabled(true);
                     btnLogin.setText("Entrar");
-                    Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
+                    
+                    // If error might be related to server connection, suggest configuration
+                    if (error.toLowerCase().contains("conexão") || error.toLowerCase().contains("servidor") || 
+                        error.toLowerCase().contains("network") || error.toLowerCase().contains("timeout")) {
+                        
+                        new android.app.AlertDialog.Builder(LoginActivity.this)
+                            .setTitle("Erro de Conexão")
+                            .setMessage(error + "\n\nDeseja configurar as configurações do servidor?")
+                            .setPositiveButton("Configurar", (dialog, which) -> {
+                                Intent intent = new Intent(LoginActivity.this, SettingsActivity.class);
+                                startActivity(intent);
+                            })
+                            .setNegativeButton("Cancelar", null)
+                            .show();
+                    } else {
+                        Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
+                    }
                 });
             }
         });

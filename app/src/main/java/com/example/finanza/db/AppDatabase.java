@@ -30,32 +30,32 @@ public abstract class AppDatabase extends RoomDatabase {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
             // Add sync metadata to Usuario table
-            database.execSQL("ALTER TABLE Usuario ADD COLUMN uuid TEXT DEFAULT ''");
-            database.execSQL("ALTER TABLE Usuario ADD COLUMN lastModified INTEGER DEFAULT 0");
-            database.execSQL("ALTER TABLE Usuario ADD COLUMN syncStatus INTEGER DEFAULT 2");
-            database.execSQL("ALTER TABLE Usuario ADD COLUMN lastSyncTime INTEGER DEFAULT 0");
+            database.execSQL("ALTER TABLE Usuario ADD COLUMN uuid TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE Usuario ADD COLUMN lastModified INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE Usuario ADD COLUMN syncStatus INTEGER NOT NULL DEFAULT 2");
+            database.execSQL("ALTER TABLE Usuario ADD COLUMN lastSyncTime INTEGER NOT NULL DEFAULT 0");
             
             // Add sync metadata to Conta table
-            database.execSQL("ALTER TABLE Conta ADD COLUMN uuid TEXT DEFAULT ''");
-            database.execSQL("ALTER TABLE Conta ADD COLUMN lastModified INTEGER DEFAULT 0");
-            database.execSQL("ALTER TABLE Conta ADD COLUMN syncStatus INTEGER DEFAULT 2");
-            database.execSQL("ALTER TABLE Conta ADD COLUMN lastSyncTime INTEGER DEFAULT 0");
-            database.execSQL("ALTER TABLE Conta ADD COLUMN serverHash TEXT DEFAULT ''");
+            database.execSQL("ALTER TABLE Conta ADD COLUMN uuid TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE Conta ADD COLUMN lastModified INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE Conta ADD COLUMN syncStatus INTEGER NOT NULL DEFAULT 2");
+            database.execSQL("ALTER TABLE Conta ADD COLUMN lastSyncTime INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE Conta ADD COLUMN serverHash TEXT NOT NULL DEFAULT ''");
             
             // Add sync metadata to Categoria table
-            database.execSQL("ALTER TABLE Categoria ADD COLUMN uuid TEXT DEFAULT ''");
-            database.execSQL("ALTER TABLE Categoria ADD COLUMN lastModified INTEGER DEFAULT 0");
-            database.execSQL("ALTER TABLE Categoria ADD COLUMN syncStatus INTEGER DEFAULT 2");
-            database.execSQL("ALTER TABLE Categoria ADD COLUMN lastSyncTime INTEGER DEFAULT 0");
-            database.execSQL("ALTER TABLE Categoria ADD COLUMN serverHash TEXT DEFAULT ''");
+            database.execSQL("ALTER TABLE Categoria ADD COLUMN uuid TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE Categoria ADD COLUMN lastModified INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE Categoria ADD COLUMN syncStatus INTEGER NOT NULL DEFAULT 2");
+            database.execSQL("ALTER TABLE Categoria ADD COLUMN lastSyncTime INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE Categoria ADD COLUMN serverHash TEXT NOT NULL DEFAULT ''");
             
             // Add sync metadata to Lancamento table
-            database.execSQL("ALTER TABLE Lancamento ADD COLUMN uuid TEXT DEFAULT ''");
-            database.execSQL("ALTER TABLE Lancamento ADD COLUMN lastModified INTEGER DEFAULT 0");
-            database.execSQL("ALTER TABLE Lancamento ADD COLUMN syncStatus INTEGER DEFAULT 2");
-            database.execSQL("ALTER TABLE Lancamento ADD COLUMN lastSyncTime INTEGER DEFAULT 0");
-            database.execSQL("ALTER TABLE Lancamento ADD COLUMN serverHash TEXT DEFAULT ''");
-            database.execSQL("ALTER TABLE Lancamento ADD COLUMN isDeleted INTEGER DEFAULT 0");
+            database.execSQL("ALTER TABLE Lancamento ADD COLUMN uuid TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE Lancamento ADD COLUMN lastModified INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE Lancamento ADD COLUMN syncStatus INTEGER NOT NULL DEFAULT 2");
+            database.execSQL("ALTER TABLE Lancamento ADD COLUMN lastSyncTime INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE Lancamento ADD COLUMN serverHash TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE Lancamento ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0");
             
             // Generate UUIDs for existing records
             database.execSQL("UPDATE Usuario SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");

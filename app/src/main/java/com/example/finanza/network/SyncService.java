@@ -84,8 +84,13 @@ public class SyncService {
                 // Primeiro buscar dados do servidor
                 if (callback != null) callback.onSyncProgress("Baixando dados do servidor...");
                 if (!buscarDadosDoServidor(usuarioId)) {
-                    Log.w(TAG, "Erro ao buscar dados do servidor, mas continuando...");
-                    message.append("Aviso: alguns dados podem não estar atualizados. ");
+                    Log.e(TAG, "Erro ao buscar dados do servidor - sincronização abortada");
+                    success = false;
+                    message.append("Erro: falha ao baixar dados do servidor. ");
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, message.toString());
+                    }
+                    return;
                 }
                 
                 // Depois sincronizar dados locais para o servidor
@@ -502,6 +507,7 @@ public class SyncService {
                 @Override
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar categorias: " + error);
+                    success[0] = false; // Mark as failed
                     synchronized (lock) {
                         completedRequests[0]++;
                         if (completedRequests[0] >= totalRequests) {
@@ -532,6 +538,7 @@ public class SyncService {
                 @Override
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar contas: " + error);
+                    success[0] = false; // Mark as failed
                     synchronized (lock) {
                         completedRequests[0]++;
                         if (completedRequests[0] >= totalRequests) {
@@ -562,6 +569,7 @@ public class SyncService {
                 @Override
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar movimentações: " + error);
+                    success[0] = false; // Mark as failed
                     synchronized (lock) {
                         completedRequests[0]++;
                         if (completedRequests[0] >= totalRequests) {
@@ -589,7 +597,9 @@ public class SyncService {
             Log.d(TAG, "Busca de dados concluída - Completadas: " + completedRequests[0] + 
                        "/" + totalRequests + ", Sucesso: " + success[0]);
             
-            return success[0] && completedRequests[0] >= totalRequests;
+            // Para considerar sucesso, todas as requisições devem completar E pelo menos uma deve ter sucesso
+            boolean allCompleted = completedRequests[0] >= totalRequests;
+            return allCompleted && success[0];
             
         } catch (Exception e) {
             Log.e(TAG, "Erro ao buscar dados do servidor: " + e.getMessage(), e);

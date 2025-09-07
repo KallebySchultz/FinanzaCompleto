@@ -620,6 +620,13 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     atualizarValores(findViewById(R.id.tvSaldo), findViewById(R.id.tvReceita), findViewById(R.id.tvDespesa));
                     updateHomeContent();
+                    
+                    // Se a sincronização falhou, informar ao usuário de forma discreta
+                    if (!success && message.contains("Erro:")) {
+                        Log.w("MainActivity", "Sincronização falhou: " + message);
+                        // Não mostrar toast para não incomodar o usuário, apenas logar
+                        // Os dados locais ainda estarão disponíveis
+                    }
                 });
             }
 

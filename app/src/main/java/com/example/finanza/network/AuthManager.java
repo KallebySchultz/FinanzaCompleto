@@ -33,9 +33,7 @@ public class AuthManager {
     
     private AuthManager(Context context) {
         this.context = context.getApplicationContext();
-        this.database = Room.databaseBuilder(context, AppDatabase.class, "finanza-database")
-                .allowMainThreadQueries() // Para operações simples de auth
-                .build();
+        this.database = AppDatabase.getDatabase(context);
         this.serverClient = ServerClient.getInstance(context);
     }
     

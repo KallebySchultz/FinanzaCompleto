@@ -93,6 +93,7 @@ public abstract class AppDatabase extends RoomDatabase {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             AppDatabase.class, "finanza-database")
                             .addMigrations(MIGRATION_2_3)
+                            .allowMainThreadQueries() // Allow main thread queries for UI simplicity
                             .build();
                 }
             }

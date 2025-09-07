@@ -45,11 +45,7 @@ public class ProfileActivity extends AppCompatActivity {
         getWindow().getDecorView().setSystemUiVisibility(0);
 
         // Inicializar database e AuthManager
-        db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-database")
-                .fallbackToDestructiveMigration()
-                .allowMainThreadQueries()
-                .build();
+        db = AppDatabase.getDatabase(getApplicationContext());
                 
         authManager = AuthManager.getInstance(this);
 

@@ -137,6 +137,7 @@ public class AccountsActivity extends AppCompatActivity {
             novaConta.nome = nomeConta;
             novaConta.saldoInicial = saldoInicial;
             novaConta.usuarioId = usuarioIdAtual;
+            // Keep direct database insert for now, but ensure tipo is set by constructor
             db.contaDao().inserir(novaConta);
             updateAccounts();
             contasPanel.setVisibility(View.GONE);

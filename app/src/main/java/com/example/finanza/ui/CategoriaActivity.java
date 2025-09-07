@@ -321,10 +321,13 @@ public class CategoriaActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Sincroniza dados e atualiza UI - mas para categorias, só precisamos atualizar se não há usuário específico
-        // CategoriaActivity parece não ter usuário específico, então só atualiza se houver algum usuário logado
+        // Sincroniza dados e atualiza UI
         if (syncService != null) {
-            syncService.sincronizarTudo(1, new SyncService.SyncCallback() { // Usando ID 1 como padrão
+            // Obter usuário logado das SharedPreferences
+            android.content.SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
+            int usuarioId = prefs.getInt("usuarioId", 1);
+            
+            syncService.sincronizarTudo(usuarioId, new SyncService.SyncCallback() {
                 @Override
                 public void onSyncStarted() {
                     // Opcional: mostrar indicador de sync

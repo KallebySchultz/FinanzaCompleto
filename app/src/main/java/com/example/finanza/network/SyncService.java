@@ -481,13 +481,13 @@ public class SyncService {
         try {
             Log.d(TAG, "Iniciando busca de dados do servidor...");
 
-            final boolean[] allCompleted = {false};
+            // Sequential sync to ensure proper order: categories -> accounts -> movements
             final boolean[] success = {true};
             final Object lock = new Object();
-            final int[] completedRequests = {0};
-            final int totalRequests = 3;
+            final int[] step = {0}; // 0=categories, 1=accounts, 2=movements, 3=done
 
-            // Buscar categorias do servidor
+            // Step 1: Buscar categorias do servidor
+            Log.d(TAG, "Passo 1: Buscando categorias...");
             serverClient.listarCategorias(new ServerClient.ServerCallback<String>() {
                 @Override
                 public void onSuccess(String result) {
@@ -496,29 +496,41 @@ public class SyncService {
                         success[0] = false;
                     }
                     synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
+                        step[0] = 1;
+                        lock.notifyAll();
                     }
                 }
 
                 @Override
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar categorias: " + error);
-                    success[0] = false; // Mark as failed
+                    success[0] = false;
                     synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
+                        step[0] = 3; // Skip to done
+                        lock.notifyAll();
                     }
                 }
             });
 
-            // Buscar contas
+            // Wait for categories to complete
+            synchronized (lock) {
+                while (step[0] == 0) {
+                    try {
+                        lock.wait(5000); // 5 seconds timeout per step
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return false;
+                    }
+                }
+            }
+
+            if (step[0] == 3 || !success[0]) {
+                Log.e(TAG, "Falha na busca de categorias, abortando sync");
+                return false;
+            }
+
+            // Step 2: Buscar contas
+            Log.d(TAG, "Passo 2: Buscando contas...");
             serverClient.listarContas(new ServerClient.ServerCallback<String>() {
                 @Override
                 public void onSuccess(String result) {
@@ -527,29 +539,41 @@ public class SyncService {
                         success[0] = false;
                     }
                     synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
+                        step[0] = 2;
+                        lock.notifyAll();
                     }
                 }
 
                 @Override
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar contas: " + error);
-                    success[0] = false; // Mark as failed
+                    success[0] = false;
                     synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
+                        step[0] = 3; // Skip to done
+                        lock.notifyAll();
                     }
                 }
             });
 
-            // Buscar movimentações
+            // Wait for accounts to complete
+            synchronized (lock) {
+                while (step[0] == 1) {
+                    try {
+                        lock.wait(5000); // 5 seconds timeout per step
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return false;
+                    }
+                }
+            }
+
+            if (step[0] == 3 || !success[0]) {
+                Log.e(TAG, "Falha na busca de contas, abortando sync");
+                return false;
+            }
+
+            // Step 3: Buscar movimentações
+            Log.d(TAG, "Passo 3: Buscando movimentações...");
             serverClient.listarMovimentacoes(new ServerClient.ServerCallback<String>() {
                 @Override
                 public void onSuccess(String result) {
@@ -558,48 +582,36 @@ public class SyncService {
                         success[0] = false;
                     }
                     synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
+                        step[0] = 3;
+                        lock.notifyAll();
                     }
                 }
 
                 @Override
                 public void onError(String error) {
                     Log.e(TAG, "Erro ao buscar movimentações: " + error);
-                    success[0] = false; // Mark as failed
+                    success[0] = false;
                     synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
+                        step[0] = 3;
+                        lock.notifyAll();
                     }
                 }
             });
 
-            // Aguardar todas as operações completarem (com timeout)
+            // Wait for movements to complete
             synchronized (lock) {
-                long startTime = System.currentTimeMillis();
-                while (!allCompleted[0] && (System.currentTimeMillis() - startTime) < 15000) { // 15 segundos timeout
+                while (step[0] == 2) {
                     try {
-                        lock.wait(1000); // Verifica a cada segundo
+                        lock.wait(5000); // 5 seconds timeout per step
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        Log.w(TAG, "Thread interrompida durante sincronização");
-                        break;
+                        return false;
                     }
                 }
             }
 
-            Log.d(TAG, "Busca de dados concluída - Completadas: " + completedRequests[0] +
-                    "/" + totalRequests + ", Sucesso: " + success[0]);
-
-            // Para considerar sucesso, todas as requisições devem completar E pelo menos uma deve ter sucesso
-            // CORRIGIDO: Não declare novamente a variável allCompleted!
-            return completedRequests[0] >= totalRequests && success[0];
+            Log.d(TAG, "Busca de dados concluída - Sucesso: " + success[0]);
+            return success[0];
 
         } catch (Exception e) {
             Log.e(TAG, "Erro ao buscar dados do servidor: " + e.getMessage(), e);
@@ -696,18 +708,28 @@ public class SyncService {
      */
     private boolean processarContasDoServidor(String response, int usuarioId) {
         try {
+            if (response == null || response.trim().isEmpty()) {
+                Log.w(TAG, "Resposta vazia para contas");
+                return true; // Não é erro, apenas não há dados
+            }
+
             String[] partes = Protocol.parseCommand(response);
-            if (partes.length < 2 || !Protocol.STATUS_OK.equals(partes[0])) {
-                Log.w(TAG, "Resposta inválida para contas: " + response);
+            if (partes.length < 1) {
+                Log.w(TAG, "Resposta mal formada para contas: " + response);
                 return false;
             }
 
-            String dados = partes[1];
-            if (dados == null || dados.trim().isEmpty()) {
-                Log.d(TAG, "Nenhuma conta no servidor");
-                return true;
+            if (!Protocol.STATUS_OK.equals(partes[0])) {
+                Log.w(TAG, "Status não OK para contas: " + response);
+                return false;
             }
 
+            if (partes.length < 2 || partes[1] == null || partes[1].trim().isEmpty()) {
+                Log.d(TAG, "Nenhuma conta no servidor");
+                return true; // Não é erro, apenas não há dados
+            }
+
+            String dados = partes[1];
             String[] contas = Protocol.parseFields(dados);
             Log.d(TAG, "Processando " + contas.length + " contas do servidor");
 
@@ -850,8 +872,11 @@ public class SyncService {
                                 Log.d(TAG, "Movimentação já existe localmente: " + descricao);
                             }
                         } else {
-                            Log.w(TAG, "Não é possível criar movimentação - referências inválidas. Usuario: " +
-                                    (usuario != null) + ", Conta: " + (conta != null) + " para movimentação: " + descricao);
+                            Log.w(TAG, "Não é possível criar movimentação - referências inválidas. " +
+                                    "Usuario: " + (usuario != null) + ", Conta: " + (conta != null) + 
+                                    " (contaId=" + contaId + ") para movimentação: " + descricao);
+                            // Note: This could happen if server data has different IDs than local data
+                            // The accounts should be synced first to ensure proper mapping
                         }
                     } catch (NumberFormatException e) {
                         Log.w(TAG, "Erro ao converter dados da movimentação: " + movData + " - " + e.getMessage());

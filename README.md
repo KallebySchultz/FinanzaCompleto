@@ -5,7 +5,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Socket.IO](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)](https://socket.io/)
 
-**Finanza** é um sistema completo de controle financeiro pessoal e empresarial que oferece aplicação móvel Android e aplicação desktop Java com sincronização em tempo real via sockets TCP.
+**Finanza** é um sistema completo de controle financeiro pessoal que oferece aplicação móvel Android e aplicação desktop Java com sincronização em tempo real via sockets TCP.
 
 ## 🌟 Características Principais
 

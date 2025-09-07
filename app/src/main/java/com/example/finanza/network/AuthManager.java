@@ -12,33 +12,80 @@ import com.example.finanza.model.Conta;
 import com.example.finanza.model.Categoria;
 
 /**
- * Gerenciador de autenticação que suporta modo offline e online
- * Prioriza autenticação local, sincroniza com servidor quando disponível
+ * AuthManager - Gerenciador de Autenticação Híbrido (Online/Offline)
+ * 
+ * Classe singleton responsável por gerenciar a autenticação de usuários
+ * no aplicativo Finanza, suportando tanto modo online (com sincronização
+ * ao servidor desktop) quanto modo offline (apenas local).
+ * 
+ * Características principais:
+ * - Autenticação prioritária com servidor desktop via TCP sockets
+ * - Fallback automático para autenticação local quando servidor indisponível
+ * - Gerenciamento de sessão persistente com SharedPreferences
+ * - Sincronização automática de dados após login bem-sucedido
+ * - Criação automática de dados padrão (contas e categorias) para novos usuários
+ * 
+ * Fluxo de Autenticação:
+ * 1. Verifica credenciais localmente
+ * 2. Tenta conectar ao servidor desktop
+ * 3. Se conectado: autentica no servidor e sincroniza dados
+ * 4. Se desconectado: usa autenticação local
+ * 5. Salva sessão e inicializa dados padrão se necessário
+ * 
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
  */
 public class AuthManager {
 
     private static final String TAG = "AuthManager";
+    
+    // Constantes para SharedPreferences
     private static final String PREFS_NAME = "FinanzaAuth";
     private static final String PREF_USER_ID = "usuarioId";
     private static final String PREF_USER_EMAIL = "userEmail";
     private static final String PREF_IS_LOGGED_IN = "isLoggedIn";
 
+    // Componentes principais
     private Context context;
     private AppDatabase database;
     private ServerClient serverClient;
     private static AuthManager instance;
 
+    /**
+     * Interface de callback para operações de autenticação
+     */
     public interface AuthCallback {
+        /**
+         * Chamado quando a autenticação é bem-sucedida
+         * @param usuario Objeto do usuário autenticado
+         */
         void onSuccess(Usuario usuario);
+        
+        /**
+         * Chamado quando ocorre erro na autenticação
+         * @param error Mensagem de erro
+         */
         void onError(String error);
     }
 
+    /**
+     * Construtor privado para implementação Singleton
+     * 
+     * @param context Contexto da aplicação
+     */
     private AuthManager(Context context) {
         this.context = context.getApplicationContext();
         this.database = AppDatabase.getDatabase(context);
         this.serverClient = ServerClient.getInstance(context);
     }
 
+    /**
+     * Obtém a instância singleton do AuthManager
+     * 
+     * @param context Contexto da aplicação
+     * @return Instância única do AuthManager
+     */
     public static synchronized AuthManager getInstance(Context context) {
         if (instance == null) {
             instance = new AuthManager(context);
@@ -47,7 +94,17 @@ public class AuthManager {
     }
 
     /**
-     * Faz login - tenta servidor primeiro, fallback para local
+     * Realiza login do usuário com autenticação híbrida
+     * 
+     * Processo:
+     * 1. Verifica credenciais localmente
+     * 2. Tenta autenticar no servidor (se disponível)
+     * 3. Sincroniza dados após login bem-sucedido
+     * 4. Fallback para modo offline se servidor indisponível
+     * 
+     * @param email Email do usuário
+     * @param senha Senha do usuário
+     * @param callback Callback para resultado da operação
      */
     public void login(String email, String senha, AuthCallback callback) {
         // Verifica primeiro localmente
@@ -159,7 +216,18 @@ public class AuthManager {
     }
 
     /**
-     * Registra novo usuário
+     * Registra um novo usuário no sistema
+     * 
+     * Processo:
+     * 1. Verifica se usuário já existe localmente
+     * 2. Tenta registrar no servidor (se disponível)
+     * 3. Cria usuário local independentemente do resultado do servidor
+     * 4. Salva sessão e inicializa dados padrão
+     * 
+     * @param nome Nome completo do usuário
+     * @param email Email do usuário (deve ser único)
+     * @param senha Senha do usuário
+     * @param callback Callback para resultado da operação
      */
     public void registrar(String nome, String email, String senha, AuthCallback callback) {
         // Verifica se usuário já existe localmente

@@ -37,8 +37,7 @@ public class SyncService {
     
     private SyncService(Context context) {
         this.context = context.getApplicationContext();
-        this.database = Room.databaseBuilder(context, AppDatabase.class, "finanza-database")
-                .build();
+        this.database = AppDatabase.getDatabase(context);
         this.serverClient = ServerClient.getInstance(context);
         this.executor = Executors.newSingleThreadExecutor();
     }

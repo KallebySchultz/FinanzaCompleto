@@ -33,9 +33,7 @@ public class AuthManager {
     
     private AuthManager(Context context) {
         this.context = context.getApplicationContext();
-        this.database = Room.databaseBuilder(context, AppDatabase.class, "finanza-database")
-                .allowMainThreadQueries() // Para operações simples de auth
-                .build();
+        this.database = AppDatabase.getDatabase(context);
         this.serverClient = ServerClient.getInstance(context);
     }
     
@@ -50,169 +48,182 @@ public class AuthManager {
      * Faz login - tenta servidor primeiro, fallback para local
      */
     public void login(String email, String senha, AuthCallback callback) {
-        // Verifica primeiro localmente
-        Usuario usuarioLocal = buscarUsuarioLocal(email, senha);
-        
-        // Primeiro tenta conectar ao servidor
-        serverClient.conectar(new ServerClient.ServerCallback<String>() {
-            @Override
-            public void onSuccess(String connectionResult) {
-                Log.d(TAG, "Conectado ao servidor, tentando login...");
-                
-                // Agora faz login
-                serverClient.login(email, senha, new ServerClient.ServerCallback<String>() {
-                    @Override
-                    public void onSuccess(String result) {
-                        Log.d(TAG, "Login no servidor bem-sucedido: " + result);
-                        
-                        // Parse da resposta do servidor para obter dados do usuário
-                        String[] partes = Protocol.parseCommand(result);
-                        Usuario usuario = usuarioLocal;
-                        
-                        if (partes.length > 1) {
-                            // Resposta: OK|userId;nome;email
-                            String[] userData = partes[1].split(";");
-                            if (userData.length >= 3) {
-                                String nome = userData[1];
-                                String emailServidor = userData[2];
-                                
-                                // Atualiza ou cria usuário local com dados do servidor
-                                if (usuario == null) {
-                                    usuario = criarUsuarioLocal(nome, emailServidor, senha);
-                                } else {
-                                    usuario.nome = nome;
-                                    usuario.email = emailServidor;
-                                    database.usuarioDao().atualizar(usuario);
+        // Executa operações de banco em thread separada
+        new Thread(() -> {
+            // Verifica primeiro localmente
+            Usuario usuarioLocal = buscarUsuarioLocal(email, senha);
+            
+            // Primeiro tenta conectar ao servidor
+            serverClient.conectar(new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String connectionResult) {
+                    Log.d(TAG, "Conectado ao servidor, tentando login...");
+                    
+                    // Agora faz login
+                    serverClient.login(email, senha, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Login no servidor bem-sucedido: " + result);
+                            
+                            // Parse da resposta do servidor para obter dados do usuário
+                            String[] partes = Protocol.parseCommand(result);
+                            Usuario usuario = usuarioLocal;
+                            
+                            if (partes.length > 1) {
+                                // Resposta: OK|userId;nome;email
+                                String[] userData = partes[1].split(";");
+                                if (userData.length >= 3) {
+                                    String nome = userData[1];
+                                    String emailServidor = userData[2];
+                                    
+                                    // Atualiza ou cria usuário local com dados do servidor
+                                    if (usuario == null) {
+                                        usuario = criarUsuarioLocal(nome, emailServidor, senha);
+                                    } else {
+                                        usuario.nome = nome;
+                                        usuario.email = emailServidor;
+                                        new Thread(() -> database.usuarioDao().atualizar(usuario)).start();
+                                    }
                                 }
+                            }
+                            
+                            if (usuario == null) {
+                                usuario = usuarioLocal != null ? usuarioLocal : criarUsuarioLocal("", email, senha);
+                            }
+                            
+                            if (usuario != null) {
+                                salvarSessao(usuario);
+                                
+                                // Iniciar sincronização de dados após login bem-sucedido
+                                SyncService syncService = SyncService.getInstance(context);
+                                syncService.sincronizarTudo(usuario.id, new SyncService.SyncCallback() {
+                                    @Override
+                                    public void onSyncStarted() {
+                                        Log.d(TAG, "Iniciando sincronização pós-login...");
+                                    }
+
+                                    @Override
+                                    public void onSyncCompleted(boolean success, String message) {
+                                        Log.d(TAG, "Sincronização pós-login concluída: " + message);
+                                    }
+
+                                    @Override
+                                    public void onSyncProgress(String operation) {
+                                        Log.d(TAG, "Sincronização: " + operation);
+                                    }
+                                });
+                                
+                                callback.onSuccess(usuario);
+                            } else {
+                                callback.onError("Erro ao salvar dados locais");
                             }
                         }
                         
-                        if (usuario == null) {
-                            usuario = usuarioLocal != null ? usuarioLocal : criarUsuarioLocal("", email, senha);
-                        }
-                        
-                        if (usuario != null) {
-                            salvarSessao(usuario);
+                        @Override
+                        public void onError(String error) {
+                            Log.d(TAG, "Login no servidor falhou: " + error);
                             
-                            // Iniciar sincronização de dados após login bem-sucedido
-                            SyncService syncService = SyncService.getInstance(context);
-                            syncService.sincronizarTudo(usuario.id, new SyncService.SyncCallback() {
-                                @Override
-                                public void onSyncStarted() {
-                                    Log.d(TAG, "Iniciando sincronização pós-login...");
-                                }
-
-                                @Override
-                                public void onSyncCompleted(boolean success, String message) {
-                                    Log.d(TAG, "Sincronização pós-login concluída: " + message);
-                                }
-
-                                @Override
-                                public void onSyncProgress(String operation) {
-                                    Log.d(TAG, "Sincronização: " + operation);
-                                }
-                            });
-                            
-                            callback.onSuccess(usuario);
-                        } else {
-                            callback.onError("Erro ao salvar dados locais");
+                            // Fallback para autenticação local
+                            if (usuarioLocal != null) {
+                                Log.d(TAG, "Usando autenticação local offline");
+                                salvarSessao(usuarioLocal);
+                                callback.onSuccess(usuarioLocal);
+                            } else {
+                                callback.onError("Credenciais inválidas (offline)");
+                            }
                         }
-                    }
-                    
-                    @Override
-                    public void onError(String error) {
-                        Log.d(TAG, "Login no servidor falhou: " + error);
-                        
-                        // Fallback para autenticação local
-                        if (usuarioLocal != null) {
-                            Log.d(TAG, "Usando autenticação local offline");
-                            salvarSessao(usuarioLocal);
-                            callback.onSuccess(usuarioLocal);
-                        } else {
-                            callback.onError("Credenciais inválidas (offline)");
-                        }
-                    }
-                });
-            }
-            
-            @Override
-            public void onError(String error) {
-                Log.d(TAG, "Falha na conexão com servidor: " + error);
-                
-                // Fallback para autenticação local
-                if (usuarioLocal != null) {
-                    Log.d(TAG, "Usando autenticação local offline");
-                    salvarSessao(usuarioLocal);
-                    callback.onSuccess(usuarioLocal);
-                } else {
-                    callback.onError("Credenciais inválidas (modo offline)");
+                    });
                 }
-            }
-        });
+                
+                @Override
+                public void onError(String error) {
+                    Log.d(TAG, "Falha na conexão com servidor: " + error);
+                    
+                    // Fallback para autenticação local
+                    if (usuarioLocal != null) {
+                        Log.d(TAG, "Usando autenticação local offline");
+                        salvarSessao(usuarioLocal);
+                        callback.onSuccess(usuarioLocal);
+                    } else {
+                        callback.onError("Credenciais inválidas (modo offline)");
+                    }
+                }
+            });
+        }).start();
     }
     
     /**
      * Registra novo usuário
      */
     public void registrar(String nome, String email, String senha, AuthCallback callback) {
-        // Verifica se usuário já existe localmente
-        if (buscarUsuarioLocal(email, senha) != null) {
-            callback.onError("Usuário já existe localmente");
-            return;
-        }
-        
-        if (serverClient.isConnected()) {
-            // Registra no servidor primeiro
-            serverClient.registrar(nome, email, senha, new ServerClient.ServerCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(TAG, "Registro no servidor bem-sucedido");
-                    
-                    // Cria usuário local
-                    Usuario usuario = criarUsuarioLocal(nome, email, senha);
-                    if (usuario != null) {
-                        salvarSessao(usuario);
-                        callback.onSuccess(usuario);
-                    } else {
-                        callback.onError("Erro ao criar usuário local");
-                    }
-                }
-                
-                @Override
-                public void onError(String error) {
-                    Log.d(TAG, "Registro no servidor falhou: " + error);
-                    
-                    // Ainda assim cria localmente para uso offline
-                    Usuario usuario = criarUsuarioLocal(nome, email, senha);
-                    if (usuario != null) {
-                        Log.d(TAG, "Usuário criado localmente (será sincronizado depois)");
-                        salvarSessao(usuario);
-                        callback.onSuccess(usuario);
-                    } else {
-                        callback.onError("Erro ao criar usuário: " + error);
-                    }
-                }
-            });
-        } else {
-            // Modo offline - cria só localmente
-            Usuario usuario = criarUsuarioLocal(nome, email, senha);
-            if (usuario != null) {
-                Log.d(TAG, "Usuário criado offline");
-                salvarSessao(usuario);
-                callback.onSuccess(usuario);
-            } else {
-                callback.onError("Erro ao criar usuário offline");
+        // Executa operações de banco em thread separada
+        new Thread(() -> {
+            // Verifica se usuário já existe localmente
+            Usuario usuarioExistente = null;
+            try {
+                usuarioExistente = database.usuarioDao().buscarPorEmail(email);
+            } catch (Exception e) {
+                Log.e(TAG, "Erro ao verificar usuário existente: " + e.getMessage());
             }
-        }
+            
+            if (usuarioExistente != null) {
+                callback.onError("Usuário já existe localmente");
+                return;
+            }
+            
+            if (serverClient.isConnected()) {
+                // Registra no servidor primeiro
+                serverClient.registrar(nome, email, senha, new ServerClient.ServerCallback<String>() {
+                    @Override
+                    public void onSuccess(String result) {
+                        Log.d(TAG, "Registro no servidor bem-sucedido");
+                        
+                        // Cria usuário local
+                        Usuario usuario = criarUsuarioLocal(nome, email, senha);
+                        if (usuario != null) {
+                            salvarSessao(usuario);
+                            callback.onSuccess(usuario);
+                        } else {
+                            callback.onError("Erro ao criar usuário local");
+                        }
+                    }
+                    
+                    @Override
+                    public void onError(String error) {
+                        Log.d(TAG, "Registro no servidor falhou: " + error);
+                        
+                        // Ainda assim cria localmente para uso offline
+                        Usuario usuario = criarUsuarioLocal(nome, email, senha);
+                        if (usuario != null) {
+                            Log.d(TAG, "Usuário criado localmente (será sincronizado depois)");
+                            salvarSessao(usuario);
+                            callback.onSuccess(usuario);
+                        } else {
+                            callback.onError("Erro ao criar usuário: " + error);
+                        }
+                    }
+                });
+            } else {
+                // Modo offline - cria só localmente
+                Usuario usuario = criarUsuarioLocal(nome, email, senha);
+                if (usuario != null) {
+                    Log.d(TAG, "Usuário criado offline");
+                    salvarSessao(usuario);
+                    callback.onSuccess(usuario);
+                } else {
+                    callback.onError("Erro ao criar usuário offline");
+                }
+            }
+        }).start();
     }
     
     /**
-     * Busca usuário local por email
+     * Busca usuário local por email e valida senha
      */
     private Usuario buscarUsuarioLocal(String email, String senha) {
         try {
-            // Busca por email primeiro
-            return database.usuarioDao().buscarPorEmail(email);
+            // Busca usuário com email e senha válidos
+            return database.usuarioDao().login(email, senha);
         } catch (Exception e) {
             Log.e(TAG, "Erro ao buscar usuário local: " + e.getMessage());
             return null;
@@ -230,8 +241,17 @@ public class AuthManager {
             usuario.senha = senha; // Em produção, deveria ser hash
             usuario.dataCriacao = System.currentTimeMillis();
             
-            long id = database.usuarioDao().inserir(usuario);
-            usuario.id = (int) id;
+            // Executa operação de banco em thread separada e aguarda resultado
+            Thread dbThread = new Thread(() -> {
+                try {
+                    long id = database.usuarioDao().inserir(usuario);
+                    usuario.id = (int) id;
+                } catch (Exception e) {
+                    Log.e(TAG, "Erro ao inserir usuário no banco: " + e.getMessage());
+                }
+            });
+            dbThread.start();
+            dbThread.join(); // Aguarda a operação completar
             
             return usuario;
         } catch (Exception e) {

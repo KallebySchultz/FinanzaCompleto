@@ -92,7 +92,10 @@ public class AuthManager {
                         if (usuario != null) {
                             salvarSessao(usuario);
                             
-                            // Iniciar sincronização de dados após login bem-sucedido
+                            // Sempre chamar o callback de sucesso primeiro, independente da sincronização
+                            callback.onSuccess(usuario);
+                            
+                            // Iniciar sincronização de dados após login bem-sucedido (em background)
                             SyncService syncService = SyncService.getInstance(context);
                             syncService.sincronizarTudo(usuario.id, new SyncService.SyncCallback() {
                                 @Override
@@ -103,9 +106,8 @@ public class AuthManager {
                                 @Override
                                 public void onSyncCompleted(boolean success, String message) {
                                     Log.d(TAG, "Sincronização pós-login concluída: " + message);
-                                    // Independente do resultado da sync, o login foi bem-sucedido
-                                    // A sincronização é uma operação adicional que pode falhar
-                                    callback.onSuccess(usuario);
+                                    // Sincronização é uma operação adicional que roda em background
+                                    // O login já foi considerado bem-sucedido
                                 }
 
                                 @Override

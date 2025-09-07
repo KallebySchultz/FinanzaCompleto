@@ -637,6 +637,7 @@ public class SyncService {
             String[] categorias = Protocol.parseFields(dados);
             Log.d(TAG, "Processando " + categorias.length + " categorias do servidor");
             
+            int categoriasProcessadas = 0;
             for (String categoriaData : categorias) {
                 if (categoriaData == null || categoriaData.trim().isEmpty()) {
                     continue;
@@ -644,39 +645,45 @@ public class SyncService {
                 
                 String[] campos = categoriaData.split(",");
                 if (campos.length >= 3) {
-                    // Format: id,nome,tipo,cor
-                    String nome = campos[1].trim();
-                    String tipo = campos[2].trim();
-                    String cor = campos.length > 3 ? campos[3].trim() : "#666666";
-                    
-                    if (nome.isEmpty() || tipo.isEmpty()) {
-                        Log.w(TAG, "Categoria com dados inválidos: " + categoriaData);
-                        continue;
-                    }
-                    
-                    // Verifica se categoria já existe localmente
-                    List<Categoria> existentes = database.categoriaDao().listarPorTipo(tipo);
-                    boolean existe = false;
-                    for (Categoria cat : existentes) {
-                        if (cat.nome.equals(nome)) {
-                            existe = true;
-                            break;
+                    try {
+                        // Format: id,nome,tipo,cor
+                        String nome = campos[1].trim();
+                        String tipo = campos[2].trim();
+                        String cor = campos.length > 3 ? campos[3].trim() : "#666666";
+                        
+                        if (nome.isEmpty() || tipo.isEmpty()) {
+                            Log.w(TAG, "Categoria com dados inválidos: " + categoriaData);
+                            continue;
                         }
-                    }
-                    
-                    if (!existe) {
-                        Categoria categoria = new Categoria();
-                        categoria.nome = nome;
-                        categoria.tipo = tipo;
-                        categoria.corHex = cor;
-                        database.categoriaDao().inserir(categoria);
-                        Log.d(TAG, "Categoria adicionada localmente: " + nome);
+                        
+                        // Verifica se categoria já existe localmente
+                        List<Categoria> existentes = database.categoriaDao().listarPorTipo(tipo);
+                        boolean existe = false;
+                        for (Categoria cat : existentes) {
+                            if (cat.nome.equals(nome)) {
+                                existe = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!existe) {
+                            Categoria categoria = new Categoria();
+                            categoria.nome = nome;
+                            categoria.tipo = tipo;
+                            categoria.corHex = cor;
+                            database.categoriaDao().inserir(categoria);
+                            categoriasProcessadas++;
+                            Log.d(TAG, "Categoria adicionada localmente: " + nome);
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "Erro ao processar categoria individual: " + categoriaData + " - " + e.getMessage());
                     }
                 } else {
                     Log.w(TAG, "Categoria com formato inválido: " + categoriaData);
                 }
             }
             
+            Log.d(TAG, "Processamento de categorias concluído: " + categoriasProcessadas + " novas categorias adicionadas");
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao processar categorias: " + e.getMessage(), e);
@@ -704,40 +711,58 @@ public class SyncService {
             String[] contas = Protocol.parseFields(dados);
             Log.d(TAG, "Processando " + contas.length + " contas do servidor");
             
+            int contasProcessadas = 0;
             for (String contaData : contas) {
+                if (contaData == null || contaData.trim().isEmpty()) {
+                    continue;
+                }
+                
                 String[] campos = contaData.split(",");
                 if (campos.length >= 3) {
-                    // Format: id,nome,saldo
-                    String nome = campos[1];
-                    double saldo = Double.parseDouble(campos[2]);
-                    
-                    // Verifica se conta já existe localmente
-                    List<Conta> existentes = database.contaDao().listarPorUsuario(usuarioId);
-                    boolean existe = false;
-                    for (Conta conta : existentes) {
-                        if (conta.nome.equals(nome)) {
-                            existe = true;
-                            break;
+                    try {
+                        // Format: id,nome,saldo
+                        String nome = campos[1].trim();
+                        double saldo = Double.parseDouble(campos[2]);
+                        
+                        if (nome.isEmpty()) {
+                            Log.w(TAG, "Conta com nome vazio: " + contaData);
+                            continue;
                         }
-                    }
-                    
-                    if (!existe) {
-                        // Verificar se o usuário existe antes de criar a conta
-                        Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
-                        if (usuario != null) {
-                            Conta conta = new Conta();
-                            conta.nome = nome;
-                            conta.saldoInicial = saldo;
-                            conta.usuarioId = usuarioId;
-                            database.contaDao().inserir(conta);
-                            Log.d(TAG, "Conta adicionada localmente: " + nome);
-                        } else {
-                            Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
+                        
+                        // Verifica se conta já existe localmente
+                        List<Conta> existentes = database.contaDao().listarPorUsuario(usuarioId);
+                        boolean existe = false;
+                        for (Conta conta : existentes) {
+                            if (conta.nome.equals(nome)) {
+                                existe = true;
+                                break;
+                            }
                         }
+                        
+                        if (!existe) {
+                            // Verificar se o usuário existe antes de criar a conta
+                            Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
+                            if (usuario != null) {
+                                Conta conta = new Conta();
+                                conta.nome = nome;
+                                conta.saldoInicial = saldo;
+                                conta.usuarioId = usuarioId;
+                                database.contaDao().inserir(conta);
+                                contasProcessadas++;
+                                Log.d(TAG, "Conta adicionada localmente: " + nome);
+                            } else {
+                                Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        Log.w(TAG, "Erro ao converter saldo da conta: " + contaData + " - " + e.getMessage());
+                    } catch (Exception e) {
+                        Log.w(TAG, "Erro ao processar conta individual: " + contaData + " - " + e.getMessage());
                     }
                 }
             }
             
+            Log.d(TAG, "Processamento de contas concluído: " + contasProcessadas + " novas contas adicionadas");
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao processar contas: " + e.getMessage(), e);
@@ -765,17 +790,27 @@ public class SyncService {
             String[] movimentacoes = Protocol.parseFields(dados);
             Log.d(TAG, "Processando " + movimentacoes.length + " movimentações do servidor");
             
+            int movimentacoesProcessadas = 0;
             for (String movData : movimentacoes) {
+                if (movData == null || movData.trim().isEmpty()) {
+                    continue;
+                }
+                
                 String[] campos = movData.split(",");
                 if (campos.length >= 6) {
-                    // Format: id,valor,data,descricao,contaId,categoriaId,tipo
                     try {
+                        // Format: id,valor,data,descricao,contaId,categoriaId,tipo
                         double valor = Double.parseDouble(campos[1]);
                         long data = Long.parseLong(campos[2]);
-                        String descricao = campos[3];
+                        String descricao = campos[3].trim();
                         int contaId = Integer.parseInt(campos[4]);
                         int categoriaId = Integer.parseInt(campos[5]);
-                        String tipo = campos.length > 6 ? campos[6] : "despesa";
+                        String tipo = campos.length > 6 ? campos[6].trim() : "despesa";
+                        
+                        if (descricao.isEmpty()) {
+                            Log.w(TAG, "Movimentação com descrição vazia: " + movData);
+                            continue;
+                        }
                         
                         // Verificar se todas as foreign keys existem antes de criar a movimentação
                         Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
@@ -783,27 +818,41 @@ public class SyncService {
                         // Categoria pode ser null, permitindo categoriaId = 0
                         
                         if (usuario != null && conta != null) {
-                            Lancamento lancamento = new Lancamento();
-                            lancamento.valor = valor;
-                            lancamento.data = data;
-                            lancamento.descricao = descricao;
-                            lancamento.contaId = contaId;
-                            lancamento.categoriaId = categoriaId;
-                            lancamento.usuarioId = usuarioId;
-                            lancamento.tipo = tipo;
-                            
-                            database.lancamentoDao().inserir(lancamento);
-                            Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
+                            // Verificar se movimentação já existe para evitar duplicatas
+                            Lancamento duplicata = database.lancamentoDao().buscarDuplicata(
+                                valor, data, descricao, contaId, usuarioId, "" // exclude UUID (empty string)
+                            );
+                            if (duplicata == null) {
+                                Lancamento lancamento = new Lancamento();
+                                lancamento.valor = valor;
+                                lancamento.data = data;
+                                lancamento.descricao = descricao;
+                                lancamento.contaId = contaId;
+                                lancamento.categoriaId = categoriaId;
+                                lancamento.usuarioId = usuarioId;
+                                lancamento.tipo = tipo;
+                                
+                                database.lancamentoDao().inserir(lancamento);
+                                movimentacoesProcessadas++;
+                                Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
+                            } else {
+                                Log.d(TAG, "Movimentação já existe localmente: " + descricao);
+                            }
                         } else {
                             Log.w(TAG, "Não é possível criar movimentação - referências inválidas. Usuario: " + 
-                                (usuario != null) + ", Conta: " + (conta != null));
+                                (usuario != null) + ", Conta: " + (conta != null) + " para movimentação: " + descricao);
                         }
                     } catch (NumberFormatException e) {
-                        Log.w(TAG, "Erro ao converter dados da movimentação: " + movData);
+                        Log.w(TAG, "Erro ao converter dados da movimentação: " + movData + " - " + e.getMessage());
+                    } catch (Exception e) {
+                        Log.w(TAG, "Erro ao processar movimentação individual: " + movData + " - " + e.getMessage());
                     }
+                } else {
+                    Log.w(TAG, "Movimentação com formato inválido: " + movData);
                 }
             }
             
+            Log.d(TAG, "Processamento de movimentações concluído: " + movimentacoesProcessadas + " novas movimentações adicionadas");
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao processar movimentações: " + e.getMessage(), e);

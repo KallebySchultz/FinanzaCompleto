@@ -126,7 +126,7 @@
                 android:id="@+id/btnSettings"
                 android:layout_width="match_parent"
                 android:layout_height="62dp"
-                android:text="⚙️ Configurações"
+                android:text="Configurações"
                 android:textSize="26sp"
                 android:textStyle="bold"
                 android:textColor="@color/white"

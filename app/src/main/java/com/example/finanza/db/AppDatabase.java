@@ -11,7 +11,7 @@ import com.example.finanza.model.*;
 
 @Database(
         entities = {Usuario.class, Conta.class, Categoria.class, Lancamento.class},
-        version = 4,
+        version = 5, // <-- ALTERADO: aumente a versão ao modificar entidades!
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -22,6 +22,17 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ContaDao contaDao();
     public abstract CategoriaDao categoriaDao();
     public abstract LancamentoDao lancamentoDao();
+
+    /**
+     * Migration from version 4 to 5 - Add saldoAtual field to Conta
+     */
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            // Adiciona saldoAtual na tabela Conta
+            database.execSQL("ALTER TABLE Conta ADD COLUMN saldoAtual REAL NOT NULL DEFAULT 0");
+        }
+    };
 
     /**
      * Migration from version 3 to 4 - Add tipo field to Conta
@@ -94,7 +105,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "finanza-database")
-                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
+                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                             .allowMainThreadQueries() // Somente para testes/dev!
                             .build();
                 }

@@ -174,20 +174,12 @@ public class MenuActivity extends AppCompatActivity {
             });
         }
 
-        // Sync functionality - só mostrar se offline
+        // Sincronização manual (sempre visível e habilitado)
         TextView btnSyncServer = findViewById(R.id.btnSyncServer);
         if (btnSyncServer != null) {
-            // Verificar conectividade
-            boolean isOnline = syncService.isOnline();
-            if (isOnline) {
-                // Se online, esconder botão de sync pois é automático
-                btnSyncServer.setVisibility(View.GONE);
-            } else {
-                // Se offline, mostrar botão para sync manual
-                btnSyncServer.setVisibility(View.VISIBLE);
-                btnSyncServer.setText("Sincronizar (Offline)");
-                btnSyncServer.setOnClickListener(v -> realizarSincronizacao());
-            }
+            btnSyncServer.setVisibility(View.VISIBLE);
+            btnSyncServer.setText("Sincronizar com Servidor");
+            btnSyncServer.setOnClickListener(v -> realizarSincronizacao());
         }
 
         // Settings functionality
@@ -222,7 +214,7 @@ public class MenuActivity extends AppCompatActivity {
                 StringBuilder csvData = new StringBuilder();
                 csvData.append("Tipo,Descrição,Valor,Data,Categoria,Conta\n");
 
-                List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1); // assuming user ID 1
+                List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(usuarioIdAtual);
                 java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
 
                 for (Lancamento lanc : lancamentos) {
@@ -237,10 +229,7 @@ public class MenuActivity extends AppCompatActivity {
                             .append("\"").append(conta != null ? conta.nome.replace("\"", "\"\"") : "N/A").append("\"\n");
                 }
 
-                // Store data for later use when file is selected
                 pendingCsvData = csvData;
-
-                // Launch file picker
                 createCsvFile();
 
             } catch (Exception e) {
@@ -254,13 +243,11 @@ public class MenuActivity extends AppCompatActivity {
 
         builder.setNeutralButton("Exportar Relatório", (dialog, which) -> {
             try {
-                // Create summary report
                 StringBuilder reportData = new StringBuilder();
                 reportData.append("=== RELATÓRIO FINANCEIRO FINANZA ===\n");
                 reportData.append("Gerado em: ").append(new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date())).append("\n\n");
 
-                // Get summary data
-                List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1);
+                List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(usuarioIdAtual);
                 double totalReceitas = 0, totalDespesas = 0;
                 java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
 
@@ -278,7 +265,6 @@ public class MenuActivity extends AppCompatActivity {
                 reportData.append("Saldo Total: ").append(formatter.format(totalReceitas - totalDespesas)).append("\n");
                 reportData.append("Total de Transações: ").append(lancamentos.size()).append("\n\n");
 
-                // Add accounts summary
                 List<Conta> contas = db.contaDao().listarTodos();
                 reportData.append("CONTAS:\n");
                 for (Conta conta : contas) {
@@ -290,10 +276,7 @@ public class MenuActivity extends AppCompatActivity {
                     reportData.append("- ").append(conta.nome).append(": ").append(formatter.format(saldoConta)).append("\n");
                 }
 
-                // Store data for later use when file is selected
                 pendingReportData = reportData;
-
-                // Launch file picker
                 createReportFile();
 
             } catch (Exception e) {
@@ -357,9 +340,7 @@ public class MenuActivity extends AppCompatActivity {
                 try {
                     if (requestCode == CREATE_CSV_FILE && pendingCsvData != null) {
                         writeToFile(uri, pendingCsvData.toString());
-
-                        // Count records for success message
-                        List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(1);
+                        List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(usuarioIdAtual);
 
                         AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
                         successBuilder.setTitle("Exportação Concluída");
@@ -426,8 +407,29 @@ public class MenuActivity extends AppCompatActivity {
         builder.setTitle("Sincronização com Servidor");
         builder.setMessage("Deseja sincronizar seus dados com o servidor?");
         builder.setPositiveButton("Sincronizar", (dialog, which) -> {
-            // Sincronizar dados do usuário
-            syncService.sincronizarTudo(usuarioIdAtual, null);
+            syncService.sincronizarTudo(usuarioIdAtual, new SyncService.SyncCallback() {
+                @Override
+                public void onSyncStarted() {
+                    // Pode exibir um loading se quiser
+                }
+
+                @Override
+                public void onSyncCompleted(boolean success, String message) {
+                    // CORRIGIDO: Sempre mostrar UI pela thread principal
+                    runOnUiThread(() -> {
+                        AlertDialog.Builder resultDialog = new AlertDialog.Builder(MenuActivity.this);
+                        resultDialog.setTitle(success ? "Sincronização Concluída" : "Erro na Sincronização");
+                        resultDialog.setMessage(message);
+                        resultDialog.setPositiveButton("OK", null);
+                        resultDialog.show();
+                    });
+                }
+
+                @Override
+                public void onSyncProgress(String operation) {
+                    // Pode exibir progresso se quiser
+                }
+            });
         });
         builder.setNegativeButton("Cancelar", null);
         builder.show();
@@ -438,11 +440,9 @@ public class MenuActivity extends AppCompatActivity {
         builder.setTitle("Sair");
         builder.setMessage("Tem certeza que deseja sair?");
         builder.setPositiveButton("Sim", (dialog, which) -> {
-            // Limpar dados de autenticação
             SharedPreferences prefs = getSharedPreferences("FinanzaAuth", MODE_PRIVATE);
             prefs.edit().clear().apply();
 
-            // Voltar para a tela de login
             Intent intent = new Intent(this, LoginActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);

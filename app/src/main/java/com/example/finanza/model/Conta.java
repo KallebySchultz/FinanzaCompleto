@@ -20,8 +20,9 @@ public class Conta {
     @ColumnInfo(defaultValue = "corrente")
     public String tipo; // "corrente", "poupanca", "cartao", "investimento", "dinheiro"
     public double saldoInicial;
+    public double saldoAtual; // <-- ADICIONADO para compatibilidade com o DAO
     public int usuarioId;
-    
+
     // Sync metadata for bidirectional synchronization
     @ColumnInfo(defaultValue = "''")
     public String uuid; // Universal unique identifier for cross-platform sync
@@ -33,7 +34,7 @@ public class Conta {
     public long lastSyncTime; // Timestamp of last successful sync
     @ColumnInfo(defaultValue = "''")
     public String serverHash; // Hash of server data to detect changes
-    
+
     public Conta() {
         // Generate UUID for new accounts
         this.uuid = java.util.UUID.randomUUID().toString();
@@ -42,18 +43,19 @@ public class Conta {
         this.lastSyncTime = 0;
         this.serverHash = "";
         this.tipo = "corrente"; // default account type
+        this.saldoAtual = 0; // inicialização padrão do campo adicionado
     }
-    
+
     public void markAsModified() {
         this.lastModified = System.currentTimeMillis();
         this.syncStatus = 2; // needs_sync
     }
-    
+
     public void markAsSynced() {
         this.syncStatus = 1; // synced
         this.lastSyncTime = System.currentTimeMillis();
     }
-    
+
     /**
      * Generate hash for duplicate detection and conflict resolution
      */

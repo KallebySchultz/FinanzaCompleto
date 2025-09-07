@@ -374,13 +374,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void atualizarValores(TextView tvSaldo, TextView tvReceita, TextView tvDespesa) {
-        double receitas = consultarReceitas();
-        double despesas = consultarDespesas();
-        double saldo = receitas - despesas;
+        double saldoTotal = 0.0;
+        double receitasTotal = 0.0;
+        double despesasTotal = 0.0;
+
+        List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
+
+        for (Conta conta : contas) {
+            Double receitas = db.lancamentoDao().somaPorContaETipo(conta.id, "receita");
+            Double despesas = db.lancamentoDao().somaPorContaETipo(conta.id, "despesa");
+
+            double totalReceitas = receitas != null ? receitas : 0.0;
+            double totalDespesas = despesas != null ? despesas : 0.0;
+
+            saldoTotal += conta.saldoInicial + totalReceitas - totalDespesas;
+            receitasTotal += totalReceitas;
+            despesasTotal += totalDespesas;
+        }
+
         if (saldoVisivel) {
-            tvSaldo.setText(formatarMoeda(saldo));
-            tvReceita.setText(formatarMoeda(receitas));
-            tvDespesa.setText(formatarMoeda(despesas));
+            tvSaldo.setText(formatarMoeda(saldoTotal));
+            tvReceita.setText(formatarMoeda(receitasTotal));
+            tvDespesa.setText(formatarMoeda(despesasTotal));
         } else {
             tvSaldo.setText("****");
             tvReceita.setText("****");

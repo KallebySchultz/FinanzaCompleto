@@ -8,6 +8,8 @@ import androidx.room.Room;
 
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Usuario;
+import com.example.finanza.model.Conta;
+import com.example.finanza.model.Categoria;
 
 /**
  * Gerenciador de autenticação que suporta modo offline e online
@@ -106,8 +108,10 @@ public class AuthManager {
                                 @Override
                                 public void onSyncCompleted(boolean success, String message) {
                                     Log.d(TAG, "Sincronização pós-login concluída: " + message);
-                                    // Sincronização é uma operação adicional que roda em background
-                                    // O login já foi considerado bem-sucedido
+                                    
+                                    // If sync failed or if user has no accounts/categories after sync, 
+                                    // create default data to ensure app functionality
+                                    verificarECriarDadosSeNecessario(usuario.id);
                                 }
 
                                 @Override
@@ -234,6 +238,9 @@ public class AuthManager {
             long id = database.usuarioDao().inserir(usuario);
             usuario.id = (int) id;
             
+            // Create default data for new user
+            criarDadosIniciais(usuario.id);
+            
             return usuario;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao criar usuário local: " + e.getMessage());
@@ -260,6 +267,110 @@ public class AuthManager {
              .apply();
              
         Log.d(TAG, "Sessão salva para usuário: " + usuario.email);
+    }
+    
+    /**
+     * Creates default data for new users (account and categories)
+     */
+    private void criarDadosIniciais(int usuarioId) {
+        try {
+            Log.d(TAG, "Criando dados iniciais para usuário: " + usuarioId);
+            
+            // Create default account
+            Conta contaPadrao = new Conta();
+            contaPadrao.nome = "Conta Padrão";
+            contaPadrao.tipo = "corrente";
+            contaPadrao.saldoInicial = 0.0;
+            contaPadrao.usuarioId = usuarioId;
+            database.contaDao().inserir(contaPadrao);
+            
+            // Create default expense categories if none exist
+            if (database.categoriaDao().listarPorTipo("despesa").isEmpty()) {
+                criarCategoriasPadrao();
+            }
+            
+            Log.d(TAG, "Dados iniciais criados com sucesso");
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao criar dados iniciais: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Creates default categories for the app
+     */
+    private void criarCategoriasPadrao() {
+        try {
+            // Default expense categories
+            String[][] categoriasDespesa = {
+                {"Alimentação", "#FF6B6B"},
+                {"Transporte", "#4ECDC4"},
+                {"Saúde", "#45B7D1"},
+                {"Educação", "#96CEB4"},
+                {"Lazer", "#FFEAA7"},
+                {"Casa", "#DDA0DD"},
+                {"Roupas", "#98D8C8"},
+                {"Tecnologia", "#F7DC6F"},
+                {"Viagem", "#BB8FCE"},
+                {"Outros", "#85929E"}
+            };
+            
+            for (String[] cat : categoriasDespesa) {
+                Categoria categoria = new Categoria();
+                categoria.nome = cat[0];
+                categoria.tipo = "despesa";
+                categoria.corHex = cat[1];
+                database.categoriaDao().inserir(categoria);
+            }
+            
+            // Default income categories
+            String[][] categoriasReceita = {
+                {"Salário", "#2ECC71"},
+                {"Freelance", "#3498DB"},
+                {"Investimentos", "#9B59B6"},
+                {"Vendas", "#E67E22"},
+                {"Prêmios", "#F1C40F"},
+                {"Restituição", "#1ABC9C"},
+                {"Outros", "#34495E"}
+            };
+            
+            for (String[] cat : categoriasReceita) {
+                Categoria categoria = new Categoria();
+                categoria.nome = cat[0];
+                categoria.tipo = "receita";
+                categoria.corHex = cat[1];
+                database.categoriaDao().inserir(categoria);
+            }
+            
+            Log.d(TAG, "Categorias padrão criadas");
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao criar categorias padrão: " + e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Checks if user has necessary data and creates default data if needed
+     */
+    private void verificarECriarDadosSeNecessario(int usuarioId) {
+        try {
+            // Check if user has at least one account
+            if (database.contaDao().listarPorUsuario(usuarioId).isEmpty()) {
+                Log.d(TAG, "Usuário sem contas - criando conta padrão");
+                Conta contaPadrao = new Conta();
+                contaPadrao.nome = "Conta Padrão";
+                contaPadrao.tipo = "corrente";
+                contaPadrao.saldoInicial = 0.0;
+                contaPadrao.usuarioId = usuarioId;
+                database.contaDao().inserir(contaPadrao);
+            }
+            
+            // Check if user has categories
+            if (database.categoriaDao().listarTodas().isEmpty()) {
+                Log.d(TAG, "Usuário sem categorias - criando categorias padrão");
+                criarCategoriasPadrao();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao verificar dados necessários: " + e.getMessage(), e);
+        }
     }
     
     /**

@@ -590,18 +590,150 @@ public class EnhancedSyncService {
      * Upload contas that need synchronization
      */
     private void uploadContas(SyncResult result, int usuarioId) {
-        // Similar implementation to uploadCategorias but for Conta objects
-        Log.d(TAG, "Uploading contas for user: " + usuarioId);
-        // TODO: Implement conta upload logic
+        try {
+            List<Conta> pendentes = database.contaDao().obterPendentesSyncPorUsuario(usuarioId);
+            Log.d(TAG, "Uploading " + pendentes.size() + " contas for user: " + usuarioId);
+            
+            for (Conta conta : pendentes) {
+                if (uploadConta(conta)) {
+                    database.contaDao().marcarComoSincronizado(conta.id, System.currentTimeMillis());
+                    result.successful++;
+                    Log.d(TAG, "Uploaded conta: " + conta.nome);
+                } else {
+                    result.errors++;
+                }
+                result.totalProcessed++;
+            }
+        } catch (Exception e) {
+            result.errors++;
+            result.lastError = "Upload contas failed: " + e.getMessage();
+            Log.e(TAG, "Error uploading contas", e);
+        }
+    }
+    
+    /**
+     * Upload single conta to server
+     */
+    private boolean uploadConta(Conta conta) {
+        try {
+            final AtomicBoolean success = new AtomicBoolean(false);
+            final AtomicBoolean completed = new AtomicBoolean(false);
+            final Object lock = new Object();
+            
+            String comando = Protocol.buildCommand(
+                Protocol.CMD_ADD_CONTA,
+                conta.uuid != null ? conta.uuid : "",
+                conta.nome,
+                conta.tipo != null ? conta.tipo : "corrente",
+                String.valueOf(conta.saldoInicial),
+                String.valueOf(conta.lastModified)
+            );
+            
+            serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    success.set(true);
+                    synchronized (lock) {
+                        completed.set(true);
+                        lock.notifyAll();
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Failed to upload conta " + conta.nome + ": " + error);
+                    synchronized (lock) {
+                        completed.set(true);
+                        lock.notifyAll();
+                    }
+                }
+            });
+            
+            // Wait for completion
+            waitForCompletion(completed, lock, "upload conta " + conta.nome);
+            return success.get();
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error uploading conta: " + conta.nome, e);
+            return false;
+        }
     }
     
     /**
      * Upload lancamentos that need synchronization
      */
     private void uploadLancamentos(SyncResult result, int usuarioId) {
-        // Similar implementation to uploadCategorias but for Lancamento objects
-        Log.d(TAG, "Uploading lancamentos for user: " + usuarioId);
-        // TODO: Implement lancamento upload logic
+        try {
+            List<Lancamento> pendentes = database.lancamentoDao().obterPendentesSyncPorUsuario(usuarioId);
+            Log.d(TAG, "Uploading " + pendentes.size() + " lancamentos for user: " + usuarioId);
+            
+            for (Lancamento lancamento : pendentes) {
+                if (uploadLancamento(lancamento)) {
+                    database.lancamentoDao().marcarComoSincronizado(lancamento.id, System.currentTimeMillis());
+                    result.successful++;
+                    Log.d(TAG, "Uploaded lancamento: " + lancamento.descricao);
+                } else {
+                    result.errors++;
+                }
+                result.totalProcessed++;
+            }
+        } catch (Exception e) {
+            result.errors++;
+            result.lastError = "Upload lancamentos failed: " + e.getMessage();
+            Log.e(TAG, "Error uploading lancamentos", e);
+        }
+    }
+    
+    /**
+     * Upload single lancamento to server
+     */
+    private boolean uploadLancamento(Lancamento lancamento) {
+        try {
+            final AtomicBoolean success = new AtomicBoolean(false);
+            final AtomicBoolean completed = new AtomicBoolean(false);
+            final Object lock = new Object();
+            
+            String comando = Protocol.buildCommand(
+                Protocol.CMD_ADD_MOVIMENTACAO,
+                lancamento.uuid != null ? lancamento.uuid : "",
+                String.valueOf(lancamento.valor),
+                String.valueOf(lancamento.data),
+                lancamento.descricao != null ? lancamento.descricao : "",
+                lancamento.tipo != null ? lancamento.tipo : "despesa",
+                String.valueOf(lancamento.contaId),
+                String.valueOf(lancamento.categoriaId),
+                String.valueOf(lancamento.lastModified),
+                String.valueOf(lancamento.isDeleted)
+            );
+            
+            serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    success.set(true);
+                    synchronized (lock) {
+                        completed.set(true);
+                        lock.notifyAll();
+                    }
+                }
+                
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Failed to upload lancamento " + lancamento.descricao + ": " + error);
+                    synchronized (lock) {
+                        completed.set(true);
+                        lock.notifyAll();
+                    }
+                }
+            });
+            
+            // Wait for completion
+            waitForCompletion(completed, lock, "upload lancamento " + lancamento.descricao);
+            return success.get();
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error uploading lancamento: " + lancamento.descricao, e);
+            return false;
+        }
     }
     
     /**

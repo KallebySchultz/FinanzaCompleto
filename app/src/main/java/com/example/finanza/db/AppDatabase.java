@@ -15,74 +15,65 @@ import com.example.finanza.model.*;
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
-    
+
     private static volatile AppDatabase INSTANCE;
-    
+
     public abstract UsuarioDao usuarioDao();
     public abstract ContaDao contaDao();
     public abstract CategoriaDao categoriaDao();
     public abstract LancamentoDao lancamentoDao();
-    
+
     /**
-     * Migration from version 2 to 3 - Adding sync metadata fields
+     * Migration from version 2 to 3 - Adiciona apenas colunas novas!
      */
     static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
         public void migrate(SupportSQLiteDatabase database) {
-            // Add sync metadata to Usuario table
-            database.execSQL("ALTER TABLE Usuario ADD COLUMN uuid TEXT NOT NULL DEFAULT ''");
+            // Adicione apenas colunas que NÃO existem!
+            database.execSQL("ALTER TABLE Usuario ADD COLUMN uuid TEXT DEFAULT ''");
             database.execSQL("ALTER TABLE Usuario ADD COLUMN lastModified INTEGER NOT NULL DEFAULT 0");
             database.execSQL("ALTER TABLE Usuario ADD COLUMN syncStatus INTEGER NOT NULL DEFAULT 2");
             database.execSQL("ALTER TABLE Usuario ADD COLUMN lastSyncTime INTEGER NOT NULL DEFAULT 0");
-            
-            // Add sync metadata to Conta table
-            database.execSQL("ALTER TABLE Conta ADD COLUMN uuid TEXT NOT NULL DEFAULT ''");
+
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Usuario_uuid ON Usuario(uuid)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Usuario_syncStatus ON Usuario(syncStatus)");
+
+            // Conta
+            database.execSQL("ALTER TABLE Conta ADD COLUMN uuid TEXT DEFAULT ''");
             database.execSQL("ALTER TABLE Conta ADD COLUMN lastModified INTEGER NOT NULL DEFAULT 0");
             database.execSQL("ALTER TABLE Conta ADD COLUMN syncStatus INTEGER NOT NULL DEFAULT 2");
             database.execSQL("ALTER TABLE Conta ADD COLUMN lastSyncTime INTEGER NOT NULL DEFAULT 0");
-            database.execSQL("ALTER TABLE Conta ADD COLUMN serverHash TEXT NOT NULL DEFAULT ''");
-            
-            // Add sync metadata to Categoria table
-            database.execSQL("ALTER TABLE Categoria ADD COLUMN uuid TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE Conta ADD COLUMN serverHash TEXT DEFAULT ''");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Conta_uuid ON Conta(uuid)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Conta_syncStatus ON Conta(syncStatus)");
+
+            // Categoria
+            database.execSQL("ALTER TABLE Categoria ADD COLUMN uuid TEXT DEFAULT ''");
             database.execSQL("ALTER TABLE Categoria ADD COLUMN lastModified INTEGER NOT NULL DEFAULT 0");
             database.execSQL("ALTER TABLE Categoria ADD COLUMN syncStatus INTEGER NOT NULL DEFAULT 2");
             database.execSQL("ALTER TABLE Categoria ADD COLUMN lastSyncTime INTEGER NOT NULL DEFAULT 0");
-            database.execSQL("ALTER TABLE Categoria ADD COLUMN serverHash TEXT NOT NULL DEFAULT ''");
-            
-            // Add sync metadata to Lancamento table
-            database.execSQL("ALTER TABLE Lancamento ADD COLUMN uuid TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE Categoria ADD COLUMN serverHash TEXT DEFAULT ''");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Categoria_uuid ON Categoria(uuid)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Categoria_syncStatus ON Categoria(syncStatus)");
+
+            // Lancamento
+            database.execSQL("ALTER TABLE Lancamento ADD COLUMN uuid TEXT DEFAULT ''");
             database.execSQL("ALTER TABLE Lancamento ADD COLUMN lastModified INTEGER NOT NULL DEFAULT 0");
             database.execSQL("ALTER TABLE Lancamento ADD COLUMN syncStatus INTEGER NOT NULL DEFAULT 2");
             database.execSQL("ALTER TABLE Lancamento ADD COLUMN lastSyncTime INTEGER NOT NULL DEFAULT 0");
-            database.execSQL("ALTER TABLE Lancamento ADD COLUMN serverHash TEXT NOT NULL DEFAULT ''");
+            database.execSQL("ALTER TABLE Lancamento ADD COLUMN serverHash TEXT DEFAULT ''");
             database.execSQL("ALTER TABLE Lancamento ADD COLUMN isDeleted INTEGER NOT NULL DEFAULT 0");
-            
-            // Generate UUIDs for existing records
-            database.execSQL("UPDATE Usuario SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
-            database.execSQL("UPDATE Conta SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
-            database.execSQL("UPDATE Categoria SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
-            database.execSQL("UPDATE Lancamento SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
-            
-            // Set lastModified timestamp for existing records
-            long currentTime = System.currentTimeMillis();
-            database.execSQL("UPDATE Usuario SET lastModified = " + currentTime + " WHERE lastModified = 0");
-            database.execSQL("UPDATE Conta SET lastModified = " + currentTime + " WHERE lastModified = 0");
-            database.execSQL("UPDATE Categoria SET lastModified = " + currentTime + " WHERE lastModified = 0");
-            database.execSQL("UPDATE Lancamento SET lastModified = " + currentTime + " WHERE lastModified = 0");
-            
-            // Create indexes for better sync performance
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_Usuario_uuid ON Usuario(uuid)");
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_Usuario_syncStatus ON Usuario(syncStatus)");
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_Conta_uuid ON Conta(uuid)");
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_Conta_syncStatus ON Conta(syncStatus)");
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_Categoria_uuid ON Categoria(uuid)");
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_Categoria_syncStatus ON Categoria(syncStatus)");
             database.execSQL("CREATE INDEX IF NOT EXISTS index_Lancamento_uuid ON Lancamento(uuid)");
             database.execSQL("CREATE INDEX IF NOT EXISTS index_Lancamento_syncStatus ON Lancamento(syncStatus)");
             database.execSQL("CREATE INDEX IF NOT EXISTS index_Lancamento_lastModified ON Lancamento(lastModified)");
+
+            // Atualize valores existentes, se necessário
+            database.execSQL("UPDATE Usuario SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
+            long currentTime = System.currentTimeMillis();
+            database.execSQL("UPDATE Usuario SET lastModified = " + currentTime + " WHERE lastModified = 0");
         }
     };
-    
+
     /**
      * Get database instance with proper migrations
      */
@@ -91,16 +82,16 @@ public abstract class AppDatabase extends RoomDatabase {
             synchronized (AppDatabase.class) {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
-                            AppDatabase.class, "finanza-database")
+                                    AppDatabase.class, "finanza-database")
                             .addMigrations(MIGRATION_2_3)
-                            .allowMainThreadQueries() // Allow main thread queries for UI simplicity
+                            .allowMainThreadQueries() // Somente para testes/dev!
                             .build();
                 }
             }
         }
         return INSTANCE;
     }
-    
+
     /**
      * Close database (for testing)
      */

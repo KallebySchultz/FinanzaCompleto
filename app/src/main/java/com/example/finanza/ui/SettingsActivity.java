@@ -6,23 +6,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.finanza.R;
 import com.example.finanza.network.ServerClient;
 import com.example.finanza.network.SyncService;
 
-/**
- * Atividade de configurações do aplicativo
- * Permite configurar o servidor para sincronização
- */
 public class SettingsActivity extends AppCompatActivity {
     private EditText editServerHost;
     private EditText editServerPort;
     private Button btnSave;
     private Button btnTest;
-    private Button btnBack;
+    private ImageView btnBack;
     private TextView statusText;
-    
+
     private ServerClient serverClient;
     private SyncService syncService;
 
@@ -33,11 +30,10 @@ public class SettingsActivity extends AppCompatActivity {
 
         serverClient = ServerClient.getInstance(this);
         syncService = SyncService.getInstance(this);
-        
+
         initViews();
         setupListeners();
         loadCurrentSettings();
-        
     }
 
     private void initViews() {
@@ -52,18 +48,20 @@ public class SettingsActivity extends AppCompatActivity {
     private void setupListeners() {
         btnSave.setOnClickListener(v -> saveSettings());
         btnTest.setOnClickListener(v -> testConnection());
-        btnBack.setOnClickListener(v -> finish());
+
+        btnBack.setOnClickListener(v -> {
+            finish();
+        });
     }
 
     private void loadCurrentSettings() {
         SharedPreferences prefs = getSharedPreferences("FinanzaServerConfig", MODE_PRIVATE);
         String host = prefs.getString("server_host", "192.168.1.100");
         int port = prefs.getInt("server_port", 8080);
-        
+
         editServerHost.setText(host);
         editServerPort.setText(String.valueOf(port));
-        
-        // Mostrar status atual
+
         if (syncService.isOnline()) {
             statusText.setText("🟢 Conectado ao servidor");
             statusText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
@@ -102,7 +100,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void testConnection() {
         statusText.setText("🔄 Testando conexão...");
         statusText.setTextColor(getResources().getColor(android.R.color.black));
-        
+
         String host = editServerHost.getText().toString().trim();
         String portStr = editServerPort.getText().toString().trim();
 
@@ -113,7 +111,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         try {
             int port = Integer.parseInt(portStr);
-            
+
             serverClient.conectar(host, port, new ServerClient.ServerCallback<String>() {
                 @Override
                 public void onSuccess(String result) {
@@ -129,7 +127,7 @@ public class SettingsActivity extends AppCompatActivity {
                     Toast.makeText(SettingsActivity.this, "Erro de conexão: " + error, Toast.LENGTH_LONG).show();
                 }
             });
-            
+
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Porta deve ser um número válido", Toast.LENGTH_SHORT).show();
         }

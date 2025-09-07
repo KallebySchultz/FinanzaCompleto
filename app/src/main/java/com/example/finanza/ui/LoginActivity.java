@@ -1,9 +1,9 @@
 package com.example.finanza.ui;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,23 +21,20 @@ public class LoginActivity extends AppCompatActivity {
     private TextInputEditText inputEmail, inputSenha;
     private Button btnLogin;
     private TextView txtCriarConta;
+    private ImageView btnConfiguracoes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Configurar barra de status
         getWindow().setStatusBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().getDecorView().setSystemUiVisibility(0);
 
-        // Inicializar AuthManager
         authManager = AuthManager.getInstance(this);
 
-        // Verificar se já está logado
         if (authManager.isLoggedIn()) {
-            // Usuário já está logado, ir para MainActivity
             Intent intent = new Intent(this, MainActivity.class);
             intent.putExtra("usuarioId", authManager.getLoggedUserId());
             startActivity(intent);
@@ -45,16 +42,20 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Inicializar views
         inputEmail = findViewById(R.id.input_email);
         inputSenha = findViewById(R.id.input_senha);
         btnLogin = findViewById(R.id.btn_login);
         txtCriarConta = findViewById(R.id.txt_criar_conta);
+        btnConfiguracoes = findViewById(R.id.btn_configuracoes);
 
-        // Configurar listeners
         btnLogin.setOnClickListener(v -> realizarLogin());
         txtCriarConta.setOnClickListener(v -> {
             Intent intent = new Intent(this, RegisterActivity.class);
+            startActivity(intent);
+        });
+
+        btnConfiguracoes.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, SettingsActivity.class);
             startActivity(intent);
         });
     }
@@ -63,11 +64,9 @@ public class LoginActivity extends AppCompatActivity {
         String email = inputEmail.getText() != null ? inputEmail.getText().toString().trim() : "";
         String senha = inputSenha.getText() != null ? inputSenha.getText().toString().trim() : "";
 
-        // Limpar erros anteriores
         inputEmail.setError(null);
         inputSenha.setError(null);
 
-        // Validações
         boolean hasError = false;
         if (email.isEmpty()) {
             inputEmail.setError("Digite o email");
@@ -77,20 +76,16 @@ public class LoginActivity extends AppCompatActivity {
             inputSenha.setError("Digite a senha");
             hasError = true;
         }
-
         if (hasError) return;
 
-        // Desabilitar botão durante login
         btnLogin.setEnabled(false);
         btnLogin.setText("Entrando...");
 
-        // Tentar fazer login usando AuthManager
         authManager.login(email, senha, new AuthManager.AuthCallback() {
             @Override
             public void onSuccess(Usuario usuario) {
                 runOnUiThread(() -> {
                     Toast.makeText(LoginActivity.this, "Login realizado com sucesso!", Toast.LENGTH_SHORT).show();
-                    
                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                     intent.putExtra("usuarioId", usuario.id);
                     startActivity(intent);

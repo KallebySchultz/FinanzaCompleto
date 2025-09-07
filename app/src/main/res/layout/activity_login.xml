@@ -7,7 +7,18 @@
     android:background="@color/primaryDarkBlue"
     android:fitsSystemWindows="false">
 
-    <!-- Container principal centralizado -->
+    <!-- Botão de configurações no canto superior direito, mais abaixo -->
+    <ImageView
+        android:id="@+id/btn_configuracoes"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="48dp"
+        android:layout_marginEnd="24dp"
+        android:src="@drawable/ic_settings"
+        android:tint="@android:color/white"
+        android:contentDescription="Configurações"/>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -15,22 +26,27 @@
         android:gravity="center"
         android:padding="32dp">
 
-        <!-- Logo e título -->
+        <!-- Logo com círculo atrás, centralizado -->
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_marginBottom="24dp">
 
+            <!-- Círculo branco atrás do logo -->
             <View
                 android:layout_width="120dp"
                 android:layout_height="120dp"
+                android:layout_gravity="center"
                 android:background="@drawable/circle_white"/>
 
+            <!-- Logo centralizada sobre o círculo -->
             <ImageView
                 android:layout_width="96dp"
                 android:layout_height="96dp"
                 android:layout_gravity="center"
-                android:src="@drawable/logo"/>
+                android:src="@drawable/logo"
+                android:contentDescription="Logo Finanza"/>
         </FrameLayout>
 
         <TextView

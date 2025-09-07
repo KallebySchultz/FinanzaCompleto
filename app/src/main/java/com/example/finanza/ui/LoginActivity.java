@@ -28,8 +28,10 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         // Configurar barra de status
-        getWindow().setStatusBarColor(getResources().getColor(R.color.primaryDarkBlue));
-        getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(androidx.core.content.ContextCompat.getColor(this, R.color.primaryDarkBlue));
+            getWindow().setNavigationBarColor(androidx.core.content.ContextCompat.getColor(this, R.color.primaryDarkBlue));
+        }
         getWindow().getDecorView().setSystemUiVisibility(0);
 
         // Inicializar AuthManager

@@ -39,11 +39,7 @@ public class MenuActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_menu);
 
-        db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-database")
-                .fallbackToDestructiveMigration()
-                .allowMainThreadQueries()
-                .build();
+        db = AppDatabase.getDatabase(getApplicationContext());
 
         // Inicializar serviço de sincronização
         syncService = SyncService.getInstance(this);

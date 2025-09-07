@@ -46,10 +46,7 @@ public class CategoriaActivity extends AppCompatActivity {
         getWindow().setStatusBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
 
-        db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-database")
-                .allowMainThreadQueries()
-                .build();
+        db = AppDatabase.getDatabase(getApplicationContext());
 
         // Inicializar sync service  
         syncService = SyncService.getInstance(this);

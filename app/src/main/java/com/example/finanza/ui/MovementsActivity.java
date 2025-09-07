@@ -64,11 +64,7 @@ public class MovementsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movements);
 
-        db = Room.databaseBuilder(getApplicationContext(),
-                        AppDatabase.class, "finanza-database")
-                .fallbackToDestructiveMigration() // Para lidar com mudanças no schema
-                .allowMainThreadQueries()
-                .build();
+        db = AppDatabase.getDatabase(getApplicationContext());
 
         // Inicializar sync service
         syncService = SyncService.getInstance(this);

@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.finanza.R;
 import com.example.finanza.network.ServerClient;
 import com.example.finanza.network.SyncService;
-
+import android.util.Log;
 public class SettingsActivity extends AppCompatActivity {
     private EditText editServerHost;
     private EditText editServerPort;

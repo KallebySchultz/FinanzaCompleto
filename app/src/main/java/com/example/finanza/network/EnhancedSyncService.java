@@ -444,10 +444,136 @@ public class EnhancedSyncService {
      * Download and process contas from server
      */
     private void downloadContas(SyncResult result, int usuarioId, long since) {
-        // Similar implementation to downloadCategorias but for Conta objects
-        // Implementation follows the same pattern with enhanced error handling
         Log.d(TAG, "Downloading contas from server (since: " + since + ")");
-        // TODO: Implement conta download logic
+        
+        final AtomicBoolean completed = new AtomicBoolean(false);
+        final Object lock = new Object();
+        
+        String command = since > 0 ? 
+            Protocol.buildCommand(Protocol.CMD_LIST_CONTAS, String.valueOf(since)) :
+            Protocol.buildCommand(Protocol.CMD_LIST_CONTAS);
+        
+        serverClient.enviarComando(command, new ServerClient.ServerCallback<String>() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    processServerContas(response, result, usuarioId);
+                } catch (Exception e) {
+                    result.errors++;
+                    result.lastError = "Process contas failed: " + e.getMessage();
+                    Log.e(TAG, "Failed to process server contas", e);
+                } finally {
+                    synchronized (lock) {
+                        completed.set(true);
+                        lock.notifyAll();
+                    }
+                }
+            }
+            
+            @Override
+            public void onError(String error) {
+                result.errors++;
+                result.lastError = "Download contas failed: " + error;
+                Log.e(TAG, "Failed to download contas: " + error);
+                synchronized (lock) {
+                    completed.set(true);
+                    lock.notifyAll();
+                }
+            }
+        });
+        
+        // Wait for completion with timeout
+        waitForCompletion(completed, lock, "download contas");
+    }
+    
+    /**
+     * Process contas received from server
+     */
+    private void processServerContas(String response, SyncResult result, int usuarioId) {
+        try {
+            String[] partes = Protocol.parseCommand(response);
+            if (partes.length < 2 || !Protocol.STATUS_OK.equals(partes[0])) {
+                Log.w(TAG, "Invalid contas response: " + response);
+                return;
+            }
+            
+            String dados = partes[1];
+            if (dados == null || dados.trim().isEmpty()) {
+                Log.d(TAG, "No contas from server");
+                return;
+            }
+            
+            String[] contas = Protocol.parseFields(dados);
+            Log.d(TAG, "Processing " + contas.length + " contas from server");
+            
+            database.runInTransaction(() -> {
+                for (String contaData : contas) {
+                    if (contaData == null || contaData.trim().isEmpty()) {
+                        continue;
+                    }
+                    
+                    try {
+                        Conta conta = parseServerConta(contaData, usuarioId);
+                        if (conta != null) {
+                            long id = database.contaDao().inserirOuAtualizar(conta);
+                            if (id > 0) {
+                                result.successful++;
+                                Log.d(TAG, "Processed conta: " + conta.nome);
+                            } else {
+                                result.duplicatesSkipped++;
+                            }
+                        }
+                        result.totalProcessed++;
+                    } catch (Exception e) {
+                        result.errors++;
+                        Log.e(TAG, "Error processing conta: " + contaData, e);
+                    }
+                }
+            });
+            
+        } catch (Exception e) {
+            result.errors++;
+            result.lastError = "Process contas failed: " + e.getMessage();
+            Log.e(TAG, "Error processing server contas", e);
+        }
+    }
+    
+    /**
+     * Parse conta data from server response
+     */
+    private Conta parseServerConta(String data, int usuarioId) {
+        try {
+            String[] campos = data.split(",");
+            if (campos.length < 3) {
+                Log.w(TAG, "Invalid conta format: " + data);
+                return null;
+            }
+            
+            Conta conta = new Conta();
+            conta.uuid = campos.length > 0 ? campos[0].trim() : java.util.UUID.randomUUID().toString();
+            conta.nome = campos[1].trim();
+            
+            if (campos.length >= 4) {
+                // Format: uuid,nome,tipo,saldo
+                conta.tipo = campos[2].trim();
+                conta.saldoInicial = Double.parseDouble(campos[3]);
+            } else {
+                // Format: uuid,nome,saldo
+                conta.tipo = "corrente";
+                conta.saldoInicial = Double.parseDouble(campos[2]);
+            }
+            
+            conta.usuarioId = usuarioId;
+            conta.lastModified = campos.length > 4 ? Long.parseLong(campos[4]) : System.currentTimeMillis();
+            conta.syncStatus = SYNC_STATUS_SYNCED;
+            conta.lastSyncTime = System.currentTimeMillis();
+            conta.serverHash = conta.generateDataHash();
+            
+            return conta;
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing conta: " + data, e);
+            return null;
+        }
     }
     
     /**

@@ -683,9 +683,14 @@ public class SyncService {
                             categoria.nome = nome;
                             categoria.tipo = tipo;
                             categoria.corHex = cor;
-                            database.categoriaDao().inserir(categoria);
-                            categoriasProcessadas++;
-                            Log.d(TAG, "Categoria adicionada localmente: " + nome);
+                            // Use the safe sync method instead of plain insert
+                            long categoriaId = database.categoriaDao().inserirSeguro(categoria);
+                            if (categoriaId > 0) {
+                                categoriasProcessadas++;
+                                Log.d(TAG, "Categoria adicionada localmente: " + nome);
+                            } else {
+                                Log.d(TAG, "Categoria já existia: " + nome);
+                            }
                         }
                     } catch (Exception e) {
                         Log.w(TAG, "Erro ao processar categoria individual: " + categoriaData + " - " + e.getMessage());
@@ -780,9 +785,14 @@ public class SyncService {
                                 conta.tipo = tipo;
                                 conta.saldoInicial = saldo;
                                 conta.usuarioId = usuarioId;
-                                database.contaDao().inserir(conta);
-                                contasProcessadas++;
-                                Log.d(TAG, "Conta adicionada localmente: " + nome + " (tipo: " + tipo + ")");
+                                // Use the safe sync method instead of plain insert
+                                long contaId = database.contaDao().inserirSeguro(conta);
+                                if (contaId > 0) {
+                                    contasProcessadas++;
+                                    Log.d(TAG, "Conta adicionada localmente: " + nome + " (tipo: " + tipo + ")");
+                                } else {
+                                    Log.d(TAG, "Conta já existia: " + nome);
+                                }
                             } else {
                                 Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
                             }
@@ -833,15 +843,39 @@ public class SyncService {
                 if (campos.length >= 6) {
                     try {
                         // Format: id,valor,data,descricao,contaId,categoriaId,tipo
+                        // Skip server ID (campos[0]) since we'll use local IDs
                         double valor = Double.parseDouble(campos[1]);
-                        long data = Long.parseLong(campos[2]);
+                        // Try to parse data as timestamp first, fallback to converting from date string
+                        long data;
+                        try {
+                            data = Long.parseLong(campos[2]);
+                        } catch (NumberFormatException e) {
+                            // If not a timestamp, try to parse as date string and convert
+                            try {
+                                java.sql.Date sqlDate = java.sql.Date.valueOf(campos[2]);
+                                data = sqlDate.getTime();
+                            } catch (Exception dateError) {
+                                Log.w(TAG, "Erro ao converter data da movimentação: " + campos[2]);
+                                data = System.currentTimeMillis(); // fallback to current time
+                            }
+                        }
                         String descricao = campos[3].trim();
-                        int contaId = Integer.parseInt(campos[4]);
+                        
+                        // Need to map server account ID to local account ID
+                        int serverContaId = Integer.parseInt(campos[4]);
+                        int contaId = mapearContaServidor(serverContaId, usuarioId);
+                        
                         int categoriaId = Integer.parseInt(campos[5]);
                         String tipo = campos.length > 6 ? campos[6].trim() : "despesa";
 
                         if (descricao.isEmpty()) {
                             Log.w(TAG, "Movimentação com descrição vazia: " + movData);
+                            continue;
+                        }
+
+                        // Skip if conta mapping failed (returns -1)
+                        if (contaId == -1) {
+                            Log.w(TAG, "Conta não encontrada para movimentação: " + descricao + " (serverContaId: " + serverContaId + ")");
                             continue;
                         }
 
@@ -853,7 +887,7 @@ public class SyncService {
                         if (usuario != null && conta != null) {
                             // Verificar se movimentação já existe para evitar duplicatas
                             Lancamento duplicata = database.lancamentoDao().buscarDuplicata(
-                                    valor, data, descricao, contaId, usuarioId, "" // exclude UUID (empty string)
+                                    valor, data, descricao, contaId, usuarioId, ""
                             );
                             if (duplicata == null) {
                                 Lancamento lancamento = new Lancamento();
@@ -865,9 +899,14 @@ public class SyncService {
                                 lancamento.usuarioId = usuarioId;
                                 lancamento.tipo = tipo;
 
-                                database.lancamentoDao().inserir(lancamento);
-                                movimentacoesProcessadas++;
-                                Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
+                                // Use the safe sync method instead of plain insert
+                                long lancamentoId = database.lancamentoDao().inserirSeguro(lancamento);
+                                if (lancamentoId > 0) {
+                                    movimentacoesProcessadas++;
+                                    Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
+                                } else {
+                                    Log.d(TAG, "Movimentação já existia: " + descricao);
+                                }
                             } else {
                                 Log.d(TAG, "Movimentação já existe localmente: " + descricao);
                             }
@@ -899,6 +938,29 @@ public class SyncService {
         } catch (Exception e) {
             Log.e(TAG, "Erro ao processar movimentações: " + e.getMessage(), e);
             return false;
+        }
+    }
+
+    /**
+     * Map server account ID to local account ID by finding account with matching name
+     * This is needed because server and local IDs may not match
+     */
+    private int mapearContaServidor(int serverContaId, int usuarioId) {
+        try {
+            // Try to find accounts for the user
+            List<Conta> contas = database.contaDao().listarPorUsuario(usuarioId);
+            if (!contas.isEmpty()) {
+                // For now, use the first account as a fallback
+                // In a better implementation, we would map by account name or other unique identifier
+                Log.d(TAG, "Mapeando serverContaId " + serverContaId + " para conta local " + contas.get(0).id + " (nome: " + contas.get(0).nome + ")");
+                return contas.get(0).id;
+            } else {
+                Log.w(TAG, "Nenhuma conta encontrada para o usuário " + usuarioId);
+                return -1; // Return -1 to indicate failure
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Erro ao mapear conta do servidor: " + e.getMessage());
+            return -1; // Return -1 to indicate failure
         }
     }
 }

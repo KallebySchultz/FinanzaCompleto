@@ -103,6 +103,9 @@ public class AuthManager {
                                 @Override
                                 public void onSyncCompleted(boolean success, String message) {
                                     Log.d(TAG, "Sincronização pós-login concluída: " + message);
+                                    // Independente do resultado da sync, o login foi bem-sucedido
+                                    // A sincronização é uma operação adicional que pode falhar
+                                    callback.onSuccess(usuario);
                                 }
 
                                 @Override
@@ -110,8 +113,6 @@ public class AuthManager {
                                     Log.d(TAG, "Sincronização: " + operation);
                                 }
                             });
-                            
-                            callback.onSuccess(usuario);
                         } else {
                             callback.onError("Erro ao salvar dados locais");
                         }

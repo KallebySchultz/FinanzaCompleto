@@ -43,6 +43,15 @@ public class SettingsActivity extends AppCompatActivity {
         btnTest = findViewById(R.id.btnTest);
         btnBack = findViewById(R.id.btnBack);
         statusText = findViewById(R.id.statusText);
+        
+        // Ensure back button is properly initialized and clickable
+        if (btnBack != null) {
+            btnBack.setClickable(true);
+            btnBack.setFocusable(true);
+            Log.d("SettingsActivity", "Back button initialized successfully");
+        } else {
+            Log.e("SettingsActivity", "Back button not found in layout!");
+        }
     }
 
     private void setupListeners() {
@@ -50,7 +59,9 @@ public class SettingsActivity extends AppCompatActivity {
         btnTest.setOnClickListener(v -> testConnection());
 
         btnBack.setOnClickListener(v -> {
+            Log.d("SettingsActivity", "Back button clicked");
             finish();
+            overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
         });
     }
 

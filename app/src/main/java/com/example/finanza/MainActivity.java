@@ -205,10 +205,36 @@ public class MainActivity extends AppCompatActivity {
         
         // Inicializar sincronização em background
         inicializarSincronizacao();
+        
+        // Verificar se é a primeira vez do usuário e mostrar orientações
+        mostrarOrientacoesSeNecessario();
     }
 
     // Mostra o modal de adicionar transação
     private void showAddTransactionDialog(boolean isReceitaPanel) {
+        // Verificar se há contas e categorias antes de abrir o dialog
+        List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
+        String tipo = isReceitaPanel ? "receita" : "despesa";
+        List<Categoria> categorias = db.categoriaDao().listarPorTipo(tipo);
+        
+        if (contas.isEmpty()) {
+            new AlertDialog.Builder(this)
+                .setTitle("Conta necessária")
+                .setMessage("Você precisa criar pelo menos uma conta antes de adicionar transações. Vá para a seção de Contas para criar uma.")
+                .setPositiveButton("OK", null)
+                .show();
+            return;
+        }
+        
+        if (categorias.isEmpty()) {
+            new AlertDialog.Builder(this)
+                .setTitle("Categoria necessária")
+                .setMessage("Você precisa criar pelo menos uma categoria de " + tipo + " antes de adicionar transações. Vá para a seção de Categorias para criar uma.")
+                .setPositiveButton("OK", null)
+                .show();
+            return;
+        }
+        
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_transaction, null);
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
@@ -643,5 +669,25 @@ public class MainActivity extends AppCompatActivity {
         // SyncService é singleton e deve persistir entre Activities
         // Não fazemos shutdown aqui para evitar RejectedExecutionException
         // quando a app é reaberta
+    }
+    
+    /**
+     * Mostra orientações para novos usuários se não houver dados
+     */
+    private void mostrarOrientacoesSeNecessario() {
+        List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
+        List<Categoria> categorias = db.categoriaDao().listarTodas();
+        
+        if (contas.isEmpty() && categorias.isEmpty()) {
+            new AlertDialog.Builder(this)
+                .setTitle("Bem-vindo ao Finanza!")
+                .setMessage("Para começar a usar o app, você precisa:\n\n" +
+                           "1. Criar pelo menos uma conta (vá para Contas)\n" +
+                           "2. Criar categorias de receita e despesa (vá para Menu > Categorias)\n" +
+                           "3. Se usar com desktop, configure o servidor (botão de configurações no login)\n\n" +
+                           "Depois disso você poderá adicionar suas transações!")
+                .setPositiveButton("Entendi", null)
+                .show();
+        }
     }
 }

@@ -9,15 +9,19 @@ import com.example.finanza.model.Categoria;
 import com.example.finanza.model.Conta;
 import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Usuario;
+import com.example.finanza.util.DataIntegrityValidator;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Serviço de sincronização entre banco local (Room) e servidor
- * Gerencia sincronização de dados offline/online
+ * Legacy Sync Service - Maintained for backward compatibility
+ * Delegates to EnhancedSyncService for improved functionality
+ * 
+ * @deprecated Use EnhancedSyncService for new implementations
  */
+@Deprecated
 public class SyncService {
     
     private static final String TAG = "SyncService";
@@ -27,8 +31,9 @@ public class SyncService {
     private AppDatabase database;
     private ServerClient serverClient;
     private ExecutorService executor;
+    private EnhancedSyncService enhancedSyncService;
     
-    // Callbacks para sincronização
+    // Callbacks for legacy compatibility
     public interface SyncCallback {
         void onSyncStarted();
         void onSyncCompleted(boolean success, String message);
@@ -37,10 +42,10 @@ public class SyncService {
     
     private SyncService(Context context) {
         this.context = context.getApplicationContext();
-        this.database = Room.databaseBuilder(context, AppDatabase.class, "finanza-database")
-                .build();
+        this.database = AppDatabase.getDatabase(context);
         this.serverClient = ServerClient.getInstance(context);
         this.executor = Executors.newSingleThreadExecutor();
+        this.enhancedSyncService = EnhancedSyncService.getInstance(context);
     }
     
     public static synchronized SyncService getInstance(Context context) {
@@ -51,754 +56,339 @@ public class SyncService {
     }
     
     /**
-     * Garante que o executor está disponível e funcionando
+     * Legacy sync method - delegates to EnhancedSyncService for improved functionality
+     * @deprecated Use EnhancedSyncService.performFullSync() directly
      */
-    private void ensureExecutorAvailable() {
-        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
-            executor = Executors.newSingleThreadExecutor();
-            Log.d(TAG, "Executor recriado após shutdown");
-        }
-    }
-    
-    /**
-     * Sincroniza todos os dados com o servidor se conectado
-     */
+    @Deprecated
     public void sincronizarTudo(int usuarioId, SyncCallback callback) {
-        if (callback != null) {
-            callback.onSyncStarted();
-        }
+        Log.d(TAG, "Legacy sync called - delegating to EnhancedSyncService");
         
-        ensureExecutorAvailable();
-        executor.execute(() -> {
-            try {
-                if (!serverClient.isConnected()) {
-                    Log.d(TAG, "Não conectado ao servidor - operação offline");
-                    if (callback != null) {
-                        callback.onSyncCompleted(true, "Modo offline - dados salvos localmente");
-                    }
-                    return;
-                }
-                
-                boolean success = true;
-                StringBuilder message = new StringBuilder();
-                
-                // Primeiro buscar dados do servidor
-                if (callback != null) callback.onSyncProgress("Baixando dados do servidor...");
-                if (!buscarDadosDoServidor(usuarioId)) {
-                    Log.w(TAG, "Erro ao buscar dados do servidor, mas continuando...");
-                    message.append("Aviso: alguns dados podem não estar atualizados. ");
-                }
-                
-                // Depois sincronizar dados locais para o servidor
-                if (callback != null) callback.onSyncProgress("Sincronizando categorias...");
-                if (!sincronizarCategorias(usuarioId)) {
-                    success = false;
-                    message.append("Erro ao sincronizar categorias. ");
-                }
-                
-                if (callback != null) callback.onSyncProgress("Sincronizando contas...");
-                if (!sincronizarContas(usuarioId)) {
-                    success = false;
-                    message.append("Erro ao sincronizar contas. ");
-                }
-                
-                if (callback != null) callback.onSyncProgress("Sincronizando movimentações...");
-                if (!sincronizarLancamentos(usuarioId)) {
-                    success = false;
-                    message.append("Erro ao sincronizar movimentações. ");
-                }
-                
-                if (success && message.length() == 0) {
-                    message.append("Sincronização concluída com sucesso");
-                } else if (success) {
-                    message.append("Sincronização concluída com avisos");
-                }
-                
+        // Convert legacy callback to enhanced callback
+        EnhancedSyncService.EnhancedSyncCallback enhancedCallback = new EnhancedSyncService.EnhancedSyncCallback() {
+            @Override
+            public void onSyncStarted() {
                 if (callback != null) {
-                    callback.onSyncCompleted(success, message.toString());
+                    callback.onSyncStarted();
                 }
-                
-            } catch (Exception e) {
-                Log.e(TAG, "Erro na sincronização: " + e.getMessage(), e);
+            }
+            
+            @Override
+            public void onSyncProgress(String operation, int progress, int total) {
                 if (callback != null) {
-                    callback.onSyncCompleted(false, "Erro na sincronização: " + e.getMessage());
+                    callback.onSyncProgress(operation);
                 }
             }
-        });
+            
+            @Override
+            public void onSyncCompleted(boolean success, String message, EnhancedSyncService.SyncResult result) {
+                if (callback != null) {
+                    String legacyMessage = success ? 
+                        "Sync completed successfully" : 
+                        "Sync failed: " + message;
+                    callback.onSyncCompleted(success, legacyMessage);
+                }
+            }
+            
+            @Override
+            public void onConflictDetected(String entityType, String details) {
+                Log.w(TAG, "Conflict detected: " + entityType + " - " + details);
+            }
+        };
+        
+        // Delegate to enhanced sync service
+        enhancedSyncService.performFullSync(usuarioId, enhancedCallback);
     }
     
     /**
-     * Sincroniza categorias (envia locais para servidor)
+     * Enhanced sync method - recommended for new implementations
      */
-    private boolean sincronizarCategorias(int usuarioId) {
-        try {
-            List<Categoria> categorias = database.categoriaDao().listarTodas();
-            
-            for (Categoria categoria : categorias) {
-                String comando = Protocol.buildCommand(
-                    Protocol.CMD_ADD_CATEGORIA,
-                    categoria.nome,
-                    categoria.tipo,
-                    categoria.corHex
-                );
-                
-                Log.d(TAG, "Sincronizando categoria: " + categoria.nome);
-                
-                // Enviar comando para o servidor se conectado
-                if (serverClient.isConnected()) {
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Categoria sincronizada: " + categoria.nome);
-                        }
-                        
-                        @Override
-                        public void onError(String error) {
-                            // Não logar como erro se categoria já existe (duplicata)
-                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Categoria já existe no servidor: " + categoria.nome);
-                            } else {
-                                Log.e(TAG, "Erro ao sincronizar categoria " + categoria.nome + ": " + error);
-                            }
-                        }
-                    });
-                }
-            }
-            
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao sincronizar categorias: " + e.getMessage(), e);
-            return false;
+    public void sincronizarComMelhorias(int usuarioId, boolean incremental, SyncCallback callback) {
+        Log.d(TAG, "Enhanced sync called with incremental=" + incremental);
+        
+        // Convert legacy callback
+        EnhancedSyncService.EnhancedSyncCallback enhancedCallback = createEnhancedCallback(callback);
+        
+        if (incremental) {
+            enhancedSyncService.performIncrementalSync(usuarioId, enhancedCallback);
+        } else {
+            enhancedSyncService.performFullSync(usuarioId, enhancedCallback);
         }
     }
     
     /**
-     * Sincroniza contas
+     * Helper method to convert legacy callback to enhanced callback
      */
-    private boolean sincronizarContas(int usuarioId) {
-        try {
-            List<Conta> contas = database.contaDao().listarPorUsuario(usuarioId);
-            
-            for (Conta conta : contas) {
-                String comando = Protocol.buildCommand(
-                    Protocol.CMD_ADD_CONTA,
-                    conta.nome,
-                    "corrente", // tipo padrão
-                    String.valueOf(conta.saldoInicial)
-                );
-                
-                Log.d(TAG, "Sincronizando conta: " + conta.nome);
-                
-                // Enviar comando para o servidor se conectado
-                if (serverClient.isConnected()) {
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Conta sincronizada: " + conta.nome);
-                        }
-                        
-                        @Override
-                        public void onError(String error) {
-                            // Não logar como erro se conta já existe (duplicata)
-                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Conta já existe no servidor: " + conta.nome);
-                            } else {
-                                Log.e(TAG, "Erro ao sincronizar conta " + conta.nome + ": " + error);
-                            }
-                        }
-                    });
+    private EnhancedSyncService.EnhancedSyncCallback createEnhancedCallback(SyncCallback callback) {
+        return new EnhancedSyncService.EnhancedSyncCallback() {
+            @Override
+            public void onSyncStarted() {
+                if (callback != null) {
+                    callback.onSyncStarted();
                 }
             }
             
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao sincronizar contas: " + e.getMessage(), e);
-            return false;
-        }
-    }
-    
-    /**
-     * Sincroniza lançamentos/movimentações
-     */
-    private boolean sincronizarLancamentos(int usuarioId) {
-        try {
-            List<Lancamento> lancamentos = database.lancamentoDao().listarPorUsuario(usuarioId);
-            
-            for (Lancamento lancamento : lancamentos) {
-                String comando = Protocol.buildCommand(
-                    Protocol.CMD_ADD_MOVIMENTACAO,
-                    String.valueOf(lancamento.valor),
-                    new java.sql.Date(lancamento.data).toString(), // formato correto YYYY-MM-DD
-                    lancamento.descricao,
-                    lancamento.tipo,
-                    String.valueOf(lancamento.contaId),
-                    String.valueOf(lancamento.categoriaId)
-                );
-                
-                Log.d(TAG, "Sincronizando lançamento: " + lancamento.descricao);
-                
-                // Enviar comando para o servidor se conectado
-                if (serverClient.isConnected()) {
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Lançamento sincronizado: " + lancamento.descricao);
-                        }
-                        
-                        @Override
-                        public void onError(String error) {
-                            // Não logar como erro se lançamento já existe (duplicata)
-                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Lançamento já existe no servidor: " + lancamento.descricao);
-                            } else {
-                                Log.e(TAG, "Erro ao sincronizar lançamento " + lancamento.descricao + ": " + error);
-                            }
-                        }
-                    });
+            @Override
+            public void onSyncProgress(String operation, int progress, int total) {
+                if (callback != null) {
+                    String progressMessage = String.format("%s (%d/%d)", operation, progress, total);
+                    callback.onSyncProgress(progressMessage);
                 }
             }
             
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao sincronizar lançamentos: " + e.getMessage(), e);
-            return false;
-        }
+            @Override
+            public void onSyncCompleted(boolean success, String message, EnhancedSyncService.SyncResult result) {
+                if (callback != null) {
+                    String detailedMessage = success ? 
+                        String.format("Sync completed: %s", result.toString()) : 
+                        String.format("Sync failed: %s", message);
+                    callback.onSyncCompleted(success, detailedMessage);
+                }
+            }
+            
+            @Override
+            public void onConflictDetected(String entityType, String details) {
+                Log.w(TAG, "Conflict detected during sync: " + entityType + " - " + details);
+                if (callback != null) {
+                    callback.onSyncProgress("Resolving conflicts for " + entityType);
+                }
+            }
+        };
     }
     
+    // ========== LEGACY METHODS WITH ENHANCED IMPLEMENTATIONS ==========
+    
     /**
-     * Adiciona categoria localmente e sincroniza se online
+     * Add category with enhanced validation and duplicate prevention
      */
     public void adicionarCategoria(Categoria categoria, SyncCallback callback) {
-        ensureExecutorAvailable();
+        Log.d(TAG, "Adding category with validation: " + categoria.nome);
+        
         executor.execute(() -> {
             try {
-                // Salva localmente primeiro
-                long id = database.categoriaDao().inserir(categoria);
-                categoria.id = (int) id;
-                
-                Log.d(TAG, "Categoria salva localmente: " + categoria.nome);
-                
-                // Tenta sincronizar se conectado
-                if (serverClient.isConnected()) {
-                    Log.d(TAG, "Sincronizando categoria com servidor...");
-                    
-                    String comando = Protocol.buildCommand(
-                        Protocol.CMD_ADD_CATEGORIA,
-                        categoria.nome,
-                        categoria.tipo,
-                        categoria.corHex
-                    );
-                    
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Categoria sincronizada com servidor: " + categoria.nome);
-                        }
-                        
-                        @Override
-                        public void onError(String error) {
-                            Log.e(TAG, "Erro ao sincronizar categoria com servidor: " + error);
-                        }
-                    });
+                // Validate data before processing
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateCategoria(categoria);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Category validation failed: " + validation);
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Validation failed: " + validation.errorMessage);
+                    }
+                    return;
                 }
                 
-                if (callback != null) {
-                    callback.onSyncCompleted(true, "Categoria adicionada");
+                // Use safe insert with duplicate prevention
+                long id = database.categoriaDao().inserirSeguro(categoria);
+                if (id > 0) {
+                    Log.d(TAG, "Category saved with ID: " + id);
+                    
+                    // Try to sync with server if connected
+                    if (serverClient.isConnected()) {
+                        String comando = Protocol.buildCategoriaEnhanced(
+                            categoria.uuid, categoria.nome, categoria.tipo, 
+                            categoria.corHex, categoria.lastModified
+                        );
+                        
+                        serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                            @Override
+                            public void onSuccess(String result) {
+                                database.categoriaDao().marcarComoSincronizado((int)id, System.currentTimeMillis());
+                                Log.d(TAG, "Category synced with server: " + categoria.nome);
+                            }
+                            
+                            @Override
+                            public void onError(String error) {
+                                Log.w(TAG, "Failed to sync category with server: " + error);
+                            }
+                        });
+                    }
+                    
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Category added successfully");
+                    }
+                } else {
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Failed to save category");
+                    }
                 }
                 
             } catch (Exception e) {
-                Log.e(TAG, "Erro ao adicionar categoria: " + e.getMessage(), e);
+                Log.e(TAG, "Error adding category", e);
                 if (callback != null) {
-                    callback.onSyncCompleted(false, "Erro ao adicionar categoria: " + e.getMessage());
+                    callback.onSyncCompleted(false, "Error: " + e.getMessage());
                 }
             }
         });
     }
     
     /**
-     * Adiciona conta localmente e sincroniza se online
+     * Add account with enhanced validation and duplicate prevention
      */
     public void adicionarConta(Conta conta, SyncCallback callback) {
-        ensureExecutorAvailable();
+        Log.d(TAG, "Adding account with validation: " + conta.nome);
+        
         executor.execute(() -> {
             try {
-                // Validar se o usuário existe antes de inserir a conta
-                Usuario usuario = database.usuarioDao().buscarPorId(conta.usuarioId);
-                if (usuario == null) {
-                    Log.e(TAG, "Erro: Usuário não existe (ID: " + conta.usuarioId + ")");
+                // Validate data before processing
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateConta(conta);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Account validation failed: " + validation);
                     if (callback != null) {
-                        callback.onSyncCompleted(false, "Usuário não encontrado");
+                        callback.onSyncCompleted(false, "Validation failed: " + validation.errorMessage);
                     }
                     return;
                 }
                 
-                long id = database.contaDao().inserir(conta);
-                conta.id = (int) id;
-                
-                Log.d(TAG, "Conta salva localmente: " + conta.nome);
-                
-                if (serverClient.isConnected()) {
-                    Log.d(TAG, "Sincronizando conta com servidor...");
+                // Use safe insert with duplicate prevention
+                long id = database.contaDao().inserirSeguro(conta);
+                if (id > 0) {
+                    Log.d(TAG, "Account saved with ID: " + id);
                     
-                    String comando = Protocol.buildCommand(
-                        Protocol.CMD_ADD_CONTA,
-                        conta.nome,
-                        "corrente", // tipo padrão
-                        String.valueOf(conta.saldoInicial)
-                    );
-                    
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Conta sincronizada com servidor: " + conta.nome);
-                        }
+                    // Try to sync with server if connected
+                    if (serverClient.isConnected()) {
+                        String comando = Protocol.buildContaEnhanced(
+                            conta.uuid, conta.nome, "corrente", 
+                            conta.saldoInicial, conta.lastModified
+                        );
                         
-                        @Override
-                        public void onError(String error) {
-                            // Não logar como erro se conta já existe (duplicata)
-                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Conta já existe no servidor: " + conta.nome);
-                            } else {
-                                Log.e(TAG, "Erro ao sincronizar conta com servidor: " + error);
+                        serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                            @Override
+                            public void onSuccess(String result) {
+                                database.contaDao().marcarComoSincronizado((int)id, System.currentTimeMillis());
+                                Log.d(TAG, "Account synced with server: " + conta.nome);
                             }
-                        }
-                    });
-                }
-                
-                if (callback != null) {
-                    callback.onSyncCompleted(true, "Conta adicionada");
+                            
+                            @Override
+                            public void onError(String error) {
+                                Log.w(TAG, "Failed to sync account with server: " + error);
+                            }
+                        });
+                    }
+                    
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Account added successfully");
+                    }
+                } else {
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Failed to save account");
+                    }
                 }
                 
             } catch (Exception e) {
-                Log.e(TAG, "Erro ao adicionar conta: " + e.getMessage(), e);
+                Log.e(TAG, "Error adding account", e);
                 if (callback != null) {
-                    callback.onSyncCompleted(false, "Erro ao adicionar conta: " + e.getMessage());
+                    callback.onSyncCompleted(false, "Error: " + e.getMessage());
                 }
             }
         });
     }
     
     /**
-     * Adiciona lançamento localmente e sincroniza se online
+     * Add transaction with enhanced validation and duplicate prevention
      */
     public void adicionarLancamento(Lancamento lancamento, SyncCallback callback) {
-        ensureExecutorAvailable();
+        Log.d(TAG, "Adding transaction with validation: " + lancamento.descricao);
+        
         executor.execute(() -> {
             try {
-                // Validar foreign keys antes de inserir
-                Usuario usuario = database.usuarioDao().buscarPorId(lancamento.usuarioId);
-                Conta conta = database.contaDao().buscarPorId(lancamento.contaId);
-                
-                if (usuario == null) {
-                    Log.e(TAG, "Erro: Usuário não existe (ID: " + lancamento.usuarioId + ")");
+                // Validate data before processing
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateLancamento(lancamento);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Transaction validation failed: " + validation);
                     if (callback != null) {
-                        callback.onSyncCompleted(false, "Usuário não encontrado");
+                        callback.onSyncCompleted(false, "Validation failed: " + validation.errorMessage);
                     }
                     return;
                 }
                 
-                if (conta == null) {
-                    Log.e(TAG, "Erro: Conta não existe (ID: " + lancamento.contaId + ")");
+                // Check referential integrity
+                DataIntegrityValidator.ValidationResult integrityCheck = 
+                    DataIntegrityValidator.checkTransactionIntegrity(lancamento, database);
+                if (!integrityCheck.isValid) {
+                    Log.e(TAG, "Transaction integrity check failed: " + integrityCheck);
                     if (callback != null) {
-                        callback.onSyncCompleted(false, "Conta não encontrada");
+                        callback.onSyncCompleted(false, "Integrity check failed: " + integrityCheck.errorMessage);
                     }
                     return;
                 }
                 
-                long id = database.lancamentoDao().inserir(lancamento);
-                lancamento.id = (int) id;
-                
-                Log.d(TAG, "Lançamento salvo localmente: " + lancamento.descricao);
-                
-                if (serverClient.isConnected()) {
-                    Log.d(TAG, "Sincronizando lançamento com servidor...");
+                // Use safe insert with duplicate prevention
+                long id = database.lancamentoDao().inserirSeguro(lancamento);
+                if (id > 0) {
+                    Log.d(TAG, "Transaction saved with ID: " + id);
                     
-                    String comando = Protocol.buildCommand(
-                        Protocol.CMD_ADD_MOVIMENTACAO,
-                        String.valueOf(lancamento.valor),
-                        new java.sql.Date(lancamento.data).toString(), // formato correto YYYY-MM-DD
-                        lancamento.descricao,
-                        lancamento.tipo,
-                        String.valueOf(lancamento.contaId),
-                        String.valueOf(lancamento.categoriaId)
-                    );
-                    
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Lançamento sincronizado com servidor: " + lancamento.descricao);
-                        }
+                    // Try to sync with server if connected
+                    if (serverClient.isConnected()) {
+                        String comando = Protocol.buildMovimentacaoEnhanced(
+                            lancamento.uuid, lancamento.valor, lancamento.data,
+                            lancamento.descricao, lancamento.tipo, 
+                            lancamento.contaId, lancamento.categoriaId,
+                            lancamento.lastModified, lancamento.isDeleted
+                        );
                         
-                        @Override
-                        public void onError(String error) {
-                            // Não logar como erro se lançamento já existe (duplicata)
-                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Lançamento já existe no servidor: " + lancamento.descricao);
-                            } else {
-                                Log.e(TAG, "Erro ao sincronizar lançamento com servidor: " + error);
+                        serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                            @Override
+                            public void onSuccess(String result) {
+                                database.lancamentoDao().marcarComoSincronizado((int)id, System.currentTimeMillis());
+                                Log.d(TAG, "Transaction synced with server: " + lancamento.descricao);
                             }
-                        }
-                    });
-                }
-                
-                if (callback != null) {
-                    callback.onSyncCompleted(true, "Movimentação adicionada");
+                            
+                            @Override
+                            public void onError(String error) {
+                                Log.w(TAG, "Failed to sync transaction with server: " + error);
+                            }
+                        });
+                    }
+                    
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Transaction added successfully");
+                    }
+                } else {
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Failed to save transaction");
+                    }
                 }
                 
             } catch (Exception e) {
-                Log.e(TAG, "Erro ao adicionar lançamento: " + e.getMessage(), e);
+                Log.e(TAG, "Error adding transaction", e);
                 if (callback != null) {
-                    callback.onSyncCompleted(false, "Erro ao adicionar lançamento: " + e.getMessage());
+                    callback.onSyncCompleted(false, "Error: " + e.getMessage());
                 }
             }
         });
     }
     
+    // ========== UTILITY METHODS ==========
+    
     /**
-     * Verifica se existe conexão com servidor
+     * Check if service is online
      */
     public boolean isOnline() {
         return serverClient.isConnected();
     }
     
     /**
-     * Libera recursos
+     * Get enhanced sync service for advanced operations
+     */
+    public EnhancedSyncService getEnhancedSyncService() {
+        return enhancedSyncService;
+    }
+    
+    /**
+     * Get conflict resolution manager
+     */
+    public ConflictResolutionManager getConflictResolutionManager() {
+        return ConflictResolutionManager.getInstance(context);
+    }
+    
+    /**
+     * Shutdown the service and cleanup resources
      */
     public void shutdown() {
         if (executor != null && !executor.isShutdown()) {
             executor.shutdown();
         }
-    }
-    
-    /**
-     * Busca todos os dados do servidor e armazena localmente
-     */
-    private boolean buscarDadosDoServidor(int usuarioId) {
-        try {
-            Log.d(TAG, "Iniciando busca de dados do servidor...");
-            
-            final boolean[] allCompleted = {false};
-            final boolean[] success = {true};
-            final Object lock = new Object();
-            final int[] completedRequests = {0};
-            final int totalRequests = 3;
-            
-            // Buscar categorias do servidor
-            serverClient.listarCategorias(new ServerClient.ServerCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(TAG, "Categorias recebidas do servidor: " + result);
-                    if (!processarCategoriasDoServidor(result, usuarioId)) {
-                        success[0] = false;
-                    }
-                    synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
-                    }
-                }
-                
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "Erro ao buscar categorias: " + error);
-                    synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
-                    }
-                }
-            });
-            
-            // Buscar contas
-            serverClient.listarContas(new ServerClient.ServerCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(TAG, "Contas recebidas do servidor: " + result);
-                    if (!processarContasDoServidor(result, usuarioId)) {
-                        success[0] = false;
-                    }
-                    synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
-                    }
-                }
-                
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "Erro ao buscar contas: " + error);
-                    synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
-                    }
-                }
-            });
-            
-            // Buscar movimentações
-            serverClient.listarMovimentacoes(new ServerClient.ServerCallback<String>() {
-                @Override
-                public void onSuccess(String result) {
-                    Log.d(TAG, "Movimentações recebidas do servidor: " + result);
-                    if (!processarMovimentacoesDoServidor(result, usuarioId)) {
-                        success[0] = false;
-                    }
-                    synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
-                    }
-                }
-                
-                @Override
-                public void onError(String error) {
-                    Log.e(TAG, "Erro ao buscar movimentações: " + error);
-                    synchronized (lock) {
-                        completedRequests[0]++;
-                        if (completedRequests[0] >= totalRequests) {
-                            allCompleted[0] = true;
-                            lock.notifyAll();
-                        }
-                    }
-                }
-            });
-            
-            // Aguardar todas as operações completarem (com timeout)
-            synchronized (lock) {
-                long startTime = System.currentTimeMillis();
-                while (!allCompleted[0] && (System.currentTimeMillis() - startTime) < 15000) { // 15 segundos timeout
-                    try {
-                        lock.wait(1000); // Verifica a cada segundo
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        Log.w(TAG, "Thread interrompida durante sincronização");
-                        break;
-                    }
-                }
-            }
-            
-            Log.d(TAG, "Busca de dados concluída - Completadas: " + completedRequests[0] + 
-                       "/" + totalRequests + ", Sucesso: " + success[0]);
-            
-            return success[0] && completedRequests[0] >= totalRequests;
-            
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao buscar dados do servidor: " + e.getMessage(), e);
-            return false;
+        if (enhancedSyncService != null) {
+            enhancedSyncService.shutdown();
         }
     }
-    
-    /**
-     * Processa categorias recebidas do servidor
-     */
-    private boolean processarCategoriasDoServidor(String response, int usuarioId) {
-        try {
-            if (response == null || response.trim().isEmpty()) {
-                Log.w(TAG, "Resposta vazia para categorias");
-                return true; // Não é erro, apenas não há dados
-            }
-            
-            String[] partes = Protocol.parseCommand(response);
-            if (partes.length < 1) {
-                Log.w(TAG, "Resposta mal formada para categorias: " + response);
-                return false;
-            }
-            
-            if (!Protocol.STATUS_OK.equals(partes[0])) {
-                Log.w(TAG, "Status não OK para categorias: " + response);
-                return false;
-            }
-            
-            if (partes.length < 2 || partes[1] == null || partes[1].trim().isEmpty()) {
-                Log.d(TAG, "Nenhuma categoria no servidor");
-                return true; // Não é erro, apenas não há dados
-            }
-            
-            String dados = partes[1];
-            String[] categorias = Protocol.parseFields(dados);
-            Log.d(TAG, "Processando " + categorias.length + " categorias do servidor");
-            
-            for (String categoriaData : categorias) {
-                if (categoriaData == null || categoriaData.trim().isEmpty()) {
-                    continue;
-                }
-                
-                String[] campos = categoriaData.split(",");
-                if (campos.length >= 3) {
-                    // Format: id,nome,tipo,cor
-                    String nome = campos[1].trim();
-                    String tipo = campos[2].trim();
-                    String cor = campos.length > 3 ? campos[3].trim() : "#666666";
-                    
-                    if (nome.isEmpty() || tipo.isEmpty()) {
-                        Log.w(TAG, "Categoria com dados inválidos: " + categoriaData);
-                        continue;
-                    }
-                    
-                    // Verifica se categoria já existe localmente
-                    List<Categoria> existentes = database.categoriaDao().listarPorTipo(tipo);
-                    boolean existe = false;
-                    for (Categoria cat : existentes) {
-                        if (cat.nome.equals(nome)) {
-                            existe = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!existe) {
-                        Categoria categoria = new Categoria();
-                        categoria.nome = nome;
-                        categoria.tipo = tipo;
-                        categoria.corHex = cor;
-                        database.categoriaDao().inserir(categoria);
-                        Log.d(TAG, "Categoria adicionada localmente: " + nome);
-                    }
-                } else {
-                    Log.w(TAG, "Categoria com formato inválido: " + categoriaData);
-                }
-            }
-            
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao processar categorias: " + e.getMessage(), e);
-            return false;
-        }
-    }
-    
-    /**
-     * Processa contas recebidas do servidor
-     */
-    private boolean processarContasDoServidor(String response, int usuarioId) {
-        try {
-            String[] partes = Protocol.parseCommand(response);
-            if (partes.length < 2 || !Protocol.STATUS_OK.equals(partes[0])) {
-                Log.w(TAG, "Resposta inválida para contas: " + response);
-                return false;
-            }
-            
-            String dados = partes[1];
-            if (dados == null || dados.trim().isEmpty()) {
-                Log.d(TAG, "Nenhuma conta no servidor");
-                return true;
-            }
-            
-            String[] contas = Protocol.parseFields(dados);
-            Log.d(TAG, "Processando " + contas.length + " contas do servidor");
-            
-            for (String contaData : contas) {
-                String[] campos = contaData.split(",");
-                if (campos.length >= 3) {
-                    // Format: id,nome,saldo
-                    String nome = campos[1];
-                    double saldo = Double.parseDouble(campos[2]);
-                    
-                    // Verifica se conta já existe localmente
-                    List<Conta> existentes = database.contaDao().listarPorUsuario(usuarioId);
-                    boolean existe = false;
-                    for (Conta conta : existentes) {
-                        if (conta.nome.equals(nome)) {
-                            existe = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!existe) {
-                        // Verificar se o usuário existe antes de criar a conta
-                        Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
-                        if (usuario != null) {
-                            Conta conta = new Conta();
-                            conta.nome = nome;
-                            conta.saldoInicial = saldo;
-                            conta.usuarioId = usuarioId;
-                            database.contaDao().inserir(conta);
-                            Log.d(TAG, "Conta adicionada localmente: " + nome);
-                        } else {
-                            Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
-                        }
-                    }
-                }
-            }
-            
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao processar contas: " + e.getMessage(), e);
-            return false;
-        }
-    }
-    
-    /**
-     * Processa movimentações recebidas do servidor
-     */
-    private boolean processarMovimentacoesDoServidor(String response, int usuarioId) {
-        try {
-            String[] partes = Protocol.parseCommand(response);
-            if (partes.length < 2 || !Protocol.STATUS_OK.equals(partes[0])) {
-                Log.w(TAG, "Resposta inválida para movimentações: " + response);
-                return false;
-            }
-            
-            String dados = partes[1];
-            if (dados == null || dados.trim().isEmpty()) {
-                Log.d(TAG, "Nenhuma movimentação no servidor");
-                return true;
-            }
-            
-            String[] movimentacoes = Protocol.parseFields(dados);
-            Log.d(TAG, "Processando " + movimentacoes.length + " movimentações do servidor");
-            
-            for (String movData : movimentacoes) {
-                String[] campos = movData.split(",");
-                if (campos.length >= 6) {
-                    // Format: id,valor,data,descricao,contaId,categoriaId,tipo
-                    try {
-                        double valor = Double.parseDouble(campos[1]);
-                        long data = Long.parseLong(campos[2]);
-                        String descricao = campos[3];
-                        int contaId = Integer.parseInt(campos[4]);
-                        int categoriaId = Integer.parseInt(campos[5]);
-                        String tipo = campos.length > 6 ? campos[6] : "despesa";
-                        
-                        // Verificar se todas as foreign keys existem antes de criar a movimentação
-                        Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
-                        Conta conta = database.contaDao().buscarPorId(contaId);
-                        // Categoria pode ser null, permitindo categoriaId = 0
-                        
-                        if (usuario != null && conta != null) {
-                            Lancamento lancamento = new Lancamento();
-                            lancamento.valor = valor;
-                            lancamento.data = data;
-                            lancamento.descricao = descricao;
-                            lancamento.contaId = contaId;
-                            lancamento.categoriaId = categoriaId;
-                            lancamento.usuarioId = usuarioId;
-                            lancamento.tipo = tipo;
-                            
-                            database.lancamentoDao().inserir(lancamento);
-                            Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
-                        } else {
-                            Log.w(TAG, "Não é possível criar movimentação - referências inválidas. Usuario: " + 
-                                (usuario != null) + ", Conta: " + (conta != null));
-                        }
-                    } catch (NumberFormatException e) {
-                        Log.w(TAG, "Erro ao converter dados da movimentação: " + movData);
-                    }
-                }
-            }
-            
-            return true;
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao processar movimentações: " + e.getMessage(), e);
-            return false;
-        }
-    }
+}
 }

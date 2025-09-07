@@ -27,6 +27,60 @@
 - **UUID Universal**: Identificação única cross-platform
 - **Sincronização Incremental**: Apenas dados modificados são transferidos
 
+## 📸 Screenshots do Sistema
+
+### 📱 **Interface Mobile (Android)**
+
+#### Tela de Login
+![Tela de Login Mobile](screenshots/mobile/01-login.png)
+*Tela de autenticação com design Material Design*
+
+#### Dashboard Principal
+![Dashboard Mobile](screenshots/mobile/03-dashboard.png)
+*Dashboard principal com resumo financeiro e transações recentes*
+
+#### Adicionar Transação
+![Adicionar Transação](screenshots/mobile/04-add-transaction.png)
+*Interface para registro de receitas e despesas*
+
+#### Gerenciar Contas
+![Gerenciar Contas](screenshots/mobile/05-accounts.png)
+*Tela para administração de contas bancárias e cartões*
+
+#### Lista de Movimentações
+![Lista de Movimentações](screenshots/mobile/07-movements.png)
+*Histórico completo de transações com filtros*
+
+### 🖥️ **Interface Desktop (Java)**
+
+#### Inicialização do Servidor
+![Servidor Iniciando](screenshots/desktop/01-server-start.png)
+*Console do servidor mostrando inicialização e conexão com MySQL*
+
+#### Dashboard Desktop
+![Dashboard Desktop](screenshots/desktop/03-dashboard.png)
+*Interface principal do cliente desktop com funcionalidades completas*
+
+#### Monitor de Sincronização
+![Monitor de Sincronização](screenshots/desktop/04-sync-monitor.png)
+*Painel de monitoramento da sincronização com dispositivos móveis*
+
+#### Relatórios Avançados
+![Relatórios](screenshots/desktop/05-reports.png)
+*Geração de relatórios financeiros com gráficos e exportação*
+
+### 🔄 **Processo de Sincronização**
+
+#### Conexão Estabelecida
+![Conexão Estabelecida](screenshots/sync/01-connection-established.png)
+*Status de conexão entre mobile e desktop*
+
+#### Sincronização de Dados
+![Sincronização de Dados](screenshots/sync/02-data-sync.png)
+*Processo de sincronização bidirecional em tempo real*
+
+> **📋 Nota sobre Screenshots**: Para visualizar as capturas de tela atualizadas, consulte o diretório [screenshots/](screenshots/) que contém instruções detalhadas para captura e atualização das imagens.
+
 ## 🏗️ Arquitetura do Sistema
 
 ```mermaid
@@ -412,6 +466,47 @@ System.out.println("Comando recebido: " + comando);
 - [ ] Testes automatizados
 - [ ] CI/CD pipeline
 - [ ] Documentação expandida
+
+## 📚 Documentação Acadêmica
+
+### 🎓 **Trabalho Interdisciplinar 2025**
+- **[Trabalho Interdisciplinar - Descrição Completa](TRABALHO_INTERDISCIPLINAR_2025.md)**: Documento acadêmico completo com objetivos, metodologia, resultados e conclusões
+- **[Modelo de Trabalho Interdisciplinar](MODELO_TRABALHO_INTERDISCIPLINAR.md)**: Estrutura formal acadêmica com resumo, abstract, metodologia e referências
+- **[Modelo Incremental](MODELO_INCREMENTAL.md)**: Documentação detalhada do processo de desenvolvimento incremental
+
+### 📖 **Documentação Técnica Completa**
+- **[Guia de Arquitetura](ARCHITECTURE.md)**: Documentação técnica da arquitetura do sistema
+- **[Guia de Instalação](SETUP_GUIDE.md)**: Instruções detalhadas de configuração e instalação
+- **[Manual do Usuário](USER_MANUAL.md)**: Manual completo para usuários finais
+- **[Guia de Sincronização](SYNC_GUIDE.md)**: Documentação específica da sincronização TCP
+- **[Qualidade de Código](CODE_QUALITY.md)**: Lista de verificação de qualidade e boas práticas
+
+### 🖼️ **Documentação Visual**
+- **[Screenshots](screenshots/README.md)**: Guia completo de capturas de tela das interfaces
+- **[Diagramas de Arquitetura](#-arquitetura-do-sistema)**: Diagramas mermaid da arquitetura do sistema
+
+## 🎯 **Características Acadêmicas do Projeto**
+
+### **Aplicação Interdisciplinar**
+Este projeto integra conhecimentos de múltiplas disciplinas:
+- **Programação**: Java (Android e Desktop), SQL, TCP Sockets
+- **Banco de Dados**: Modelagem, MySQL, Room Database
+- **Engenharia de Software**: Arquitetura MVC/MVVM, padrões de design
+- **Redes**: Protocolo TCP, sincronização distribuída
+- **Interface Humano-Computador**: Design responsivo, usabilidade
+- **Gestão de Projetos**: Metodologia ágil, desenvolvimento incremental
+
+### **Metodologia de Desenvolvimento**
+- **Modelo Incremental**: Desenvolvimento em 4 incrementos de 4 semanas cada
+- **Scrum**: Sprints, planning, review e retrospectiva
+- **Documentação Acadêmica**: Seguindo padrões universitários
+- **Controle de Versão**: Git com commits semânticos
+
+### **Contribuições Técnicas**
+- **Arquitetura Híbrida**: Inovação na integração mobile-desktop
+- **Sincronização TCP Direta**: Comunicação eficiente sem APIs REST
+- **Offline-First**: Funcionamento robusto sem conectividade
+- **Resolução de Conflitos**: Algoritmo automático por timestamp
 
 ## 📄 Licença
 

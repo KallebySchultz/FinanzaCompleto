@@ -137,6 +137,20 @@ public interface LancamentoDao {
     Long obterUltimoTempoSync();
     
     /**
+     * Update categoria ID for all lancamentos that reference the old categoria ID
+     * Used when categoria sync updates local ID to server ID
+     */
+    @Query("UPDATE Lancamento SET categoriaId = :novoId WHERE categoriaId = :antigoId")
+    void atualizarCategoriaId(int antigoId, int novoId);
+    
+    /**
+     * Update conta ID for all lancamentos that reference the old conta ID
+     * Used when conta sync updates local ID to server ID
+     */
+    @Query("UPDATE Lancamento SET contaId = :novoId WHERE contaId = :antigoId")
+    void atualizarContaId(int antigoId, int novoId);
+    
+    /**
      * Find potential duplicate by business logic
      */
     @Query("SELECT * FROM Lancamento WHERE valor = :valor AND data = :data AND descricao = :descricao AND contaId = :contaId AND usuarioId = :usuarioId AND uuid != :excludeUuid AND isDeleted = 0 LIMIT 1")

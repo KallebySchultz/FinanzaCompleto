@@ -160,4 +160,50 @@ public interface ContaDao {
         conta.markAsModified();
         return inserir(conta);
     }
+    
+    /**
+     * Insert or update conta from server data
+     */
+    @Transaction  
+    default long sincronizarDoServidor(int serverId, String nome, String tipo, double saldo, int usuarioId) {
+        // First check if we already have a conta with this server ID
+        Conta existenteServerId = buscarPorId(serverId);
+        if (existenteServerId != null) {
+            return serverId;
+        }
+        
+        // Check if we have a local conta with same name/user
+        Conta localConta = buscarPorNomeEUsuario(nome, usuarioId);
+        if (localConta != null && localConta.id != serverId) {
+            // This conta exists locally but with different ID
+            Conta serverConta = new Conta();
+            serverConta.id = serverId;  // Set explicit ID 
+            serverConta.nome = nome;
+            serverConta.tipo = tipo;
+            serverConta.saldoInicial = saldo;
+            serverConta.saldoAtual = saldo;
+            serverConta.usuarioId = usuarioId;
+            serverConta.syncStatus = 1; // synced
+            serverConta.lastSyncTime = System.currentTimeMillis();
+            
+            // Delete the old local conta to avoid confusion
+            deletar(localConta);
+            
+            // Insert with explicit ID
+            return inserir(serverConta);
+        }
+        
+        // No local conta exists, create new one with server ID
+        Conta conta = new Conta();
+        conta.id = serverId;  // Set explicit server ID
+        conta.nome = nome;
+        conta.tipo = tipo;
+        conta.saldoInicial = saldo;
+        conta.saldoAtual = saldo;
+        conta.usuarioId = usuarioId;
+        conta.syncStatus = 1; // synced
+        conta.lastSyncTime = System.currentTimeMillis();
+        
+        return inserir(conta);
+    }
 }

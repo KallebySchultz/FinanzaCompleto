@@ -165,7 +165,38 @@ public class SyncService {
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
-                            Log.d(TAG, "Categoria sincronizada: " + categoria.nome);
+                            Log.d(TAG, "Categoria sincronizada: " + categoria.nome + " - " + result);
+                            
+                            // CRITICAL FIX: Parse server response and update local categoria with server ID
+                            try {
+                                String[] partes = Protocol.parseCommand(result);
+                                if (partes.length >= 2 && Protocol.STATUS_OK.equals(partes[0])) {
+                                    int serverId = Integer.parseInt(partes[1]);
+                                    
+                                    // Update the local categoria with the server ID
+                                    if (categoria.id != serverId) {
+                                        Log.d(TAG, "Atualizando categoria local ID " + categoria.id + " para server ID " + serverId);
+                                        
+                                        // Update lancamentos that reference this categoria
+                                        database.lancamentoDao().atualizarCategoriaId(categoria.id, serverId);
+                                        
+                                        // Create new categoria with server ID and delete old one
+                                        Categoria serverCategoria = new Categoria();
+                                        serverCategoria.id = serverId;
+                                        serverCategoria.nome = categoria.nome;
+                                        serverCategoria.tipo = categoria.tipo;
+                                        serverCategoria.corHex = categoria.corHex;
+                                        serverCategoria.uuid = categoria.uuid;
+                                        serverCategoria.syncStatus = 1; // synced
+                                        serverCategoria.lastSyncTime = System.currentTimeMillis();
+                                        
+                                        database.categoriaDao().deletar(categoria);
+                                        database.categoriaDao().inserir(serverCategoria);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.w(TAG, "Erro ao processar resposta da categoria: " + e.getMessage());
+                            }
                         }
 
                         @Override
@@ -210,7 +241,40 @@ public class SyncService {
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
-                            Log.d(TAG, "Conta sincronizada: " + conta.nome);
+                            Log.d(TAG, "Conta sincronizada: " + conta.nome + " - " + result);
+                            
+                            // CRITICAL FIX: Parse server response and update local conta with server ID
+                            try {
+                                String[] partes = Protocol.parseCommand(result);
+                                if (partes.length >= 2 && Protocol.STATUS_OK.equals(partes[0])) {
+                                    int serverId = Integer.parseInt(partes[1]);
+                                    
+                                    // Update the local conta with the server ID
+                                    if (conta.id != serverId) {
+                                        Log.d(TAG, "Atualizando conta local ID " + conta.id + " para server ID " + serverId);
+                                        
+                                        // Update lancamentos that reference this conta
+                                        database.lancamentoDao().atualizarContaId(conta.id, serverId);
+                                        
+                                        // Create new conta with server ID and delete old one
+                                        Conta serverConta = new Conta();
+                                        serverConta.id = serverId;
+                                        serverConta.nome = conta.nome;
+                                        serverConta.tipo = conta.tipo;
+                                        serverConta.saldoInicial = conta.saldoInicial;
+                                        serverConta.saldoAtual = conta.saldoAtual;
+                                        serverConta.usuarioId = conta.usuarioId;
+                                        serverConta.uuid = conta.uuid;
+                                        serverConta.syncStatus = 1; // synced
+                                        serverConta.lastSyncTime = System.currentTimeMillis();
+                                        
+                                        database.contaDao().deletar(conta);
+                                        database.contaDao().inserir(serverConta);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.w(TAG, "Erro ao processar resposta da conta: " + e.getMessage());
+                            }
                         }
 
                         @Override
@@ -670,6 +734,7 @@ public class SyncService {
                 if (campos.length >= 3) {
                     try {
                         // Format: id,nome,tipo,cor
+                        int serverId = Integer.parseInt(campos[0].trim());
                         String nome = campos[1].trim();
                         String tipo = campos[2].trim();
                         String cor = campos.length > 3 ? campos[3].trim() : "#666666";
@@ -679,29 +744,14 @@ public class SyncService {
                             continue;
                         }
 
-                        // Verifica se categoria já existe localmente
-                        List<Categoria> existentes = database.categoriaDao().listarPorTipo(tipo);
-                        boolean existe = false;
-                        for (Categoria cat : existentes) {
-                            if (cat.nome.equals(nome)) {
-                                existe = true;
-                                break;
-                            }
-                        }
-
-                        if (!existe) {
-                            Categoria categoria = new Categoria();
-                            categoria.nome = nome;
-                            categoria.tipo = tipo;
-                            categoria.corHex = cor;
-                            // Use the safe sync method instead of plain insert
-                            long categoriaId = database.categoriaDao().inserirSeguro(categoria);
-                            if (categoriaId > 0) {
-                                categoriasProcessadas++;
-                                Log.d(TAG, "Categoria adicionada localmente: " + nome);
-                            } else {
-                                Log.d(TAG, "Categoria já existia: " + nome);
-                            }
+                        // CRITICAL FIX: Use server ID instead of auto-generated ID
+                        // This ensures movimentações can reference the correct category ID
+                        long categoriaId = database.categoriaDao().sincronizarDoServidor(serverId, nome, tipo, cor);
+                        if (categoriaId > 0) {
+                            categoriasProcessadas++;
+                            Log.d(TAG, "Categoria sincronizada com ID do servidor " + serverId + ": " + nome);
+                        } else {
+                            Log.d(TAG, "Categoria já existia com ID " + serverId + ": " + nome);
                         }
                     } catch (Exception e) {
                         Log.w(TAG, "Erro ao processar categoria individual: " + categoriaData + " - " + e.getMessage());
@@ -759,6 +809,7 @@ public class SyncService {
                 if (campos.length >= 3) {
                     try {
                         // Format: id,nome,saldo OR id,nome,tipo,saldo
+                        int serverId = Integer.parseInt(campos[0].trim());
                         String nome = campos[1].trim();
                         String tipo = "corrente"; // default
                         double saldo;
@@ -777,36 +828,20 @@ public class SyncService {
                             continue;
                         }
 
-                        // Verifica se conta já existe localmente
-                        List<Conta> existentes = database.contaDao().listarPorUsuario(usuarioId);
-                        boolean existe = false;
-                        for (Conta conta : existentes) {
-                            if (conta.nome.equals(nome)) {
-                                existe = true;
-                                break;
-                            }
-                        }
-
-                        if (!existe) {
-                            // Verificar se o usuário existe antes de criar a conta
-                            Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
-                            if (usuario != null) {
-                                Conta conta = new Conta();
-                                conta.nome = nome;
-                                conta.tipo = tipo;
-                                conta.saldoInicial = saldo;
-                                conta.usuarioId = usuarioId;
-                                // Use the safe sync method instead of plain insert
-                                long contaId = database.contaDao().inserirSeguro(conta);
-                                if (contaId > 0) {
-                                    contasProcessadas++;
-                                    Log.d(TAG, "Conta adicionada localmente: " + nome + " (tipo: " + tipo + ")");
-                                } else {
-                                    Log.d(TAG, "Conta já existia: " + nome);
-                                }
+                        // Verificar se o usuário existe antes de criar a conta
+                        Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
+                        if (usuario != null) {
+                            // CRITICAL FIX: Use server ID instead of auto-generated ID
+                            // This ensures movimentações can reference the correct account ID
+                            long contaId = database.contaDao().sincronizarDoServidor(serverId, nome, tipo, saldo, usuarioId);
+                            if (contaId > 0) {
+                                contasProcessadas++;
+                                Log.d(TAG, "Conta sincronizada com ID do servidor " + serverId + ": " + nome + " (tipo: " + tipo + ")");
                             } else {
-                                Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
+                                Log.d(TAG, "Conta já existia com ID " + serverId + ": " + nome);
                             }
+                        } else {
+                            Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
                         }
                     } catch (NumberFormatException e) {
                         Log.w(TAG, "Erro ao converter saldo da conta: " + contaData + " - " + e.getMessage());

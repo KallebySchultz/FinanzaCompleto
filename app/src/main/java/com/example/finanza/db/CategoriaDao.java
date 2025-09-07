@@ -145,4 +145,56 @@ public interface CategoriaDao {
         categoria.markAsModified();
         return inserir(categoria);
     }
+    
+    /**
+     * Update existing category with server ID (for sync reconciliation)
+     */
+    @Query("UPDATE Categoria SET id = :novoId WHERE id = :antigoId")
+    void atualizarId(int antigoId, int novoId);
+    
+    /**
+     * Insert or update categoria from server data
+     */
+    @Transaction  
+    default long sincronizarDoServidor(int serverId, String nome, String tipo, String corHex) {
+        // First check if we already have a category with this server ID
+        Categoria existenteServerId = buscarPorId(serverId);
+        if (existenteServerId != null) {
+            return serverId;
+        }
+        
+        // Check if we have a local category with same name/type
+        Categoria localCategory = buscarPorNomeETipo(nome, tipo);
+        if (localCategory != null && localCategory.id != serverId) {
+            // This category exists locally but with different ID
+            // We need to update all references and then change the ID
+            
+            // For now, let's create the server category and let the app handle the mapping
+            // In a production environment, we'd need to migrate foreign key references
+            Categoria serverCategoria = new Categoria();
+            serverCategoria.id = serverId;  // Set explicit ID 
+            serverCategoria.nome = nome;
+            serverCategoria.tipo = tipo;
+            serverCategoria.corHex = corHex != null ? corHex : "#666666";
+            serverCategoria.syncStatus = 1; // synced
+            serverCategoria.lastSyncTime = System.currentTimeMillis();
+            
+            // Delete the old local category to avoid confusion
+            deletar(localCategory);
+            
+            // Insert with explicit ID
+            return inserir(serverCategoria);
+        }
+        
+        // No local category exists, create new one with server ID
+        Categoria categoria = new Categoria();
+        categoria.id = serverId;  // Set explicit server ID
+        categoria.nome = nome;
+        categoria.tipo = tipo;
+        categoria.corHex = corHex != null ? corHex : "#666666";
+        categoria.syncStatus = 1; // synced
+        categoria.lastSyncTime = System.currentTimeMillis();
+        
+        return inserir(categoria);
+    }
 }

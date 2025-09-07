@@ -33,18 +33,18 @@ import java.util.List;
 
 /**
  * MainActivity - Tela principal da aplicação Finanza
- * 
+ *
  * Esta atividade representa o dashboard principal do aplicativo financeiro,
  * onde o usuário pode visualizar o resumo de suas finanças e realizar
  * operações básicas como adicionar receitas e despesas.
- * 
+ *
  * Funcionalidades principais:
  * - Exibição do saldo total e por conta
  * - Adição rápida de receitas e despesas
  * - Navegação para outras seções do app
  * - Sincronização automática com servidor desktop
  * - Visualização de resumo financeiro
- * 
+ *
  * @author Finanza Team
  * @version 1.0
  * @since 2024
@@ -55,12 +55,12 @@ public class MainActivity extends AppCompatActivity {
 
     // Estado de visibilidade do saldo
     private boolean saldoVisivel = true;
-    
+
     // Componentes de banco de dados e serviços
     private AppDatabase db;
     private AuthManager authManager;
     private SyncService syncService;
-    
+
     // IDs de referência do usuário e dados padrão
     private int usuarioIdAtual;
     private int contaPadraoId;
@@ -75,14 +75,14 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Método onCreate - Inicialização da atividade principal
-     * 
+     *
      * Responsável por:
      * - Configurar a interface visual (status bar, navigation bar)
      * - Inicializar banco de dados e serviços de autenticação/sincronização
      * - Validar autenticação do usuário
      * - Carregar dados padrão (contas e categorias)
      * - Configurar listeners de eventos da interface
-     * 
+     *
      * @param savedInstanceState Estado salvo da atividade (se houver)
      */
     @Override
@@ -92,24 +92,24 @@ public class MainActivity extends AppCompatActivity {
 
         // Configuração visual da interface
         configurarInterfaceVisual();
-        
+
         // Inicialização de componentes essenciais
         inicializarComponentes();
-        
+
         // Validação e configuração do usuário
         if (!validarUsuarioAutenticado()) {
             return; // Sai do método se usuário não válido
         }
-        
+
         // Carregamento de dados padrão
         carregarDadosPadrao();
-        
+
         // Configuração da interface principal
         configurarInterfacePrincipal();
-        
+
         // Configuração de listeners e eventos
         configurarEventListeners();
-        
+
         // Configuração da navegação
         configurarNavegacao();
     }
@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Valida se há um usuário autenticado válido
-     * 
+     *
      * @return true se usuário válido, false caso contrário
      */
     private boolean validarUsuarioAutenticado() {
@@ -144,13 +144,13 @@ public class MainActivity extends AppCompatActivity {
         if (usuarioIdAtual == -1) {
             usuarioIdAtual = authManager.getLoggedUserId();
         }
-        
+
         if (usuarioIdAtual == -1) {
             Log.w(TAG, "Usuário não autenticado, redirecionando para login");
             redirecionarParaLogin();
             return false;
         }
-        
+
         // Validar se o usuário existe no banco de dados
         Usuario usuarioAtual = db.usuarioDao().buscarPorId(usuarioIdAtual);
         if (usuarioAtual == null) {
@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
             redirecionarParaLogin();
             return false;
         }
-        
+
         Log.d(TAG, "Usuário validado: " + usuarioAtual.email);
         return true;
     }
@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         List<Categoria> despesaCats = db.categoriaDao().listarPorTipo("despesa");
         Categoria catDespesa = !despesaCats.isEmpty() ? despesaCats.get(0) : null;
         categoriaDespesaId = catDespesa != null ? catDespesa.id : -1;
-        
+
         Log.d(TAG, "Dados padrão carregados - Receita ID: " + categoriaReceitaId + ", Despesa ID: " + categoriaDespesaId);
     }
 
@@ -232,10 +232,10 @@ public class MainActivity extends AppCompatActivity {
             atualizarValores(tvSaldo, tvReceita, tvDespesa);
             updateHomeContent();
         });
-        
+
         // Configurar botão de adicionar transação
         configurarBotaoAdicionar();
-        
+
         // Inicializar sincronização em background
         inicializarSincronizacao();
     }
@@ -338,7 +338,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Exibe o diálogo para adicionar nova transação
-     * 
+     *
      * @param isReceitaPanel true para receita, false para despesa
      */
     private void showAddTransactionDialog(boolean isReceitaPanel) {
@@ -463,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
                     lancamento.categoriaId = categoriaSelecionada[0].id;
                     lancamento.usuarioId = usuarioIdAtual;
                     lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
-                    
+
                     // Usar sync service para salvar e sincronizar
                     syncService.adicionarLancamento(lancamento, new SyncService.SyncCallback() {
                         @Override
@@ -505,10 +505,10 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Atualiza os valores exibidos no dashboard principal
-     * 
+     *
      * Calcula e exibe o saldo total, receitas e despesas do usuário,
      * considerando o estado de visibilidade (oculto/visível).
-     * 
+     *
      * @param tvSaldo TextView que exibe o saldo total
      * @param tvReceita TextView que exibe o total de receitas
      * @param tvDespesa TextView que exibe o total de despesas
@@ -548,7 +548,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Consulta o total de receitas do usuário
-     * 
+     *
      * @return Valor total das receitas
      */
     private double consultarReceitas() {
@@ -558,7 +558,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Consulta o total de despesas do usuário
-     * 
+     *
      * @return Valor total das despesas
      */
     private double consultarDespesas() {
@@ -568,7 +568,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Calcula o saldo atual do usuário
-     * 
+     *
      * @return Saldo total (receitas - despesas)
      */
     private double consultarSaldo() {
@@ -577,7 +577,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Formata valor monetário para exibição
-     * 
+     *
      * @param valor Valor a ser formatado
      * @return String formatada no padrão brasileiro (R$ 0,00)
      */
@@ -587,7 +587,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Atualiza todo o conteúdo da tela principal
-     * 
+     *
      * Coordena a atualização de todos os resumos:
      * - Resumo de contas
      * - Resumo de categorias
@@ -601,7 +601,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Atualiza o resumo das contas do usuário no dashboard
-     * 
+     *
      * Cria dinamicamente os cartões de contas com seus respectivos saldos
      * e configura os listeners para navegação.
      */
@@ -654,77 +654,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateCategoriesSummary() {
-        LinearLayout container = findViewById(R.id.categories_summary_container);
-        container.removeAllViews();
-
-        List<Categoria> categoriasDespesa = db.categoriaDao().listarPorTipo("despesa");
-
-        java.util.List<CategoryExpense> categoryExpenses = new java.util.ArrayList<>();
-        for (Categoria categoria : categoriasDespesa) {
-            Double totalGasto = db.lancamentoDao().somaPorCategoria(categoria.id, usuarioIdAtual);
-            if (totalGasto != null && totalGasto > 0) {
-                categoryExpenses.add(new CategoryExpense(categoria, totalGasto));
-            }
-        }
-        java.util.Collections.sort(categoryExpenses, (a, b) -> Double.compare(b.totalGasto, a.totalGasto));
-
-        int maxCategorias = Math.min(5, categoryExpenses.size());
-        for (int i = 0; i < maxCategorias; i++) {
-            CategoryExpense categoryExpense = categoryExpenses.get(i);
-
-            LinearLayout itemCategoria = new LinearLayout(this);
-            itemCategoria.setOrientation(LinearLayout.HORIZONTAL);
-            itemCategoria.setPadding(16, 12, 16, 12);
-
-            LinearLayout infoContainer = new LinearLayout(this);
-            infoContainer.setOrientation(LinearLayout.VERTICAL);
-            infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-
-            TextView nomeCategoria = new TextView(this);
-            nomeCategoria.setText(categoryExpense.categoria.nome);
-            nomeCategoria.setTextColor(getResources().getColor(R.color.white));
-            nomeCategoria.setTextSize(16);
-            nomeCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
-
-            TextView valorCategoria = new TextView(this);
-            if (saldoVisivel) {
-                valorCategoria.setText(formatarMoeda(categoryExpense.totalGasto));
-                valorCategoria.setTextColor(getResources().getColor(R.color.negativeRed));
-            } else {
-                valorCategoria.setText("****");
-                valorCategoria.setTextColor(getResources().getColor(R.color.white));
-            }
-            valorCategoria.setTextSize(14);
-
-            infoContainer.addView(nomeCategoria);
-            infoContainer.addView(valorCategoria);
-
-            itemCategoria.addView(infoContainer);
-
-            container.addView(itemCategoria);
-        }
-
-        if (categoryExpenses.isEmpty()) {
-            TextView noData = new TextView(this);
-            noData.setText("Nenhuma despesa registrada");
-            noData.setTextColor(getResources().getColor(R.color.white));
-            noData.setTextSize(14);
-            noData.setGravity(android.view.Gravity.CENTER);
-            container.addView(noData);
-        }
-    }
-
     /**
      * Classe auxiliar para gerenciar gastos por categoria
-     * 
+     *
      * Utilizada internamente para organizar e ordenar categorias
      * por valor de gasto para exibição no dashboard.
      */
     private static class CategoryExpense {
         Categoria categoria;
         double totalGasto;
-        
+
         CategoryExpense(Categoria categoria, double totalGasto) {
             this.categoria = categoria;
             this.totalGasto = totalGasto;
@@ -733,7 +672,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Atualiza o resumo de categorias de despesa no dashboard
-     * 
+     *
      * Exibe as 5 categorias com maiores gastos, ordenadas por valor.
      * Mostra apenas categorias que possuem movimentações registradas.
      */
@@ -741,10 +680,8 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout container = findViewById(R.id.categories_summary_container);
         container.removeAllViews();
 
-        // Buscar todas as categorias de despesa
         List<Categoria> categoriasDespesa = db.categoriaDao().listarPorTipo("despesa");
 
-        // Calcular gastos por categoria
         java.util.List<CategoryExpense> categoryExpenses = new java.util.ArrayList<>();
         for (Categoria categoria : categoriasDespesa) {
             Double totalGasto = db.lancamentoDao().somaPorCategoria(categoria.id, usuarioIdAtual);
@@ -752,16 +689,12 @@ public class MainActivity extends AppCompatActivity {
                 categoryExpenses.add(new CategoryExpense(categoria, totalGasto));
             }
         }
-        
-        // Ordenar por valor (maior para menor)
         java.util.Collections.sort(categoryExpenses, (a, b) -> Double.compare(b.totalGasto, a.totalGasto));
 
-        // Exibir apenas as 5 primeiras categorias
         int maxCategorias = Math.min(5, categoryExpenses.size());
         for (int i = 0; i < maxCategorias; i++) {
             CategoryExpense categoryExpense = categoryExpenses.get(i);
 
-            // Criar item visual para a categoria
             LinearLayout itemCategoria = new LinearLayout(this);
             itemCategoria.setOrientation(LinearLayout.HORIZONTAL);
             itemCategoria.setPadding(16, 12, 16, 12);
@@ -794,7 +727,6 @@ public class MainActivity extends AppCompatActivity {
             container.addView(itemCategoria);
         }
 
-        // Exibir mensagem se não há dados
         if (categoryExpenses.isEmpty()) {
             TextView noData = new TextView(this);
             noData.setText("Nenhuma despesa registrada");
@@ -807,7 +739,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Atualiza a lista de transações recentes no dashboard
-     * 
+     *
      * Exibe as 5 transações mais recentes do usuário com ícones
      * indicativos e cores apropriadas para receitas/despesas.
      */
@@ -877,7 +809,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Calcula o saldo atual de uma conta específica
-     * 
+     *
      * @param conta A conta para calcular o saldo
      * @return Saldo atual (saldo inicial + receitas - despesas)
      */
@@ -890,10 +822,10 @@ public class MainActivity extends AppCompatActivity {
 
         return conta.saldoInicial + totalReceitas - totalDespesas;
     }
-    
+
     /**
      * Inicializa sincronização em background com o servidor desktop
-     * 
+     *
      * Executa sincronização silenciosa dos dados do usuário.
      * Em caso de falha, os dados locais permanecem disponíveis.
      */
@@ -908,12 +840,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSyncCompleted(boolean success, String message) {
                 Log.d(TAG, "Sincronização concluída: " + message);
-                
+
                 // Atualiza a UI na thread principal após sincronização
                 runOnUiThread(() -> {
                     atualizarValores(findViewById(R.id.tvSaldo), findViewById(R.id.tvReceita), findViewById(R.id.tvDespesa));
                     updateHomeContent();
-                    
+
                     // Log de falha sem incomodar o usuário
                     if (!success && message.contains("Erro:")) {
                         Log.w(TAG, "Sincronização falhou: " + message);
@@ -928,10 +860,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    
+
     /**
      * Chamado quando a atividade é retomada
-     * 
+     *
      * Executa nova sincronização para manter dados atualizados.
      */
     @Override
@@ -942,10 +874,10 @@ public class MainActivity extends AppCompatActivity {
             inicializarSincronizacao();
         }
     }
-    
+
     /**
      * Chamado quando a atividade é destruída
-     * 
+     *
      * O SyncService é mantido como singleton para persistir entre atividades.
      */
     @Override

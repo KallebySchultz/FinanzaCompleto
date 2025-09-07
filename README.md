@@ -101,7 +101,14 @@ Finanza-Mobile/
 │   │   ├── server/                       # Lógica do servidor
 │   │   └── util/                         # Utilitários
 │   └── banco/                            # Scripts do banco
-└── docs/                                 # Documentação
+├── screenshots/                           # Screenshots das aplicações
+│   ├── mobile/                           # Capturas do app Android
+│   ├── desktop/                          # Capturas do app Desktop
+│   └── setup/                            # Capturas de configuração
+├── docs/                                 # Documentação técnica
+├── Modelo Incremental.md                 # Documentação do modelo de desenvolvimento
+├── TRABALHO INTERDISCIPLINAR 2025 - DESCRIÇÃO.md  # Descrição acadêmica do projeto
+└── Modelo Trab. Interdisciplinar.md      # Framework de trabalho interdisciplinar
 
 ```
 
@@ -265,6 +272,38 @@ Finanza-Mobile/
    - Visualize gráficos
    - Gerencie usuários
 
+## 📷 Screenshots das Aplicações
+
+### 📱 **Aplicação Mobile (Android)**
+
+| Tela | Descrição | Screenshot |
+|------|-----------|------------|
+| **Login** | Autenticação com Material Design | ![Login Mobile](screenshots/mobile/mobile_login.png) |
+| **Dashboard** | Resumo financeiro e gráficos | ![Dashboard Mobile](screenshots/mobile/mobile_dashboard.png) |
+| **Contas** | Gerenciamento de contas bancárias | ![Contas Mobile](screenshots/mobile/mobile_accounts.png) |
+| **Movimentações** | Registro de receitas e despesas | ![Movimentações Mobile](screenshots/mobile/mobile_movements.png) |
+| **Sincronização** | Status de conexão com desktop | ![Sync Mobile](screenshots/mobile/mobile_sync.png) |
+
+### 🖥️ **Aplicação Desktop (Java)**
+
+| Tela | Descrição | Screenshot |
+|------|-----------|------------|
+| **Login** | Interface Swing de autenticação | ![Login Desktop](screenshots/desktop/desktop_login.png) |
+| **Dashboard** | Dashboard completo com relatórios | ![Dashboard Desktop](screenshots/desktop/desktop_dashboard.png) |
+| **Usuários** | Administração de usuários | ![Usuários Desktop](screenshots/desktop/desktop_users.png) |
+| **Monitor TCP** | Monitor de sincronização | ![Monitor Desktop](screenshots/desktop/desktop_sync_monitor.png) |
+| **Relatórios** | Geração e exportação de dados | ![Relatórios Desktop](screenshots/desktop/desktop_reports.png) |
+
+### 🔧 **Processo de Instalação**
+
+| Etapa | Descrição | Screenshot |
+|-------|-----------|------------|
+| **Banco de Dados** | Configuração do MySQL | ![Config BD](screenshots/setup/setup_database.png) |
+| **Primeiro Acesso** | Tela inicial do sistema | ![First Run](screenshots/setup/setup_first_run.png) |
+| **Configuração de Rede** | Setup de IP e porta TCP | ![Network Config](screenshots/setup/setup_network.png) |
+
+> 📋 **Nota**: Para visualizar as screenshots completas, consulte o diretório `/screenshots/` ou execute as aplicações conforme o guia de instalação.
+
 ## 🔧 Configuração Avançada
 
 ### 🌐 **Servidor TCP**
@@ -393,6 +432,25 @@ System.out.println("Comando recebido: " + comando);
 3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
+
+## 📚 Documentação Completa
+
+### 📋 **Documentação Principal**
+- 📄 [`README.md`](README.md) - Documentação completa do projeto
+- 📄 [`ARCHITECTURE.md`](ARCHITECTURE.md) - Arquitetura detalhada do sistema
+- 📄 [`USER_MANUAL.md`](USER_MANUAL.md) - Manual completo do usuário
+- 📄 [`SETUP_GUIDE.md`](SETUP_GUIDE.md) - Guia de instalação e configuração
+
+### 🎓 **Documentação Acadêmica**
+- 📄 [`Modelo Incremental.md`](Modelo%20Incremental.md) - Modelo de desenvolvimento aplicado
+- 📄 [`TRABALHO INTERDISCIPLINAR 2025 - DESCRIÇÃO.md`](TRABALHO%20INTERDISCIPLINAR%202025%20-%20DESCRIÇÃO.md) - Descrição do projeto interdisciplinar
+- 📄 [`Modelo Trab. Interdisciplinar.md`](Modelo%20Trab.%20Interdisciplinar.md) - Framework de trabalho interdisciplinar
+
+### 🔧 **Documentação Técnica**
+- 📁 [`DESKTOP VERSION/docs/`](DESKTOP%20VERSION/docs/) - Documentação específica do desktop
+- 📁 [`screenshots/`](screenshots/) - Screenshots das aplicações
+- 📄 [`SYNC_GUIDE.md`](SYNC_GUIDE.md) - Guia de sincronização
+- 📄 [`CODE_QUALITY.md`](CODE_QUALITY.md) - Padrões de qualidade de código
 
 ## 📈 Roadmap
 

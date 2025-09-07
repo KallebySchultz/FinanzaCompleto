@@ -169,7 +169,7 @@ public class AuthManager {
                     // Cria usuário local
                     Usuario usuario = criarUsuarioLocal(nome, email, senha);
                     if (usuario != null) {
-                        salvarSessao(usuario);
+                        // Não fazer login automático - usuário deve retornar à tela de login
                         callback.onSuccess(usuario);
                     } else {
                         callback.onError("Erro ao criar usuário local");
@@ -184,7 +184,7 @@ public class AuthManager {
                     Usuario usuario = criarUsuarioLocal(nome, email, senha);
                     if (usuario != null) {
                         Log.d(TAG, "Usuário criado localmente (será sincronizado depois)");
-                        salvarSessao(usuario);
+                        // Não fazer login automático - usuário deve retornar à tela de login
                         callback.onSuccess(usuario);
                     } else {
                         callback.onError("Erro ao criar usuário: " + error);
@@ -196,7 +196,7 @@ public class AuthManager {
             Usuario usuario = criarUsuarioLocal(nome, email, senha);
             if (usuario != null) {
                 Log.d(TAG, "Usuário criado offline");
-                salvarSessao(usuario);
+                // Não fazer login automático - usuário deve retornar à tela de login
                 callback.onSuccess(usuario);
             } else {
                 callback.onError("Erro ao criar usuário offline");

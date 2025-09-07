@@ -16,66 +16,66 @@ import com.example.finanza.model.Categoria;
  * Prioriza autenticação local, sincroniza com servidor quando disponível
  */
 public class AuthManager {
-    
+
     private static final String TAG = "AuthManager";
     private static final String PREFS_NAME = "FinanzaAuth";
     private static final String PREF_USER_ID = "usuarioId";
     private static final String PREF_USER_EMAIL = "userEmail";
     private static final String PREF_IS_LOGGED_IN = "isLoggedIn";
-    
+
     private Context context;
     private AppDatabase database;
     private ServerClient serverClient;
     private static AuthManager instance;
-    
+
     public interface AuthCallback {
         void onSuccess(Usuario usuario);
         void onError(String error);
     }
-    
+
     private AuthManager(Context context) {
         this.context = context.getApplicationContext();
         this.database = AppDatabase.getDatabase(context);
         this.serverClient = ServerClient.getInstance(context);
     }
-    
+
     public static synchronized AuthManager getInstance(Context context) {
         if (instance == null) {
             instance = new AuthManager(context);
         }
         return instance;
     }
-    
+
     /**
      * Faz login - tenta servidor primeiro, fallback para local
      */
     public void login(String email, String senha, AuthCallback callback) {
         // Verifica primeiro localmente
         Usuario usuarioLocal = buscarUsuarioLocal(email, senha);
-        
+
         // Primeiro tenta conectar ao servidor
         serverClient.conectar(new ServerClient.ServerCallback<String>() {
             @Override
             public void onSuccess(String connectionResult) {
                 Log.d(TAG, "Conectado ao servidor, tentando login...");
-                
+
                 // Agora faz login
                 serverClient.login(email, senha, new ServerClient.ServerCallback<String>() {
                     @Override
                     public void onSuccess(String result) {
                         Log.d(TAG, "Login no servidor bem-sucedido: " + result);
-                        
+
                         // Parse da resposta do servidor para obter dados do usuário
                         String[] partes = Protocol.parseCommand(result);
                         Usuario usuario = usuarioLocal;
-                        
+
                         if (partes.length > 1) {
                             // Resposta: OK|userId;nome;email
                             String[] userData = partes[1].split(";");
                             if (userData.length >= 3) {
                                 String nome = userData[1];
                                 String emailServidor = userData[2];
-                                
+
                                 // Atualiza ou cria usuário local com dados do servidor
                                 if (usuario == null) {
                                     usuario = criarUsuarioLocal(nome, emailServidor, senha);
@@ -86,20 +86,23 @@ public class AuthManager {
                                 }
                             }
                         }
-                        
+
                         if (usuario == null) {
                             usuario = usuarioLocal != null ? usuarioLocal : criarUsuarioLocal("", email, senha);
                         }
-                        
+
                         if (usuario != null) {
                             salvarSessao(usuario);
-                            
+
                             // Sempre chamar o callback de sucesso primeiro, independente da sincronização
                             callback.onSuccess(usuario);
-                            
+
+                            // Correção: tornar usuario final para uso dentro do callback
+                            final Usuario usuarioFinal = usuario;
+
                             // Iniciar sincronização de dados após login bem-sucedido (em background)
                             SyncService syncService = SyncService.getInstance(context);
-                            syncService.sincronizarTudo(usuario.id, new SyncService.SyncCallback() {
+                            syncService.sincronizarTudo(usuarioFinal.id, new SyncService.SyncCallback() {
                                 @Override
                                 public void onSyncStarted() {
                                     Log.d(TAG, "Iniciando sincronização pós-login...");
@@ -108,10 +111,9 @@ public class AuthManager {
                                 @Override
                                 public void onSyncCompleted(boolean success, String message) {
                                     Log.d(TAG, "Sincronização pós-login concluída: " + message);
-                                    
-                                    // If sync failed or if user has no accounts/categories after sync, 
-                                    // create default data to ensure app functionality
-                                    verificarECriarDadosSeNecessario(usuario.id);
+
+                                    // Use usuarioFinal
+                                    verificarECriarDadosSeNecessario(usuarioFinal.id);
                                 }
 
                                 @Override
@@ -123,11 +125,11 @@ public class AuthManager {
                             callback.onError("Erro ao salvar dados locais");
                         }
                     }
-                    
+
                     @Override
                     public void onError(String error) {
                         Log.d(TAG, "Login no servidor falhou: " + error);
-                        
+
                         // Fallback para autenticação local
                         if (usuarioLocal != null) {
                             Log.d(TAG, "Usando autenticação local offline");
@@ -139,11 +141,11 @@ public class AuthManager {
                     }
                 });
             }
-            
+
             @Override
             public void onError(String error) {
                 Log.d(TAG, "Falha na conexão com servidor: " + error);
-                
+
                 // Fallback para autenticação local
                 if (usuarioLocal != null) {
                     Log.d(TAG, "Usando autenticação local offline");
@@ -155,7 +157,7 @@ public class AuthManager {
             }
         });
     }
-    
+
     /**
      * Registra novo usuário
      */
@@ -165,14 +167,14 @@ public class AuthManager {
             callback.onError("Usuário já existe localmente");
             return;
         }
-        
+
         if (serverClient.isConnected()) {
             // Registra no servidor primeiro
             serverClient.registrar(nome, email, senha, new ServerClient.ServerCallback<String>() {
                 @Override
                 public void onSuccess(String result) {
                     Log.d(TAG, "Registro no servidor bem-sucedido");
-                    
+
                     // Cria usuário local
                     Usuario usuario = criarUsuarioLocal(nome, email, senha);
                     if (usuario != null) {
@@ -182,11 +184,11 @@ public class AuthManager {
                         callback.onError("Erro ao criar usuário local");
                     }
                 }
-                
+
                 @Override
                 public void onError(String error) {
                     Log.d(TAG, "Registro no servidor falhou: " + error);
-                    
+
                     // Ainda assim cria localmente para uso offline
                     Usuario usuario = criarUsuarioLocal(nome, email, senha);
                     if (usuario != null) {
@@ -210,7 +212,7 @@ public class AuthManager {
             }
         }
     }
-    
+
     /**
      * Busca usuário local por email
      */
@@ -223,7 +225,7 @@ public class AuthManager {
             return null;
         }
     }
-    
+
     /**
      * Cria usuário local
      */
@@ -234,48 +236,48 @@ public class AuthManager {
             usuario.email = email;
             usuario.senha = senha; // Em produção, deveria ser hash
             usuario.dataCriacao = System.currentTimeMillis();
-            
+
             long id = database.usuarioDao().inserir(usuario);
             usuario.id = (int) id;
-            
+
             // Create default data for new user
             criarDadosIniciais(usuario.id);
-            
+
             return usuario;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao criar usuário local: " + e.getMessage());
             return null;
         }
     }
-    
+
     /**
      * Sobrecarga para usuários existentes
      */
     private Usuario criarUsuarioLocal(String email, String senha) {
         return criarUsuarioLocal("", email, senha);
     }
-    
+
     /**
      * Salva sessão do usuário
      */
     private void salvarSessao(Usuario usuario) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         prefs.edit()
-             .putInt(PREF_USER_ID, usuario.id)
-             .putString(PREF_USER_EMAIL, usuario.email)
-             .putBoolean(PREF_IS_LOGGED_IN, true)
-             .apply();
-             
+                .putInt(PREF_USER_ID, usuario.id)
+                .putString(PREF_USER_EMAIL, usuario.email)
+                .putBoolean(PREF_IS_LOGGED_IN, true)
+                .apply();
+
         Log.d(TAG, "Sessão salva para usuário: " + usuario.email);
     }
-    
+
     /**
      * Creates default data for new users (account and categories)
      */
     private void criarDadosIniciais(int usuarioId) {
         try {
             Log.d(TAG, "Criando dados iniciais para usuário: " + usuarioId);
-            
+
             // Create default account
             Conta contaPadrao = new Conta();
             contaPadrao.nome = "Conta Padrão";
@@ -283,18 +285,18 @@ public class AuthManager {
             contaPadrao.saldoInicial = 0.0;
             contaPadrao.usuarioId = usuarioId;
             database.contaDao().inserir(contaPadrao);
-            
+
             // Create default expense categories if none exist
             if (database.categoriaDao().listarPorTipo("despesa").isEmpty()) {
                 criarCategoriasPadrao();
             }
-            
+
             Log.d(TAG, "Dados iniciais criados com sucesso");
         } catch (Exception e) {
             Log.e(TAG, "Erro ao criar dados iniciais: " + e.getMessage(), e);
         }
     }
-    
+
     /**
      * Creates default categories for the app
      */
@@ -302,18 +304,18 @@ public class AuthManager {
         try {
             // Default expense categories
             String[][] categoriasDespesa = {
-                {"Alimentação", "#FF6B6B"},
-                {"Transporte", "#4ECDC4"},
-                {"Saúde", "#45B7D1"},
-                {"Educação", "#96CEB4"},
-                {"Lazer", "#FFEAA7"},
-                {"Casa", "#DDA0DD"},
-                {"Roupas", "#98D8C8"},
-                {"Tecnologia", "#F7DC6F"},
-                {"Viagem", "#BB8FCE"},
-                {"Outros", "#85929E"}
+                    {"Alimentação", "#FF6B6B"},
+                    {"Transporte", "#4ECDC4"},
+                    {"Saúde", "#45B7D1"},
+                    {"Educação", "#96CEB4"},
+                    {"Lazer", "#FFEAA7"},
+                    {"Casa", "#DDA0DD"},
+                    {"Roupas", "#98D8C8"},
+                    {"Tecnologia", "#F7DC6F"},
+                    {"Viagem", "#BB8FCE"},
+                    {"Outros", "#85929E"}
             };
-            
+
             for (String[] cat : categoriasDespesa) {
                 Categoria categoria = new Categoria();
                 categoria.nome = cat[0];
@@ -321,18 +323,18 @@ public class AuthManager {
                 categoria.corHex = cat[1];
                 database.categoriaDao().inserir(categoria);
             }
-            
+
             // Default income categories
             String[][] categoriasReceita = {
-                {"Salário", "#2ECC71"},
-                {"Freelance", "#3498DB"},
-                {"Investimentos", "#9B59B6"},
-                {"Vendas", "#E67E22"},
-                {"Prêmios", "#F1C40F"},
-                {"Restituição", "#1ABC9C"},
-                {"Outros", "#34495E"}
+                    {"Salário", "#2ECC71"},
+                    {"Freelance", "#3498DB"},
+                    {"Investimentos", "#9B59B6"},
+                    {"Vendas", "#E67E22"},
+                    {"Prêmios", "#F1C40F"},
+                    {"Restituição", "#1ABC9C"},
+                    {"Outros", "#34495E"}
             };
-            
+
             for (String[] cat : categoriasReceita) {
                 Categoria categoria = new Categoria();
                 categoria.nome = cat[0];
@@ -340,13 +342,13 @@ public class AuthManager {
                 categoria.corHex = cat[1];
                 database.categoriaDao().inserir(categoria);
             }
-            
+
             Log.d(TAG, "Categorias padrão criadas");
         } catch (Exception e) {
             Log.e(TAG, "Erro ao criar categorias padrão: " + e.getMessage(), e);
         }
     }
-    
+
     /**
      * Checks if user has necessary data and creates default data if needed
      */
@@ -362,7 +364,7 @@ public class AuthManager {
                 contaPadrao.usuarioId = usuarioId;
                 database.contaDao().inserir(contaPadrao);
             }
-            
+
             // Check if user has categories
             if (database.categoriaDao().listarTodas().isEmpty()) {
                 Log.d(TAG, "Usuário sem categorias - criando categorias padrão");
@@ -372,7 +374,7 @@ public class AuthManager {
             Log.e(TAG, "Erro ao verificar dados necessários: " + e.getMessage(), e);
         }
     }
-    
+
     /**
      * Verifica se usuário está logado
      */
@@ -380,7 +382,7 @@ public class AuthManager {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         return prefs.getBoolean(PREF_IS_LOGGED_IN, false);
     }
-    
+
     /**
      * Obtém ID do usuário logado
      */
@@ -388,7 +390,7 @@ public class AuthManager {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         return prefs.getInt(PREF_USER_ID, -1);
     }
-    
+
     /**
      * Obtém email do usuário logado
      */
@@ -396,7 +398,7 @@ public class AuthManager {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         return prefs.getString(PREF_USER_EMAIL, "");
     }
-    
+
     /**
      * Faz logout
      */
@@ -405,14 +407,14 @@ public class AuthManager {
         if (serverClient.isConnected()) {
             serverClient.disconnect();
         }
-        
+
         // Limpa sessão local
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         prefs.edit().clear().apply();
-        
+
         Log.d(TAG, "Logout realizado");
     }
-    
+
     /**
      * Obtém dados do usuário logado
      */

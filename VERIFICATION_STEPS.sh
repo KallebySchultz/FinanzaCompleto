@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Manual Verification Script for Foreign Key Constraint Fix
+# This script outlines the steps to manually test the fix
+
+echo "=== MANUAL VERIFICATION STEPS FOR FOREIGN KEY CONSTRAINT FIX ==="
+echo ""
+
+echo "STEP 1: Prepare Test Environment"
+echo "- Install the modified app on a test device"
+echo "- Clear app data to start fresh: Settings > Apps > Finanza > Storage > Clear Data"
+echo "- Ensure the Finanza server is running and accessible"
+echo ""
+
+echo "STEP 2: Monitor Logs"
+echo "Connect to device logs to monitor the sync process:"
+echo "adb logcat | grep -E '(SyncService|finanza)'"
+echo ""
+
+echo "STEP 3: Test Category Creation and Sync"
+echo "1. Open the app and create a new category:"
+echo "   - Name: 'Teste'"
+echo "   - Type: 'receita'"
+echo "   - Color: any color"
+echo "2. Look for logs showing category sync:"
+echo "   Expected: 'Categoria sincronizada: Teste - OK|[SERVER_ID]'"
+echo "   Expected: 'Atualizando categoria local ID [LOCAL_ID] para server ID [SERVER_ID]'"
+echo ""
+
+echo "STEP 4: Test Movimentação Creation"
+echo "1. Create a new movimentação (transaction):"
+echo "   - Value: 10.00"
+echo "   - Date: today"
+echo "   - Description: 'teste'"
+echo "   - Type: 'receita' (income)"
+echo "   - Account: any available account"
+echo "   - Category: 'Teste' (the one created in step 3)"
+echo "2. Save the transaction"
+echo ""
+
+echo "STEP 5: Monitor Sync Process"
+echo "Look for these specific log patterns:"
+echo ""
+echo "BEFORE FIX (should NOT appear):"
+echo "  'ADD_MOVIMENTACAO|10.0|...|receita|1|1'"
+echo "  'Erro ao inserir movimentação: Cannot add or update a child row'"
+echo ""
+echo "AFTER FIX (should appear):"
+echo "  'ADD_MOVIMENTACAO|10.0|...|receita|[ACCOUNT_SERVER_ID]|[CATEGORY_SERVER_ID]'"
+echo "  'Resposta enviada: OK|[MOVIMENTACAO_ID]'"
+echo ""
+
+echo "STEP 6: Verify Success"
+echo "1. Check that the movimentação appears in the app's transaction list"
+echo "2. Check that no error messages are shown to the user"
+echo "3. Verify the transaction persists after app restart"
+echo ""
+
+echo "STEP 7: Test Multiple Categories"
+echo "1. Create another category:"
+echo "   - Name: 'Despesa Teste'"
+echo "   - Type: 'despesa'"
+echo "2. Create a movimentação with this new category"
+echo "3. Verify both categories work correctly"
+echo ""
+
+echo "EXPECTED RESULTS:"
+echo "✓ Categories are created and synced with server IDs"
+echo "✓ Movimentações are created successfully without foreign key errors"
+echo "✓ Server logs show successful movimentação creation"
+echo "✓ App displays transactions correctly"
+echo "✓ Data persists across app restarts"
+echo ""
+
+echo "TROUBLESHOOTING:"
+echo "If issues persist, check:"
+echo "1. Server is running and accessible"
+echo "2. Database foreign key constraints are correctly defined"
+echo "3. App has latest code changes applied"
+echo "4. Device has network connectivity"
+echo ""
+
+echo "=== END VERIFICATION SCRIPT ==="

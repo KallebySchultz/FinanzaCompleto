@@ -105,8 +105,8 @@ public class RegisterActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     Toast.makeText(RegisterActivity.this, "Conta criada com sucesso!", Toast.LENGTH_SHORT).show();
                     
-                    Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
-                    intent.putExtra("usuarioId", usuario.id);
+                    // Redirecionar para login após registro bem-sucedido
+                    Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                     startActivity(intent);
                     finish();
                 });

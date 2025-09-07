@@ -91,106 +91,26 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Busca/cria conta padrão
-        Conta contaPadrao;
+        // Buscar contas existentes (não criar automaticamente)
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
-        if (contas.size() == 0) {
-            contaPadrao = new Conta();
-            contaPadrao.nome = "Conta Padrão";
-            contaPadrao.saldoInicial = 0.0;
-            contaPadrao.usuarioId = usuarioIdAtual;
-            int id = (int) db.contaDao().inserir(contaPadrao);
-            contaPadrao.id = id;
-        } else {
+        Conta contaPadrao = null;
+        if (!contas.isEmpty()) {
             contaPadrao = contas.get(0);
+            contaPadraoId = contaPadrao.id;
+            contaSelecionada = contaPadrao;
+        } else {
+            // Sem contas disponíveis - será tratado nas validações
+            contaPadraoId = -1;
+            contaSelecionada = null;
         }
-        contaPadraoId = contaPadrao.id;
-        contaSelecionada = contaPadrao;
 
-        // Categorias padrão receita
-        String[][] categoriasReceitaPadrao = {
-                {"Receita", "#22BB33"},
-                {"Salário", "#22BB33"},
-                {"Freelancer", "#22BB33"},
-                {"Serviço autônomo", "#22BB33"},
-                {"Venda", "#22BB33"},
-                {"Recebimento de aluguel", "#22BB33"},
-                {"Reajuste de saldo", "#22BB33"}
-        };
+        // Buscar categorias existentes (não criar automaticamente)
         List<Categoria> receitasCats = db.categoriaDao().listarPorTipo("receita");
-        for (String[] catPadrao : categoriasReceitaPadrao) {
-            boolean existe = false;
-            for (Categoria cat : receitasCats) {
-                if (cat.nome.equalsIgnoreCase(catPadrao[0])) {
-                    existe = true;
-                    break;
-                }
-            }
-            if (!existe) {
-                Categoria nova = new Categoria();
-                nova.nome = catPadrao[0];
-                nova.corHex = catPadrao[1];
-                nova.tipo = "receita";
-                db.categoriaDao().inserir(nova);
-            }
-        }
-        receitasCats = db.categoriaDao().listarPorTipo("receita");
-        Categoria catReceita = null;
-        for (Categoria cat : receitasCats) {
-            if ("Receita".equalsIgnoreCase(cat.nome)) {
-                catReceita = cat;
-                break;
-            }
-        }
-        if (catReceita == null && !receitasCats.isEmpty()) {
-            catReceita = receitasCats.get(0);
-        }
+        Categoria catReceita = !receitasCats.isEmpty() ? receitasCats.get(0) : null;
         categoriaReceitaId = catReceita != null ? catReceita.id : -1;
 
-        // Categorias padrão despesa
-        String[][] categoriasDespesaPadrao = {
-                {"Despesa", "#FF2222"},
-                {"Alimentação", "#FF2222"},
-                {"Transporte", "#FF2222"},
-                {"Moradia", "#FF2222"},
-                {"Saúde", "#FF2222"},
-                {"Educação", "#FF2222"},
-                {"Lazer", "#FF2222"},
-                {"Compras", "#FF2222"},
-                {"Supermercado", "#FF2222"},
-                {"Assinaturas", "#FF2222"},
-                {"Contas", "#FF2222"},
-                {"Cartão de crédito", "#FF2222"},
-                {"Viagem", "#FF2222"}
-        };
         List<Categoria> despesaCats = db.categoriaDao().listarPorTipo("despesa");
-        for (String[] catPadrao : categoriasDespesaPadrao) {
-            boolean existe = false;
-            for (Categoria cat : despesaCats) {
-                if (cat.nome.equalsIgnoreCase(catPadrao[0])) {
-                    existe = true;
-                    break;
-                }
-            }
-            if (!existe) {
-                Categoria nova = new Categoria();
-                nova.nome = catPadrao[0];
-                nova.corHex = catPadrao[1];
-                nova.tipo = "despesa";
-                db.categoriaDao().inserir(nova);
-            }
-        }
-        despesaCats = db.categoriaDao().listarPorTipo("despesa");
-        Categoria catDespesa = null;
-        for (Categoria cat : despesaCats) {
-            if ("Despesa".equalsIgnoreCase(cat.nome)) {
-                catDespesa = cat;
-                break;
-            }
-        }
-        if (catDespesa == null && !despesaCats.isEmpty()) {
-            catDespesa = despesaCats.get(0);
-        }
+        Categoria catDespesa = !despesaCats.isEmpty() ? despesaCats.get(0) : null;
         categoriaDespesaId = catDespesa != null ? catDespesa.id : -1;
 
         final TextView tvSaldo = findViewById(R.id.tvSaldo);
@@ -314,6 +234,14 @@ public class MainActivity extends AppCompatActivity {
 
         inputConta.setOnClickListener(v -> {
             List<Conta> contasList = db.contaDao().listarPorUsuario(usuarioIdAtual);
+            if (contasList.isEmpty()) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Nenhuma conta disponível")
+                        .setMessage("É necessário criar uma conta antes de registrar movimentações. Acesse o menu de Contas para criar sua primeira conta.")
+                        .setPositiveButton("OK", null)
+                        .show();
+                return;
+            }
             String[] contasArray = new String[contasList.size()];
             for (int i = 0; i < contasList.size(); i++) {
                 contasArray[i] = contasList.get(i).nome;
@@ -347,6 +275,14 @@ public class MainActivity extends AppCompatActivity {
         inputCategoria.setOnClickListener(v -> {
             String tipo = isReceitaPanel ? "receita" : "despesa";
             List<Categoria> categoriasList = db.categoriaDao().listarPorTipo(tipo);
+            if (categoriasList.isEmpty()) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Nenhuma categoria disponível")
+                        .setMessage("É necessário criar uma categoria de " + tipo + " antes de registrar movimentações. Acesse o menu de Categorias para criar sua primeira categoria.")
+                        .setPositiveButton("OK", null)
+                        .show();
+                return;
+            }
             String[] categoriasArray = new String[categoriasList.size()];
             for (int i = 0; i < categoriasList.size(); i++) {
                 categoriasArray[i] = categoriasList.get(i).nome;

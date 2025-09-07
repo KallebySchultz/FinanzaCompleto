@@ -1,141 +1,261 @@
 package com.example.finanza;
 
-import android.app.DatePickerDialog;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.DatePicker;
-import android.widget.TextView;
-import android.widget.ImageView;
-import android.widget.ImageButton;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.Button;
-
-import com.example.finanza.R;
-import com.example.finanza.ui.AccountsActivity;
-import com.google.android.material.textfield.TextInputEditText;
+import android.widget.DatePicker;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.room.Room;
 
 import com.example.finanza.db.AppDatabase;
+import com.example.finanza.model.Categoria;
+import com.example.finanza.model.Conta;
 import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Usuario;
-import com.example.finanza.model.Conta;
-import com.example.finanza.model.Categoria;
 import com.example.finanza.network.AuthManager;
 import com.example.finanza.network.SyncService;
+import com.example.finanza.ui.AccountsActivity;
 import com.example.finanza.ui.MenuActivity;
 import com.example.finanza.ui.MovementsActivity;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.Calendar;
 import java.util.List;
 
+/**
+ * MainActivity - Tela principal da aplicação Finanza
+ * 
+ * Esta atividade representa o dashboard principal do aplicativo financeiro,
+ * onde o usuário pode visualizar o resumo de suas finanças e realizar
+ * operações básicas como adicionar receitas e despesas.
+ * 
+ * Funcionalidades principais:
+ * - Exibição do saldo total e por conta
+ * - Adição rápida de receitas e despesas
+ * - Navegação para outras seções do app
+ * - Sincronização automática com servidor desktop
+ * - Visualização de resumo financeiro
+ * 
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
+ */
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
+
+    // Estado de visibilidade do saldo
     private boolean saldoVisivel = true;
+    
+    // Componentes de banco de dados e serviços
     private AppDatabase db;
     private AuthManager authManager;
     private SyncService syncService;
+    
+    // IDs de referência do usuário e dados padrão
     private int usuarioIdAtual;
     private int contaPadraoId;
     private int categoriaReceitaId;
     private int categoriaDespesaId;
 
-    // Painel customizado
+    // Painel customizado para adição de transações
     private Conta contaSelecionada;
     private Categoria categoriaSelecionada;
     private long dataSelecionada = System.currentTimeMillis();
     private boolean isReceitaPanel = true; // true: receita, false: despesa
 
+    /**
+     * Método onCreate - Inicialização da atividade principal
+     * 
+     * Responsável por:
+     * - Configurar a interface visual (status bar, navigation bar)
+     * - Inicializar banco de dados e serviços de autenticação/sincronização
+     * - Validar autenticação do usuário
+     * - Carregar dados padrão (contas e categorias)
+     * - Configurar listeners de eventos da interface
+     * 
+     * @param savedInstanceState Estado salvo da atividade (se houver)
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Configuração visual da interface
+        configurarInterfaceVisual();
+        
+        // Inicialização de componentes essenciais
+        inicializarComponentes();
+        
+        // Validação e configuração do usuário
+        if (!validarUsuarioAutenticado()) {
+            return; // Sai do método se usuário não válido
+        }
+        
+        // Carregamento de dados padrão
+        carregarDadosPadrao();
+        
+        // Configuração da interface principal
+        configurarInterfacePrincipal();
+        
+        // Configuração de listeners e eventos
+        configurarEventListeners();
+        
+        // Configuração da navegação
+        configurarNavegacao();
+    }
+
+    /**
+     * Configura cores da status bar e navigation bar
+     */
+    private void configurarInterfaceVisual() {
         getWindow().setStatusBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().setNavigationBarColor(getResources().getColor(R.color.primaryDarkBlue));
         getWindow().getDecorView().setSystemUiVisibility(0);
+    }
 
+    /**
+     * Inicializa banco de dados e serviços principais
+     */
+    private void inicializarComponentes() {
         db = AppDatabase.getDatabase(getApplicationContext());
-
-        // Inicializar serviços
         authManager = AuthManager.getInstance(this);
         syncService = SyncService.getInstance(this);
+        Log.d(TAG, "Componentes inicializados");
+    }
 
-        // Obter usuário autenticado
+    /**
+     * Valida se há um usuário autenticado válido
+     * 
+     * @return true se usuário válido, false caso contrário
+     */
+    private boolean validarUsuarioAutenticado() {
+        // Obter usuário autenticado da intent ou AuthManager
         usuarioIdAtual = getIntent().getIntExtra("usuarioId", -1);
         if (usuarioIdAtual == -1) {
             usuarioIdAtual = authManager.getLoggedUserId();
         }
         
         if (usuarioIdAtual == -1) {
-            // Usuário não autenticado, voltar para login
-            Intent loginIntent = new Intent(this, com.example.finanza.ui.LoginActivity.class);
-            startActivity(loginIntent);
-            finish();
-            return;
+            Log.w(TAG, "Usuário não autenticado, redirecionando para login");
+            redirecionarParaLogin();
+            return false;
         }
         
-        // Validar se o usuário realmente existe no banco de dados
+        // Validar se o usuário existe no banco de dados
         Usuario usuarioAtual = db.usuarioDao().buscarPorId(usuarioIdAtual);
         if (usuarioAtual == null) {
-            // Usuário não existe no banco, limpar sessão e voltar para login
+            Log.w(TAG, "Usuário não encontrado no banco, limpando sessão");
             authManager.logout();
-            Intent loginIntent = new Intent(this, com.example.finanza.ui.LoginActivity.class);
-            startActivity(loginIntent);
-            finish();
-            return;
+            redirecionarParaLogin();
+            return false;
         }
+        
+        Log.d(TAG, "Usuário validado: " + usuarioAtual.email);
+        return true;
+    }
 
-        // Buscar contas existentes (não criar automaticamente)
+    /**
+     * Redireciona para a tela de login
+     */
+    private void redirecionarParaLogin() {
+        Intent loginIntent = new Intent(this, com.example.finanza.ui.LoginActivity.class);
+        startActivity(loginIntent);
+        finish();
+    }
+
+    /**
+     * Carrega dados padrão do usuário (contas e categorias)
+     */
+    private void carregarDadosPadrao() {
+        // Buscar contas existentes
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
-        Conta contaPadrao = null;
         if (!contas.isEmpty()) {
-            contaPadrao = contas.get(0);
+            Conta contaPadrao = contas.get(0);
             contaPadraoId = contaPadrao.id;
             contaSelecionada = contaPadrao;
+            Log.d(TAG, "Conta padrão carregada: " + contaPadrao.nome);
         } else {
-            // Sem contas disponíveis - será tratado nas validações
             contaPadraoId = -1;
             contaSelecionada = null;
+            Log.w(TAG, "Nenhuma conta encontrada para o usuário");
         }
 
-        // Buscar categorias existentes (não criar automaticamente)
+        // Buscar categorias de receita
         List<Categoria> receitasCats = db.categoriaDao().listarPorTipo("receita");
         Categoria catReceita = !receitasCats.isEmpty() ? receitasCats.get(0) : null;
         categoriaReceitaId = catReceita != null ? catReceita.id : -1;
 
+        // Buscar categorias de despesa
         List<Categoria> despesaCats = db.categoriaDao().listarPorTipo("despesa");
         Categoria catDespesa = !despesaCats.isEmpty() ? despesaCats.get(0) : null;
         categoriaDespesaId = catDespesa != null ? catDespesa.id : -1;
+        
+        Log.d(TAG, "Dados padrão carregados - Receita ID: " + categoriaReceitaId + ", Despesa ID: " + categoriaDespesaId);
+    }
 
+    /**
+     * Configura elementos principais da interface
+     */
+    private void configurarInterfacePrincipal() {
+        final TextView tvSaldo = findViewById(R.id.tvSaldo);
+        final TextView tvReceita = findViewById(R.id.tvReceita);
+        final TextView tvDespesa = findViewById(R.id.tvDespesa);
+
+        // Atualizar valores iniciais
+        atualizarValores(tvSaldo, tvReceita, tvDespesa);
+        updateHomeContent();
+    }
+
+    /**
+     * Configura listeners de eventos da interface
+     */
+    private void configurarEventListeners() {
         final TextView tvSaldo = findViewById(R.id.tvSaldo);
         final TextView tvReceita = findViewById(R.id.tvReceita);
         final TextView tvDespesa = findViewById(R.id.tvDespesa);
         final ImageView imgEye = findViewById(R.id.imgEye);
 
-        atualizarValores(tvSaldo, tvReceita, tvDespesa);
-        updateHomeContent();
-
+        // Listener para toggle de visibilidade do saldo
         imgEye.setOnClickListener(v -> {
             saldoVisivel = !saldoVisivel;
             imgEye.setImageResource(saldoVisivel ? R.drawable.ic_eye_open : R.drawable.ic_eye_closed);
             atualizarValores(tvSaldo, tvReceita, tvDespesa);
             updateHomeContent();
         });
+        
+        // Configurar botão de adicionar transação
+        configurarBotaoAdicionar();
+        
+        // Inicializar sincronização em background
+        inicializarSincronizacao();
+    }
 
+    /**
+     * Configura a navegação principal do aplicativo
+     */
+    private void configurarNavegacao() {
         final ImageView navHome = findViewById(R.id.nav_home);
         final ImageView navMenu = findViewById(R.id.nav_menu);
+        final ImageView navAccounts = findViewById(R.id.nav_accounts);
+        final ImageView navMovements = findViewById(R.id.nav_movements);
 
+        // Configurar navegação Home
         navHome.setOnClickListener(v -> {
             navHome.setColorFilter(getResources().getColor(R.color.accentBlue));
             navMenu.setColorFilter(getResources().getColor(R.color.white));
         });
 
+        // Configurar navegação Menu
         navMenu.setOnClickListener(v -> {
             navHome.setColorFilter(getResources().getColor(R.color.white));
             navMenu.setColorFilter(getResources().getColor(R.color.accentBlue));
@@ -146,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
             finish();
         });
 
-        final ImageView navAccounts = findViewById(R.id.nav_accounts);
+        // Configurar navegação Contas
         if (navAccounts != null) {
             navAccounts.setOnClickListener(v -> {
                 navHome.setColorFilter(getResources().getColor(R.color.white));
@@ -160,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        final ImageView navMovements = findViewById(R.id.nav_movements);
+        // Configurar navegação Movimentações
         if (navMovements != null) {
             navMovements.setOnClickListener(v -> {
                 navHome.setColorFilter(getResources().getColor(R.color.white));
@@ -173,12 +293,18 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             });
         }
+    }
 
+    /**
+     * Configura o botão de adicionar transações e o painel expansível
+     */
+    private void configurarBotaoAdicionar() {
         final ImageButton navAdd = findViewById(R.id.nav_add);
         final FrameLayout addPanel = findViewById(R.id.add_panel);
         final LinearLayout btnReceita = findViewById(R.id.btnReceita);
         final LinearLayout btnDespesa = findViewById(R.id.btnDespesa);
 
+        // Configurar botão principal de adicionar
         navAdd.setOnClickListener(v -> {
             if (addPanel.getVisibility() == View.VISIBLE) {
                 addPanel.setVisibility(View.GONE);
@@ -189,28 +315,32 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Fechar painel ao clicar fora
         addPanel.setOnClickListener(v -> {
             addPanel.setVisibility(View.GONE);
             navAdd.setImageResource(R.drawable.ic_add);
         });
 
+        // Configurar botão de receita
         btnReceita.setOnClickListener(v -> {
             addPanel.setVisibility(View.GONE);
             navAdd.setImageResource(R.drawable.ic_add);
             showAddTransactionDialog(true);
         });
 
+        // Configurar botão de despesa
         btnDespesa.setOnClickListener(v -> {
             addPanel.setVisibility(View.GONE);
             navAdd.setImageResource(R.drawable.ic_add);
             showAddTransactionDialog(false);
         });
-        
-        // Inicializar sincronização em background
-        inicializarSincronizacao();
     }
 
-    // Mostra o modal de adicionar transação
+    /**
+     * Exibe o diálogo para adicionar nova transação
+     * 
+     * @param isReceitaPanel true para receita, false para despesa
+     */
     private void showAddTransactionDialog(boolean isReceitaPanel) {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_add_transaction, null);
         AlertDialog dialog = new AlertDialog.Builder(this)
@@ -373,11 +503,22 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    /**
+     * Atualiza os valores exibidos no dashboard principal
+     * 
+     * Calcula e exibe o saldo total, receitas e despesas do usuário,
+     * considerando o estado de visibilidade (oculto/visível).
+     * 
+     * @param tvSaldo TextView que exibe o saldo total
+     * @param tvReceita TextView que exibe o total de receitas
+     * @param tvDespesa TextView que exibe o total de despesas
+     */
     private void atualizarValores(TextView tvSaldo, TextView tvReceita, TextView tvDespesa) {
         double saldoTotal = 0.0;
         double receitasTotal = 0.0;
         double despesasTotal = 0.0;
 
+        // Calcular totais considerando todas as contas do usuário
         List<Conta> contas = db.contaDao().listarPorUsuario(usuarioIdAtual);
 
         for (Conta conta : contas) {
@@ -387,11 +528,13 @@ public class MainActivity extends AppCompatActivity {
             double totalReceitas = receitas != null ? receitas : 0.0;
             double totalDespesas = despesas != null ? despesas : 0.0;
 
+            // Saldo = saldo inicial + receitas - despesas
             saldoTotal += conta.saldoInicial + totalReceitas - totalDespesas;
             receitasTotal += totalReceitas;
             despesasTotal += totalDespesas;
         }
 
+        // Exibir valores ou ocultar conforme configuração de visibilidade
         if (saldoVisivel) {
             tvSaldo.setText(formatarMoeda(saldoTotal));
             tvReceita.setText(formatarMoeda(receitasTotal));
@@ -403,30 +546,65 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Consulta o total de receitas do usuário
+     * 
+     * @return Valor total das receitas
+     */
     private double consultarReceitas() {
         Double valor = db.lancamentoDao().somaPorTipo("receita", usuarioIdAtual);
         return valor != null ? valor : 0.0;
     }
 
+    /**
+     * Consulta o total de despesas do usuário
+     * 
+     * @return Valor total das despesas
+     */
     private double consultarDespesas() {
         Double valor = db.lancamentoDao().somaPorTipo("despesa", usuarioIdAtual);
         return valor != null ? valor : 0.0;
     }
 
+    /**
+     * Calcula o saldo atual do usuário
+     * 
+     * @return Saldo total (receitas - despesas)
+     */
     private double consultarSaldo() {
         return consultarReceitas() - consultarDespesas();
     }
 
+    /**
+     * Formata valor monetário para exibição
+     * 
+     * @param valor Valor a ser formatado
+     * @return String formatada no padrão brasileiro (R$ 0,00)
+     */
     private String formatarMoeda(double valor) {
         return String.format("R$ %.2f", valor);
     }
 
+    /**
+     * Atualiza todo o conteúdo da tela principal
+     * 
+     * Coordena a atualização de todos os resumos:
+     * - Resumo de contas
+     * - Resumo de categorias
+     * - Transações recentes
+     */
     private void updateHomeContent() {
         updateAccountsSummary();
         updateCategoriesSummary();
         updateRecentTransactions();
     }
 
+    /**
+     * Atualiza o resumo das contas do usuário no dashboard
+     * 
+     * Cria dinamicamente os cartões de contas com seus respectivos saldos
+     * e configura os listeners para navegação.
+     */
     private void updateAccountsSummary() {
         LinearLayout container = findViewById(R.id.accounts_summary_container);
         container.removeAllViews();
@@ -537,27 +715,117 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Classe auxiliar para gerenciar gastos por categoria
+     * 
+     * Utilizada internamente para organizar e ordenar categorias
+     * por valor de gasto para exibição no dashboard.
+     */
     private static class CategoryExpense {
         Categoria categoria;
         double totalGasto;
+        
         CategoryExpense(Categoria categoria, double totalGasto) {
             this.categoria = categoria;
             this.totalGasto = totalGasto;
         }
     }
 
+    /**
+     * Atualiza o resumo de categorias de despesa no dashboard
+     * 
+     * Exibe as 5 categorias com maiores gastos, ordenadas por valor.
+     * Mostra apenas categorias que possuem movimentações registradas.
+     */
+    private void updateCategoriesSummary() {
+        LinearLayout container = findViewById(R.id.categories_summary_container);
+        container.removeAllViews();
+
+        // Buscar todas as categorias de despesa
+        List<Categoria> categoriasDespesa = db.categoriaDao().listarPorTipo("despesa");
+
+        // Calcular gastos por categoria
+        java.util.List<CategoryExpense> categoryExpenses = new java.util.ArrayList<>();
+        for (Categoria categoria : categoriasDespesa) {
+            Double totalGasto = db.lancamentoDao().somaPorCategoria(categoria.id, usuarioIdAtual);
+            if (totalGasto != null && totalGasto > 0) {
+                categoryExpenses.add(new CategoryExpense(categoria, totalGasto));
+            }
+        }
+        
+        // Ordenar por valor (maior para menor)
+        java.util.Collections.sort(categoryExpenses, (a, b) -> Double.compare(b.totalGasto, a.totalGasto));
+
+        // Exibir apenas as 5 primeiras categorias
+        int maxCategorias = Math.min(5, categoryExpenses.size());
+        for (int i = 0; i < maxCategorias; i++) {
+            CategoryExpense categoryExpense = categoryExpenses.get(i);
+
+            // Criar item visual para a categoria
+            LinearLayout itemCategoria = new LinearLayout(this);
+            itemCategoria.setOrientation(LinearLayout.HORIZONTAL);
+            itemCategoria.setPadding(16, 12, 16, 12);
+
+            LinearLayout infoContainer = new LinearLayout(this);
+            infoContainer.setOrientation(LinearLayout.VERTICAL);
+            infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+
+            TextView nomeCategoria = new TextView(this);
+            nomeCategoria.setText(categoryExpense.categoria.nome);
+            nomeCategoria.setTextColor(getResources().getColor(R.color.white));
+            nomeCategoria.setTextSize(16);
+            nomeCategoria.setTypeface(null, android.graphics.Typeface.BOLD);
+
+            TextView valorCategoria = new TextView(this);
+            if (saldoVisivel) {
+                valorCategoria.setText(formatarMoeda(categoryExpense.totalGasto));
+                valorCategoria.setTextColor(getResources().getColor(R.color.negativeRed));
+            } else {
+                valorCategoria.setText("****");
+                valorCategoria.setTextColor(getResources().getColor(R.color.white));
+            }
+            valorCategoria.setTextSize(14);
+
+            infoContainer.addView(nomeCategoria);
+            infoContainer.addView(valorCategoria);
+
+            itemCategoria.addView(infoContainer);
+
+            container.addView(itemCategoria);
+        }
+
+        // Exibir mensagem se não há dados
+        if (categoryExpenses.isEmpty()) {
+            TextView noData = new TextView(this);
+            noData.setText("Nenhuma despesa registrada");
+            noData.setTextColor(getResources().getColor(R.color.white));
+            noData.setTextSize(14);
+            noData.setGravity(android.view.Gravity.CENTER);
+            container.addView(noData);
+        }
+    }
+
+    /**
+     * Atualiza a lista de transações recentes no dashboard
+     * 
+     * Exibe as 5 transações mais recentes do usuário com ícones
+     * indicativos e cores apropriadas para receitas/despesas.
+     */
     private void updateRecentTransactions() {
         LinearLayout container = findViewById(R.id.recent_transactions_container);
         container.removeAllViews();
 
+        // Buscar as 5 transações mais recentes
         List<Lancamento> transacoes = db.lancamentoDao().listarUltimasPorUsuario(usuarioIdAtual, 5);
         for (Lancamento transacao : transacoes) {
+            // Criar item visual para a transação
             LinearLayout itemTransacao = new LinearLayout(this);
             itemTransacao.setOrientation(LinearLayout.HORIZONTAL);
             itemTransacao.setPadding(16, 12, 16, 12);
             itemTransacao.setClickable(true);
             itemTransacao.setFocusable(true);
 
+            // Configurar navegação ao clicar
             itemTransacao.setOnClickListener(v -> {
                 Intent intent = new Intent(MainActivity.this, MovementsActivity.class);
                 intent.putExtra("usuarioId", usuarioIdAtual);
@@ -565,6 +833,7 @@ public class MainActivity extends AppCompatActivity {
                 overridePendingTransition(0, 0);
             });
 
+            // Ícone da transação (seta para cima/baixo)
             ImageView icon = new ImageView(this);
             icon.setImageResource(transacao.tipo.equals("receita") ? R.drawable.ic_arrow_up : R.drawable.ic_arrow_down);
             icon.setLayoutParams(new LinearLayout.LayoutParams(48, 48));
@@ -572,6 +841,7 @@ public class MainActivity extends AppCompatActivity {
                     getResources().getColor(R.color.positiveGreen) :
                     getResources().getColor(R.color.negativeRed));
 
+            // Container com informações da transação
             LinearLayout infoContainer = new LinearLayout(this);
             infoContainer.setOrientation(LinearLayout.VERTICAL);
             infoContainer.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
@@ -605,6 +875,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Calcula o saldo atual de uma conta específica
+     * 
+     * @param conta A conta para calcular o saldo
+     * @return Saldo atual (saldo inicial + receitas - despesas)
+     */
     private double consultarSaldoConta(Conta conta) {
         Double receitas = db.lancamentoDao().somaPorContaETipo(conta.id, "receita");
         Double despesas = db.lancamentoDao().somaPorContaETipo(conta.id, "despesa");
@@ -616,57 +892,66 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
-     * Inicializa sincronização em background
+     * Inicializa sincronização em background com o servidor desktop
+     * 
+     * Executa sincronização silenciosa dos dados do usuário.
+     * Em caso de falha, os dados locais permanecem disponíveis.
      */
     private void inicializarSincronizacao() {
-        // Tenta sincronizar dados se conectado
+        // Tenta sincronizar dados se conectado ao servidor
         syncService.sincronizarTudo(usuarioIdAtual, new SyncService.SyncCallback() {
             @Override
             public void onSyncStarted() {
-                // Pode mostrar indicador de sync se necessário
-                Log.d("MainActivity", "Sincronização iniciada...");
+                Log.d(TAG, "Sincronização iniciada...");
             }
 
             @Override
             public void onSyncCompleted(boolean success, String message) {
-                Log.d("MainActivity", "Sincronização concluída: " + message);
+                Log.d(TAG, "Sincronização concluída: " + message);
                 
                 // Atualiza a UI na thread principal após sincronização
                 runOnUiThread(() -> {
                     atualizarValores(findViewById(R.id.tvSaldo), findViewById(R.id.tvReceita), findViewById(R.id.tvDespesa));
                     updateHomeContent();
                     
-                    // Se a sincronização falhou, informar ao usuário de forma discreta
+                    // Log de falha sem incomodar o usuário
                     if (!success && message.contains("Erro:")) {
-                        Log.w("MainActivity", "Sincronização falhou: " + message);
-                        // Não mostrar toast para não incomodar o usuário, apenas logar
-                        // Os dados locais ainda estarão disponíveis
+                        Log.w(TAG, "Sincronização falhou: " + message);
+                        // Dados locais permanecem disponíveis
                     }
                 });
             }
 
             @Override
             public void onSyncProgress(String operation) {
-                Log.d("MainActivity", "Sincronização: " + operation);
+                Log.d(TAG, "Sincronização: " + operation);
             }
         });
     }
     
+    /**
+     * Chamado quando a atividade é retomada
+     * 
+     * Executa nova sincronização para manter dados atualizados.
+     */
     @Override
     protected void onResume() {
         super.onResume();
-        // Tenta sincronizar sempre que volta para a tela principal
-        // Não precisa verificar isOnline() porque a sincronização já trata isso internamente
+        // Sincroniza sempre que volta para a tela principal
         if (syncService != null) {
             inicializarSincronizacao();
         }
     }
     
+    /**
+     * Chamado quando a atividade é destruída
+     * 
+     * O SyncService é mantido como singleton para persistir entre atividades.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
         // SyncService é singleton e deve persistir entre Activities
         // Não fazemos shutdown aqui para evitar RejectedExecutionException
-        // quando a app é reaberta
     }
 }

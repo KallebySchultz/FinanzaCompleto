@@ -10,4 +10,38 @@ public class Categoria {
     public String nome;
     public String corHex; // Cor para ícone na UI
     public String tipo; // "receita" ou "despesa"
+    
+    // Sync metadata for bidirectional synchronization
+    public String uuid; // Universal unique identifier for cross-platform sync
+    public long lastModified; // Timestamp of last modification for conflict resolution
+    public int syncStatus; // 0=local_only, 1=synced, 2=needs_sync, 3=conflict
+    public long lastSyncTime; // Timestamp of last successful sync
+    public String serverHash; // Hash of server data to detect changes
+    
+    public Categoria() {
+        // Generate UUID for new categories
+        this.uuid = java.util.UUID.randomUUID().toString();
+        this.lastModified = System.currentTimeMillis();
+        this.syncStatus = 2; // needs_sync by default
+        this.lastSyncTime = 0;
+        this.serverHash = "";
+    }
+    
+    public void markAsModified() {
+        this.lastModified = System.currentTimeMillis();
+        this.syncStatus = 2; // needs_sync
+    }
+    
+    public void markAsSynced() {
+        this.syncStatus = 1; // synced
+        this.lastSyncTime = System.currentTimeMillis();
+    }
+    
+    /**
+     * Generate hash for duplicate detection and conflict resolution
+     */
+    public String generateDataHash() {
+        String data = nome + "|" + tipo + "|" + (corHex != null ? corHex : "");
+        return String.valueOf(data.hashCode());
+    }
 }

@@ -30,4 +30,47 @@ public class Lancamento {
     public int categoriaId;
     public int usuarioId;
     public String tipo; // "receita" ou "despesa"
+    
+    // Sync metadata for bidirectional synchronization
+    public String uuid; // Universal unique identifier for cross-platform sync
+    public long lastModified; // Timestamp of last modification for conflict resolution
+    public int syncStatus; // 0=local_only, 1=synced, 2=needs_sync, 3=conflict
+    public long lastSyncTime; // Timestamp of last successful sync
+    public String serverHash; // Hash of server data to detect changes
+    public boolean isDeleted; // Soft delete flag for sync
+    
+    public Lancamento() {
+        // Generate UUID for new transactions
+        this.uuid = java.util.UUID.randomUUID().toString();
+        this.lastModified = System.currentTimeMillis();
+        this.syncStatus = 2; // needs_sync by default
+        this.lastSyncTime = 0;
+        this.serverHash = "";
+        this.isDeleted = false;
+    }
+    
+    public void markAsModified() {
+        this.lastModified = System.currentTimeMillis();
+        this.syncStatus = 2; // needs_sync
+    }
+    
+    public void markAsSynced() {
+        this.syncStatus = 1; // synced
+        this.lastSyncTime = System.currentTimeMillis();
+    }
+    
+    public void markAsDeleted() {
+        this.isDeleted = true;
+        this.markAsModified();
+    }
+    
+    /**
+     * Generate hash for duplicate detection and conflict resolution
+     */
+    public String generateDataHash() {
+        String data = valor + "|" + data + "|" + (descricao != null ? descricao : "") + 
+                     "|" + contaId + "|" + categoriaId + "|" + usuarioId + "|" + 
+                     (tipo != null ? tipo : "") + "|" + isDeleted;
+        return String.valueOf(data.hashCode());
+    }
 }

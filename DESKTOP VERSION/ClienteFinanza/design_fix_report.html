@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanza Desktop - Correção de Bug de Design</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1B2A57;
+            text-align: center;
+            border-bottom: 3px solid #4A7CF5;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #1B2A57;
+            margin-top: 30px;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before, .after {
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+        .before {
+            border-color: #E53935;
+            background-color: #ffebee;
+        }
+        .after {
+            border-color: #21C87A;
+            background-color: #e8f5e8;
+        }
+        .color-sample {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            margin-right: 10px;
+            vertical-align: middle;
+            border: 1px solid #ccc;
+        }
+        .mockup {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+        .login-mockup {
+            text-align: center;
+            padding: 30px;
+        }
+        .login-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .login-button {
+            display: inline-block;
+            padding: 8px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+        .dashboard-card {
+            display: inline-block;
+            width: 150px;
+            height: 100px;
+            margin: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid;
+            text-align: center;
+            vertical-align: top;
+        }
+        .improvements {
+            background-color: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .file-changes {
+            background-color: #f0f8ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .checkmark {
+            color: #21C87A;
+            font-weight: bold;
+        }
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        li::before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Finanza Desktop - Correção do Bug de Design</h1>
+        
+        <h2>📋 Problema Identificado</h2>
+        <p><strong>Issue:</strong> "corrija o bug no design no cliente desktop"</p>
+        <p>A interface desktop não seguia o padrão visual estabelecido no app Android, utilizando cores básicas do Java (Color.BLUE, Color.GREEN, etc.) ao invés das cores oficiais do brand Finanza.</p>
+        
+        <h2>🎨 Comparação de Cores</h2>
+        <div class="comparison">
+            <div class="before">
+                <h3>❌ Antes (Cores Java Básicas)</h3>
+                <p><span class="color-sample" style="background-color: #0066CC;"></span> Título: #0066CC</p>
+                <p><span class="color-sample" style="background-color: #0000FF;"></span> Links: #0000FF (Azul Puro)</p>
+                <p><span class="color-sample" style="background-color: #00FF00;"></span> Receitas: #00FF00 (Verde Puro)</p>
+                <p><span class="color-sample" style="background-color: #FF0000;"></span> Despesas: #FF0000 (Vermelho Puro)</p>
+                <p><span class="color-sample" style="background-color: #FFC800;"></span> Transações: #FFC800 (Laranja)</p>
+            </div>
+            <div class="after">
+                <h3>✅ Depois (Brand Finanza)</h3>
+                <p><span class="color-sample" style="background-color: #1B2A57;"></span> Primary: #1B2A57 (Azul Escuro)</p>
+                <p><span class="color-sample" style="background-color: #4A7CF5;"></span> Accent: #4A7CF5 (Azul Claro)</p>
+                <p><span class="color-sample" style="background-color: #21C87A;"></span> Positivo: #21C87A (Verde Profissional)</p>
+                <p><span class="color-sample" style="background-color: #E53935;"></span> Negativo: #E53935 (Vermelho Profissional)</p>
+                <p><span class="color-sample" style="background-color: #F5F5F5;"></span> Background: #F5F5F5 (Cinza Claro)</p>
+            </div>
+        </div>
+        
+        <h2>🖼️ Mock-ups das Telas</h2>
+        
+        <h3>Tela de Login</h3>
+        <div class="comparison">
+            <div class="before">
+                <div class="mockup login-mockup">
+                    <div class="login-title" style="color: #0066CC;">Finanza Desktop</div>
+                    <div>Email: <input type="text" style="margin: 5px;"></div>
+                    <div>Senha: <input type="password" style="margin: 5px;"></div>
+                    <a href="#" class="login-button" style="background-color: #888888;">Entrar</a>
+                    <p style="color: #0000FF; text-decoration: underline; font-size: 12px;">Esqueceu a senha?</p>
+                </div>
+            </div>
+            <div class="after">
+                <div class="mockup login-mockup">
+                    <div class="login-title" style="color: #1B2A57;">Finanza Desktop</div>
+                    <div>Email: <input type="text" style="margin: 5px;"></div>
+                    <div>Senha: <input type="password" style="margin: 5px;"></div>
+                    <a href="#" class="login-button" style="background-color: #4A7CF5;">Entrar</a>
+                    <p style="color: #4A7CF5; text-decoration: underline; font-size: 12px;">Esqueceu a senha?</p>
+                </div>
+            </div>
+        </div>
+        
+        <h3>Dashboard Cards</h3>
+        <div class="comparison">
+            <div class="before">
+                <div class="mockup">
+                    <div class="dashboard-card" style="border-color: #0000FF;">
+                        <strong style="color: #0000FF;">Saldo Total</strong><br>
+                        <span style="font-size: 20px;">R$ 1.000,00</span>
+                    </div>
+                    <div class="dashboard-card" style="border-color: #00FF00;">
+                        <strong style="color: #00FF00;">Receitas</strong><br>
+                        <span style="font-size: 20px;">R$ 2.500,00</span>
+                    </div>
+                    <div class="dashboard-card" style="border-color: #FF0000;">
+                        <strong style="color: #FF0000;">Despesas</strong><br>
+                        <span style="font-size: 20px;">R$ 1.500,00</span>
+                    </div>
+                    <div class="dashboard-card" style="border-color: #FFC800;">
+                        <strong style="color: #FFC800;">Transações</strong><br>
+                        <span style="font-size: 20px;">15</span>
+                    </div>
+                </div>
+            </div>
+            <div class="after">
+                <div class="mockup">
+                    <div class="dashboard-card" style="border-color: #1B2A57;">
+                        <strong style="color: #1B2A57;">Saldo Total</strong><br>
+                        <span style="font-size: 20px; color: #21C87A;">R$ 1.000,00</span>
+                    </div>
+                    <div class="dashboard-card" style="border-color: #21C87A;">
+                        <strong style="color: #21C87A;">Receitas</strong><br>
+                        <span style="font-size: 20px;">R$ 2.500,00</span>
+                    </div>
+                    <div class="dashboard-card" style="border-color: #E53935;">
+                        <strong style="color: #E53935;">Despesas</strong><br>
+                        <span style="font-size: 20px;">R$ 1.500,00</span>
+                    </div>
+                    <div class="dashboard-card" style="border-color: #4A7CF5;">
+                        <strong style="color: #4A7CF5;">Transações</strong><br>
+                        <span style="font-size: 20px;">15</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h2>🛠️ Implementações Realizadas</h2>
+        <div class="improvements">
+            <ul>
+                <li>Criada classe <code>util/ColorScheme.java</code> com paleta oficial do brand</li>
+                <li>LoginView atualizada com cores profissionais (#1B2A57, #4A7CF5)</li>
+                <li>DashboardView com esquema de cores consistente</li>
+                <li>Look and Feel nativo habilitado para melhor aparência</li>
+                <li>Cores responsivas baseadas em valores financeiros (saldo +/-)</li>
+                <li>Status bars e backgrounds com cores adequadas</li>
+                <li>Botões estilizados sem bordas e com cores do brand</li>
+            </ul>
+        </div>
+        
+        <h2>📁 Arquivos Modificados</h2>
+        <div class="file-changes">
+            <p><strong>Criados:</strong></p>
+            <ul>
+                <li><code>util/ColorScheme.java</code> - Classe com paleta de cores oficial</li>
+            </ul>
+            <p><strong>Modificados:</strong></p>
+            <ul>
+                <li><code>MainCliente.java</code> - Look and Feel nativo habilitado</li>
+                <li><code>view/LoginView.java</code> - Cores do brand aplicadas</li>
+                <li><code>view/DashboardView.java</code> - Cards com cores consistentes</li>
+                <li><code>view/ContasView.java</code> - Import do ColorScheme adicionado</li>
+            </ul>
+        </div>
+        
+        <h2>✨ Resultado Final</h2>
+        <p>A interface desktop agora <strong>segue exatamente o padrão visual do app Android</strong>, conforme especificado na documentação:</p>
+        <blockquote style="background-color: #f0f8ff; padding: 15px; border-left: 4px solid #4A7CF5; margin: 20px 0;">
+            "A interface desktop deve seguir o padrão visual e de navegação do app Android, promovendo transição fácil para usuários já acostumados com o mobile."
+        </blockquote>
+        
+        <p><span class="checkmark">✅ Bug de design corrigido com sucesso!</span></p>
+        <p>A aplicação agora apresenta um design coeso, profissional e alinhado com a identidade visual estabelecida no aplicativo móvel.</p>
+    </div>
+</body>
+</html>

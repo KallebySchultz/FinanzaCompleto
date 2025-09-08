@@ -2,6 +2,7 @@ package view;
 
 import controller.FinanceController;
 import model.Usuario;
+import util.ColorScheme;
 
 import javax.swing.*;
 import java.awt.*;

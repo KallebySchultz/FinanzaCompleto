@@ -2,6 +2,7 @@ package view;
 
 import controller.AuthController;
 import controller.AuthController.LoginResult;
+import util.ColorScheme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -47,7 +48,7 @@ public class LoginView extends JFrame {
         
         // Link para recuperar senha
         recuperarSenhaLabel = new JLabel("<html><u>Esqueceu a senha?</u></html>");
-        recuperarSenhaLabel.setForeground(Color.BLUE);
+        recuperarSenhaLabel.setForeground(ColorScheme.ACCENT_BLUE);
         recuperarSenhaLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
     
@@ -58,11 +59,12 @@ public class LoginView extends JFrame {
         JPanel mainPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setBackground(ColorScheme.BACKGROUND);
         
         // Título
         JLabel titleLabel = new JLabel("Finanza Desktop", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        titleLabel.setForeground(new Color(0, 102, 204));
+        titleLabel.setForeground(ColorScheme.PRIMARY_DARK_BLUE);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         gbc.insets = new Insets(0, 0, 30, 0);
         mainPanel.add(titleLabel, gbc);
@@ -94,8 +96,19 @@ public class LoginView extends JFrame {
         
         // Botões
         JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.setBackground(ColorScheme.BACKGROUND);
+        
         loginButton.setPreferredSize(new Dimension(100, 30));
+        loginButton.setBackground(ColorScheme.ACCENT_BLUE);
+        loginButton.setForeground(ColorScheme.WHITE);
+        loginButton.setFocusPainted(false);
+        loginButton.setBorderPainted(false);
+        
         registerButton.setPreferredSize(new Dimension(100, 30));
+        registerButton.setBackground(ColorScheme.POSITIVE_GREEN);
+        registerButton.setForeground(ColorScheme.WHITE);
+        registerButton.setFocusPainted(false);
+        registerButton.setBorderPainted(false);
         registerButton.setVisible(false);
         
         buttonPanel.add(loginButton);
@@ -118,7 +131,9 @@ public class LoginView extends JFrame {
         
         // Status bar
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        statusPanel.setBackground(ColorScheme.GRAY);
         JLabel statusLabel = new JLabel("Pronto para conectar");
+        statusLabel.setForeground(ColorScheme.TEXT_SECONDARY);
         statusPanel.add(statusLabel);
         add(statusPanel, BorderLayout.SOUTH);
     }

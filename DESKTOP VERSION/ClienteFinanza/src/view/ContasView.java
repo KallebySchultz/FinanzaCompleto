@@ -3,6 +3,7 @@ package view;
 import controller.FinanceController;
 import model.Conta;
 import model.Usuario;
+import util.ColorScheme;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;

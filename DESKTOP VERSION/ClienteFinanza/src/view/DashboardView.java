@@ -3,6 +3,7 @@ package view;
 import controller.AuthController;
 import controller.FinanceController;
 import model.Usuario;
+import util.ColorScheme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -88,14 +89,18 @@ public class DashboardView extends JFrame {
         // Painel principal
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.setBackground(ColorScheme.BACKGROUND);
         
         // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(ColorScheme.BACKGROUND);
         JLabel welcomeLabel = new JLabel("Bem-vindo, " + usuario.getNome() + "!");
         welcomeLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        welcomeLabel.setForeground(ColorScheme.PRIMARY_DARK_BLUE);
         headerPanel.add(welcomeLabel, BorderLayout.WEST);
         
         JLabel dateLabel = new JLabel(java.time.LocalDate.now().toString());
+        dateLabel.setForeground(ColorScheme.TEXT_SECONDARY);
         headerPanel.add(dateLabel, BorderLayout.EAST);
         headerPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         
@@ -109,7 +114,9 @@ public class DashboardView extends JFrame {
         
         // Status bar
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        statusPanel.setBackground(ColorScheme.GRAY);
         JLabel statusLabel = new JLabel("Conectado ao servidor | Usuário: " + usuario.getEmail());
+        statusLabel.setForeground(ColorScheme.TEXT_SECONDARY);
         statusPanel.add(statusLabel);
         add(statusPanel, BorderLayout.SOUTH);
         
@@ -130,21 +137,22 @@ public class DashboardView extends JFrame {
     
     private JPanel createResumoPanel() {
         JPanel panel = new JPanel(new GridLayout(2, 2, 20, 20));
+        panel.setBackground(ColorScheme.BACKGROUND);
         
         // Card Saldo Total
-        JPanel saldoCard = createCard("Saldo Total", "R$ 0,00", Color.BLUE);
+        JPanel saldoCard = createCard("Saldo Total", "R$ 0,00", ColorScheme.PRIMARY_DARK_BLUE);
         saldoLabel = (JLabel) saldoCard.getComponent(3); // Get the value label
         
         // Card Receitas do Mês
-        JPanel receitasCard = createCard("Receitas do Mês", "R$ 0,00", Color.GREEN);
+        JPanel receitasCard = createCard("Receitas do Mês", "R$ 0,00", ColorScheme.POSITIVE_GREEN);
         receitasLabel = (JLabel) receitasCard.getComponent(3);
         
         // Card Despesas do Mês
-        JPanel despesasCard = createCard("Despesas do Mês", "R$ 0,00", Color.RED);
+        JPanel despesasCard = createCard("Despesas do Mês", "R$ 0,00", ColorScheme.NEGATIVE_RED);
         despesasLabel = (JLabel) despesasCard.getComponent(3);
         
         // Card Transações
-        JPanel transacoesCard = createCard("Transações", "0", Color.ORANGE);
+        JPanel transacoesCard = createCard("Transações", "0", ColorScheme.ACCENT_BLUE);
         transacoesLabel = (JLabel) transacoesCard.getComponent(3);
         
         panel.add(saldoCard);
@@ -162,7 +170,7 @@ public class DashboardView extends JFrame {
             BorderFactory.createLineBorder(cor, 2),
             BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
-        card.setBackground(Color.WHITE);
+        card.setBackground(ColorScheme.CARD_BACKGROUND);
         
         JLabel tituloLabel = new JLabel(titulo);
         tituloLabel.setFont(new Font("Arial", Font.BOLD, 14));
@@ -171,7 +179,7 @@ public class DashboardView extends JFrame {
         
         JLabel valorLabel = new JLabel(valor);
         valorLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        valorLabel.setForeground(Color.BLACK);
+        valorLabel.setForeground(ColorScheme.TEXT_PRIMARY);
         valorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         card.add(Box.createVerticalGlue());
@@ -222,9 +230,9 @@ public class DashboardView extends JFrame {
         
         // Atualizar cores baseadas nos valores
         if (data.getSaldoTotal() < 0) {
-            saldoLabel.setForeground(Color.RED);
+            saldoLabel.setForeground(ColorScheme.BALANCE_NEGATIVE);
         } else {
-            saldoLabel.setForeground(Color.BLACK);
+            saldoLabel.setForeground(ColorScheme.BALANCE_POSITIVE);
         }
     }
     

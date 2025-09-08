@@ -6,7 +6,6 @@ import controller.AuthController.LoginResult;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.net.URI;
 
 /**
  * Tela de login e registro do sistema
@@ -298,10 +297,7 @@ public class LoginView extends JFrame {
     }
 
     private void abrirRecuperarSenha() {
-        try {
-            Desktop.getDesktop().browse(new URI("https://finanza.example.com/recuperar-senha"));
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Não foi possível abrir a página de recuperação de senha.", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
+        RecuperarSenhaDialog dialog = new RecuperarSenhaDialog(this, authController);
+        dialog.setVisible(true);
     }
 }

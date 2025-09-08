@@ -324,4 +324,30 @@ public class ServerClient {
         String comando = Protocol.buildCommand(Protocol.CMD_GET_PERFIL);
         enviarComando(comando, callback);
     }
+    
+    /**
+     * Solicita recuperação de senha por email
+     */
+    public void recuperarSenha(String email, ServerCallback<String> callback) {
+        String comando = Protocol.buildCommand(Protocol.CMD_RESET_PASSWORD, email);
+        enviarComando(comando, new ServerCallback<String>() {
+            @Override
+            public void onSuccess(String result) {
+                String[] partes = Protocol.parseCommand(result);
+                if (partes.length > 0 && Protocol.STATUS_OK.equals(partes[0])) {
+                    String mensagem = partes.length > 1 ? partes[1] : "Instruções enviadas por email";
+                    callback.onSuccess(mensagem);
+                } else if (partes.length > 1) {
+                    callback.onError(partes[1]);
+                } else {
+                    callback.onError("Resposta inválida do servidor");
+                }
+            }
+            
+            @Override
+            public void onError(String error) {
+                callback.onError(error);
+            }
+        });
+    }
 }

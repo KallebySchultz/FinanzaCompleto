@@ -2,17 +2,21 @@ package com.example.finanza.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.finanza.MainActivity;
 import com.example.finanza.R;
 import com.example.finanza.model.Usuario;
 import com.example.finanza.network.AuthManager;
+import com.example.finanza.network.ServerClient;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class LoginActivity extends AppCompatActivity {
@@ -20,7 +24,7 @@ public class LoginActivity extends AppCompatActivity {
     private AuthManager authManager;
     private TextInputEditText inputEmail, inputSenha;
     private Button btnLogin;
-    private TextView txtCriarConta;
+    private TextView txtCriarConta, txtRecuperarSenha;
     private ImageView btnConfiguracoes;
 
     @Override
@@ -46,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
         inputSenha = findViewById(R.id.input_senha);
         btnLogin = findViewById(R.id.btn_login);
         txtCriarConta = findViewById(R.id.txt_criar_conta);
+        txtRecuperarSenha = findViewById(R.id.txt_recuperar_senha);
         btnConfiguracoes = findViewById(R.id.btn_configuracoes);
 
         btnLogin.setOnClickListener(v -> realizarLogin());
@@ -53,6 +58,8 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(this, RegisterActivity.class);
             startActivity(intent);
         });
+
+        txtRecuperarSenha.setOnClickListener(v -> mostrarDialogRecuperarSenha());
 
         btnConfiguracoes.setOnClickListener(v -> {
             Intent intent = new Intent(LoginActivity.this, SettingsActivity.class);
@@ -102,5 +109,61 @@ public class LoginActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void mostrarDialogRecuperarSenha() {
+        LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_recuperar_senha, null);
+        
+        TextInputEditText inputEmailRecovery = dialogView.findViewById(R.id.input_email_recovery);
+        Button btnEnviarRecovery = dialogView.findViewById(R.id.btn_enviar_recovery);
+        Button btnCancelarRecovery = dialogView.findViewById(R.id.btn_cancelar_recovery);
+        
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .setCancelable(true)
+                .create();
+        
+        btnCancelarRecovery.setOnClickListener(v -> dialog.dismiss());
+        
+        btnEnviarRecovery.setOnClickListener(v -> {
+            String email = inputEmailRecovery.getText() != null ? 
+                inputEmailRecovery.getText().toString().trim() : "";
+            
+            if (email.isEmpty()) {
+                inputEmailRecovery.setError("Digite o email");
+                return;
+            }
+            
+            if (!email.contains("@")) {
+                inputEmailRecovery.setError("Digite um email válido");
+                return;
+            }
+            
+            btnEnviarRecovery.setEnabled(false);
+            btnEnviarRecovery.setText("Enviando...");
+            
+            ServerClient serverClient = ServerClient.getInstance(this);
+            serverClient.recuperarSenha(email, new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String mensagem) {
+                    runOnUiThread(() -> {
+                        dialog.dismiss();
+                        Toast.makeText(LoginActivity.this, mensagem, Toast.LENGTH_LONG).show();
+                    });
+                }
+                
+                @Override
+                public void onError(String error) {
+                    runOnUiThread(() -> {
+                        btnEnviarRecovery.setEnabled(true);
+                        btnEnviarRecovery.setText("Enviar");
+                        Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
+                    });
+                }
+            });
+        });
+        
+        dialog.show();
     }
 }

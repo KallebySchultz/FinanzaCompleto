@@ -97,6 +97,9 @@ public class Protocol {
     /** Comando para alterar senha do usuário */
     public static final String CMD_CHANGE_PASSWORD = "CHANGE_PASSWORD";
     
+    /** Comando para recuperar senha por email */
+    public static final String CMD_RESET_PASSWORD = "RESET_PASSWORD";
+    
     // ================== COMANDOS DE CONTAS ==================
     
     /** Comando para listar todas as contas do usuário */

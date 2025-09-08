@@ -53,4 +53,20 @@ public class SecurityUtil {
     public static boolean validarSenha(String senha) {
         return senha != null && senha.length() >= 6;
     }
+    
+    /**
+     * Gera token de recuperação de senha
+     * @return token seguro de 8 caracteres
+     */
+    public static String gerarTokenRecuperacao() {
+        SecureRandom random = new SecureRandom();
+        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        StringBuilder token = new StringBuilder();
+        
+        for (int i = 0; i < 8; i++) {
+            token.append(caracteres.charAt(random.nextInt(caracteres.length())));
+        }
+        
+        return token.toString();
+    }
 }

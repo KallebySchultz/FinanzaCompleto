@@ -155,6 +155,12 @@ public class ClientHandler extends Thread {
             case Protocol.CMD_CHANGE_PASSWORD:
                 processarAlterarSenha(partes);
                 break;
+            case Protocol.CMD_REQUEST_PASSWORD_RESET:
+                processarSolicitarRecuperacaoSenha(partes);
+                break;
+            case Protocol.CMD_RESET_PASSWORD:
+                processarRedefinirSenha(partes);
+                break;
                 
             default:
                 enviarResposta(Protocol.createErrorResponse("Comando não reconhecido: " + comando));
@@ -1050,6 +1056,72 @@ public class ClientHandler extends Thread {
             
         } catch (Exception e) {
             System.err.println("Erro ao alterar senha: " + e.getMessage());
+            enviarResposta(Protocol.createErrorResponse("Erro interno do servidor"));
+        }
+    }
+    
+    private void processarSolicitarRecuperacaoSenha(String[] partes) {
+        if (partes.length < 2) {
+            enviarResposta(Protocol.createErrorResponse("Email é obrigatório"));
+            return;
+        }
+        
+        try {
+            String email = partes[1];
+            
+            if (!SecurityUtil.validarEmail(email)) {
+                enviarResposta(Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Email inválido"));
+                return;
+            }
+            
+            // Verifica se usuário existe
+            Usuario usuario = usuarioDAO.buscarPorEmail(email);
+            if (usuario == null) {
+                // Por segurança, não informamos se o email existe ou não
+                enviarResposta(Protocol.createSuccessResponse("Se o email existir, um código de recuperação será gerado"));
+                return;
+            }
+            
+            // Gera token de recuperação
+            String token = usuarioDAO.gerarTokenRecuperacao(email);
+            if (token != null) {
+                // Em uma implementação real, o token seria enviado por email
+                // Para o desktop, retornamos o token para ser exibido ao usuário
+                enviarResposta(Protocol.createSuccessResponse("Código de recuperação: " + token));
+            } else {
+                enviarResposta(Protocol.createErrorResponse("Erro ao gerar código de recuperação"));
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao solicitar recuperação de senha: " + e.getMessage());
+            enviarResposta(Protocol.createErrorResponse("Erro interno do servidor"));
+        }
+    }
+    
+    private void processarRedefinirSenha(String[] partes) {
+        if (partes.length < 3) {
+            enviarResposta(Protocol.createErrorResponse("Token e nova senha são obrigatórios"));
+            return;
+        }
+        
+        try {
+            String token = partes[1];
+            String novaSenha = partes[2];
+            
+            if (!SecurityUtil.validarSenha(novaSenha)) {
+                enviarResposta(Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Nova senha deve ter pelo menos 6 caracteres"));
+                return;
+            }
+            
+            // Valida token e redefine senha
+            if (usuarioDAO.redefinirSenhaComToken(token, novaSenha)) {
+                enviarResposta(Protocol.createSuccessResponse("Senha redefinida com sucesso"));
+            } else {
+                enviarResposta(Protocol.createResponse(Protocol.STATUS_INVALID_CREDENTIALS, "Código de recuperação inválido ou expirado"));
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao redefinir senha: " + e.getMessage());
             enviarResposta(Protocol.createErrorResponse("Erro interno do servidor"));
         }
     }

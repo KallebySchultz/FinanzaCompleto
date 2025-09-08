@@ -103,6 +103,22 @@ public class LoginView extends JFrame {
         gbc.insets = new Insets(10, 0, 0, 0);
         mainPanel.add(toggleButton, gbc);
         
+        // Link "Esqueci minha senha"
+        JButton forgotPasswordButton = new JButton("Esqueci minha senha");
+        forgotPasswordButton.setBorderPainted(false);
+        forgotPasswordButton.setContentAreaFilled(false);
+        forgotPasswordButton.setForeground(new Color(0, 102, 204));
+        forgotPasswordButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        forgotPasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                abrirRecuperacaoSenha();
+            }
+        });
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
+        gbc.insets = new Insets(5, 0, 0, 0);
+        mainPanel.add(forgotPasswordButton, gbc);
+        
         add(mainPanel, BorderLayout.CENTER);
         
         // Status bar
@@ -277,5 +293,10 @@ public class LoginView extends JFrame {
             DashboardView dashboard = new DashboardView(authController, usuario);
             dashboard.setVisible(true);
         });
+    }
+    
+    private void abrirRecuperacaoSenha() {
+        PasswordRecoveryDialog dialog = new PasswordRecoveryDialog(this, authController);
+        dialog.setVisible(true);
     }
 }

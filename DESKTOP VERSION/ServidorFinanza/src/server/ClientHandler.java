@@ -631,8 +631,32 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Categoria adicionada com sucesso (modo teste)");
         }
         
-        // TODO: Implementar inserção real no banco de dados
-        return Protocol.createSuccessResponse("Categoria adicionada com sucesso");
+        try {
+            String nome = partes[1];
+            String tipoStr = partes[2];
+            
+            // Validar tipo de categoria
+            Categoria.TipoCategoria tipo = Categoria.TipoCategoria.fromString(tipoStr);
+            if (tipo == null) {
+                return Protocol.createErrorResponse("Tipo de categoria inválido");
+            }
+            
+            // Criar nova categoria
+            Categoria novaCategoria = new Categoria();
+            novaCategoria.setNome(nome);
+            novaCategoria.setTipo(tipo);
+            novaCategoria.setIdUsuario(usuarioLogado.getId());
+            
+            if (categoriaDAO.inserir(novaCategoria)) {
+                return Protocol.createSuccessResponse(String.valueOf(novaCategoria.getId()));
+            } else {
+                return Protocol.createErrorResponse("Erro ao criar categoria");
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao adicionar categoria: " + e.getMessage());
+            return Protocol.createErrorResponse("Erro interno do servidor");
+        }
     }
     
     /**
@@ -790,7 +814,7 @@ public class ClientHandler extends Thread {
             return Protocol.createErrorResponse("Usuário não está logado");
         }
         
-        if (partes.length < 5) {
+        if (partes.length < 7) {
             return Protocol.createErrorResponse("Parâmetros insuficientes para adicionar movimentação");
         }
         
@@ -799,8 +823,44 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Movimentação adicionada com sucesso (modo teste)");
         }
         
-        // TODO: Implementar inserção real no banco de dados
-        return Protocol.createSuccessResponse("Movimentação adicionada com sucesso");
+        try {
+            double valor = Double.parseDouble(partes[1]);
+            Date data = Date.valueOf(partes[2]);
+            String descricao = partes[3];
+            String tipoStr = partes[4];
+            int idConta = Integer.parseInt(partes[5]);
+            int idCategoria = Integer.parseInt(partes[6]);
+            
+            // Validar tipo de movimentação
+            Movimentacao.TipoMovimentacao tipo = Movimentacao.TipoMovimentacao.fromString(tipoStr);
+            if (tipo == null) {
+                return Protocol.createErrorResponse("Tipo de movimentação inválido");
+            }
+            
+            // Criar nova movimentação
+            Movimentacao novaMovimentacao = new Movimentacao();
+            novaMovimentacao.setValor(valor);
+            novaMovimentacao.setData(data);
+            novaMovimentacao.setDescricao(descricao);
+            novaMovimentacao.setTipo(tipo);
+            novaMovimentacao.setIdConta(idConta);
+            novaMovimentacao.setIdCategoria(idCategoria);
+            novaMovimentacao.setIdUsuario(usuarioLogado.getId());
+            
+            if (movimentacaoDAO.inserir(novaMovimentacao)) {
+                return Protocol.createSuccessResponse(String.valueOf(novaMovimentacao.getId()));
+            } else {
+                return Protocol.createErrorResponse("Erro ao criar movimentação");
+            }
+            
+        } catch (NumberFormatException e) {
+            return Protocol.createErrorResponse("Valor ou IDs inválidos");
+        } catch (IllegalArgumentException e) {
+            return Protocol.createErrorResponse("Data inválida");
+        } catch (Exception e) {
+            System.err.println("Erro ao adicionar movimentação: " + e.getMessage());
+            return Protocol.createErrorResponse("Erro interno do servidor");
+        }
     }
     
     /**

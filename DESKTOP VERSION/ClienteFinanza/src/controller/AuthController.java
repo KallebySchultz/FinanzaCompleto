@@ -14,6 +14,8 @@ public class AuthController {
     private static final String CMD_LOGIN = "LOGIN";
     private static final String CMD_REGISTER = "REGISTER";
     private static final String CMD_LOGOUT = "LOGOUT";
+    private static final String CMD_REQUEST_PASSWORD_RESET = "REQUEST_PASSWORD_RESET";
+    private static final String CMD_RESET_PASSWORD = "RESET_PASSWORD";
     private static final String STATUS_OK = "OK";
     private static final String STATUS_ERROR = "ERROR";
     private static final String STATUS_INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
@@ -164,6 +166,76 @@ public class AuthController {
      */
     public NetworkClient getNetworkClient() {
         return networkClient;
+    }
+    
+    /**
+     * Solicita recuperação de senha
+     */
+    public LoginResult solicitarRecuperacaoSenha(String email) {
+        if (!networkClient.isConnected()) {
+            return new LoginResult(false, "Não conectado ao servidor", null);
+        }
+        
+        String comando = CMD_REQUEST_PASSWORD_RESET + SEPARATOR + email;
+        String resposta = networkClient.sendCommand(comando);
+        
+        String[] partes = resposta.split("\\" + SEPARATOR);
+        
+        if (partes.length >= 1) {
+            String status = partes[0];
+            
+            switch (status) {
+                case STATUS_OK:
+                    String token = partes.length >= 2 ? partes[1] : "Código enviado";
+                    return new LoginResult(true, token, null);
+                    
+                case STATUS_INVALID_DATA:
+                    String mensagem = partes.length >= 2 ? partes[1] : "Email inválido";
+                    return new LoginResult(false, mensagem, null);
+                    
+                default:
+                    String erro = partes.length >= 2 ? partes[1] : "Erro desconhecido";
+                    return new LoginResult(false, erro, null);
+            }
+        }
+        
+        return new LoginResult(false, "Resposta inválida do servidor", null);
+    }
+    
+    /**
+     * Redefine senha usando token de recuperação
+     */
+    public LoginResult redefinirSenha(String token, String novaSenha) {
+        if (!networkClient.isConnected()) {
+            return new LoginResult(false, "Não conectado ao servidor", null);
+        }
+        
+        String comando = CMD_RESET_PASSWORD + SEPARATOR + token + SEPARATOR + novaSenha;
+        String resposta = networkClient.sendCommand(comando);
+        
+        String[] partes = resposta.split("\\" + SEPARATOR);
+        
+        if (partes.length >= 1) {
+            String status = partes[0];
+            
+            switch (status) {
+                case STATUS_OK:
+                    return new LoginResult(true, "Senha redefinida com sucesso", null);
+                    
+                case STATUS_INVALID_CREDENTIALS:
+                    return new LoginResult(false, "Código de recuperação inválido ou expirado", null);
+                    
+                case STATUS_INVALID_DATA:
+                    String mensagem = partes.length >= 2 ? partes[1] : "Dados inválidos";
+                    return new LoginResult(false, mensagem, null);
+                    
+                default:
+                    String erro = partes.length >= 2 ? partes[1] : "Erro desconhecido";
+                    return new LoginResult(false, erro, null);
+            }
+        }
+        
+        return new LoginResult(false, "Resposta inválida do servidor", null);
     }
     
     /**

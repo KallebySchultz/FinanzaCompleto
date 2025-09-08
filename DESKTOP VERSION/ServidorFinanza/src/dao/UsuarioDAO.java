@@ -161,6 +161,81 @@ public class UsuarioDAO {
     }
     
     /**
+     * Gera e armazena token de recuperação de senha
+     * @param email email do usuário
+     * @return token de recuperação ou null em caso de erro
+     */
+    public String gerarTokenRecuperacao(String email) {
+        String token = SecurityUtil.gerarTokenRecuperacao();
+        String sql = "UPDATE usuario SET password_reset_token = ?, reset_token_expiry = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE email = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, token);
+            stmt.setString(2, email);
+            
+            if (stmt.executeUpdate() > 0) {
+                return token;
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao gerar token de recuperação: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Valida token de recuperação de senha
+     * @param token token de recuperação
+     * @return Usuario se token válido, null caso contrário
+     */
+    public Usuario validarTokenRecuperacao(String token) {
+        String sql = "SELECT * FROM usuario WHERE password_reset_token = ? AND reset_token_expiry > NOW()";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, token);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToUsuario(rs);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao validar token de recuperação: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Redefine senha usando token de recuperação
+     * @param token token de recuperação
+     * @param novaSenha nova senha
+     * @return true se redefinida com sucesso
+     */
+    public boolean redefinirSenhaComToken(String token, String novaSenha) {
+        String sql = "UPDATE usuario SET senha_hash = ?, password_reset_token = NULL, reset_token_expiry = NULL WHERE password_reset_token = ? AND reset_token_expiry > NOW()";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, SecurityUtil.hashSenha(novaSenha));
+            stmt.setString(2, token);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao redefinir senha com token: " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
      * Mapeia ResultSet para objeto Usuario
      */
     private Usuario mapResultSetToUsuario(ResultSet rs) throws SQLException {

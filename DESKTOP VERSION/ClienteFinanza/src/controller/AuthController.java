@@ -14,6 +14,7 @@ public class AuthController {
     private static final String CMD_LOGIN = "LOGIN";
     private static final String CMD_REGISTER = "REGISTER";
     private static final String CMD_LOGOUT = "LOGOUT";
+    private static final String CMD_RECOVER_PASSWORD = "RECOVER_PASSWORD";
     private static final String STATUS_OK = "OK";
     private static final String STATUS_ERROR = "ERROR";
     private static final String STATUS_INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
@@ -117,6 +118,35 @@ public class AuthController {
                 case STATUS_INVALID_DATA:
                     String mensagem = partes.length >= 2 ? partes[1] : "Dados inválidos";
                     return new LoginResult(false, mensagem, null);
+                    
+                default:
+                    String erro = partes.length >= 2 ? partes[1] : "Erro desconhecido";
+                    return new LoginResult(false, erro, null);
+            }
+        }
+        
+        return new LoginResult(false, "Resposta inválida do servidor", null);
+    }
+    
+    /**
+     * Recupera senha do usuário
+     */
+    public LoginResult recuperarSenha(String email, String novaSenha) {
+        if (!networkClient.isConnected()) {
+            return new LoginResult(false, "Não conectado ao servidor", null);
+        }
+        
+        String comando = CMD_RECOVER_PASSWORD + SEPARATOR + email + SEPARATOR + novaSenha;
+        String resposta = networkClient.sendCommand(comando);
+        
+        String[] partes = resposta.split("\\" + SEPARATOR);
+        
+        if (partes.length >= 1) {
+            String status = partes[0];
+            
+            switch (status) {
+                case STATUS_OK:
+                    return new LoginResult(true, "Senha alterada com sucesso", null);
                     
                 default:
                     String erro = partes.length >= 2 ? partes[1] : "Erro desconhecido";

@@ -232,18 +232,6 @@ public class ClientHandler extends Thread {
             return;
         }
         
-        if (testMode) {
-            // Em modo de teste, simular registro
-            Usuario usuarioTeste = new Usuario(1, nome, email, "hash_teste");
-            this.usuarioLogado = usuarioTeste;
-            String dadosUsuario = "1" + Protocol.FIELD_SEPARATOR + 
-                                 nome + Protocol.FIELD_SEPARATOR + 
-                                 email;
-            enviarResposta(Protocol.createSuccessResponse(dadosUsuario));
-            System.out.println("Usuário registrado em modo teste: " + email);
-            return;
-        }
-        
         // Verifica se usuário já existe
         if (usuarioDAO.buscarPorEmail(email) != null) {
             enviarResposta(Protocol.createResponse(Protocol.STATUS_USER_EXISTS, "Email já cadastrado"));
@@ -1077,19 +1065,6 @@ public class ClientHandler extends Thread {
         
         if (!SecurityUtil.validarEmail(email)) {
             enviarResposta(Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Email inválido"));
-            return;
-        }
-        
-        if (testMode) {
-            // Em modo de teste, simular recuperação de senha
-            String senhaTemporaria = SecurityUtil.gerarSenhaTemporaria();
-            
-            // Simular envio de email
-            if (EmailUtil.enviarRecuperacaoSenha(email, senhaTemporaria)) {
-                enviarResposta(Protocol.createSuccessResponse("Nova senha enviada por email"));
-            } else {
-                enviarResposta(Protocol.createErrorResponse("Erro ao enviar email"));
-            }
             return;
         }
         

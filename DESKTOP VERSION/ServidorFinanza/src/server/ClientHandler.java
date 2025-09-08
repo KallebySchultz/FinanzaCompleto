@@ -9,6 +9,7 @@ import model.Conta;
 import model.Categoria;
 import model.Movimentacao;
 import util.SecurityUtil;
+import util.EmailUtil;
 
 import java.io.*;
 import java.net.Socket;
@@ -154,6 +155,9 @@ public class ClientHandler extends Thread {
                 break;
             case Protocol.CMD_CHANGE_PASSWORD:
                 processarAlterarSenha(partes);
+                break;
+            case Protocol.CMD_RECOVER_PASSWORD:
+                processarRecuperarSenha(partes);
                 break;
                 
             default:
@@ -1050,6 +1054,50 @@ public class ClientHandler extends Thread {
             
         } catch (Exception e) {
             System.err.println("Erro ao alterar senha: " + e.getMessage());
+            enviarResposta(Protocol.createErrorResponse("Erro interno do servidor"));
+        }
+    }
+    
+    private void processarRecuperarSenha(String[] partes) {
+        if (partes.length < 2) {
+            enviarResposta(Protocol.createErrorResponse("Email é obrigatório para recuperação de senha"));
+            return;
+        }
+        
+        String email = partes[1];
+        
+        if (!SecurityUtil.validarEmail(email)) {
+            enviarResposta(Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Email inválido"));
+            return;
+        }
+        
+        try {
+            // Busca usuário por email
+            Usuario usuario = usuarioDAO.buscarPorEmail(email);
+            
+            if (usuario == null) {
+                // Por segurança, não revelar se o email existe ou não
+                enviarResposta(Protocol.createSuccessResponse("Se o email existir, uma nova senha será enviada"));
+                return;
+            }
+            
+            // Gera nova senha temporária
+            String senhaTemporaria = SecurityUtil.gerarSenhaTemporaria();
+            
+            // Atualiza senha no banco
+            if (usuarioDAO.atualizarSenha(usuario.getId(), senhaTemporaria)) {
+                // Envia email com nova senha
+                if (EmailUtil.enviarRecuperacaoSenha(email, senhaTemporaria)) {
+                    enviarResposta(Protocol.createSuccessResponse("Nova senha enviada por email"));
+                } else {
+                    enviarResposta(Protocol.createErrorResponse("Erro ao enviar email"));
+                }
+            } else {
+                enviarResposta(Protocol.createErrorResponse("Erro ao atualizar senha"));
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao processar recuperação de senha: " + e.getMessage());
             enviarResposta(Protocol.createErrorResponse("Erro interno do servidor"));
         }
     }

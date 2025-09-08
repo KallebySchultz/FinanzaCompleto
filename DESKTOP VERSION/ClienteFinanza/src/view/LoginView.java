@@ -19,6 +19,7 @@ public class LoginView extends JFrame {
     private JButton loginButton;
     private JButton registerButton;
     private JButton toggleButton;
+    private JLabel recuperarSenhaLabel;
     private JPanel registerPanel;
     private boolean isLoginMode = true;
     
@@ -43,6 +44,11 @@ public class LoginView extends JFrame {
         loginButton = new JButton("Entrar");
         registerButton = new JButton("Cadastrar");
         toggleButton = new JButton("Não tem conta? Cadastre-se");
+        
+        // Link para recuperar senha
+        recuperarSenhaLabel = new JLabel("<html><u>Esqueceu a senha?</u></html>");
+        recuperarSenhaLabel.setForeground(Color.BLUE);
+        recuperarSenhaLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
     
     private void setupUI() {
@@ -98,8 +104,13 @@ public class LoginView extends JFrame {
         gbc.insets = new Insets(0, 0, 10, 0);
         mainPanel.add(buttonPanel, gbc);
         
-        // Botão alternar modo
+        // Link recuperar senha (apenas no modo login)
         gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
+        gbc.insets = new Insets(0, 0, 10, 0);
+        mainPanel.add(recuperarSenhaLabel, gbc);
+        
+        // Botão alternar modo
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 2;
         gbc.insets = new Insets(10, 0, 0, 0);
         mainPanel.add(toggleButton, gbc);
         
@@ -134,6 +145,16 @@ public class LoginView extends JFrame {
             }
         });
         
+        // Click no link "Esqueceu a senha?"
+        recuperarSenhaLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (isLoginMode) {
+                    abrirRecuperarSenha();
+                }
+            }
+        });
+        
         // Enter nos campos
         ActionListener enterAction = new ActionListener() {
             @Override
@@ -160,6 +181,7 @@ public class LoginView extends JFrame {
             registerPanel.setVisible(false);
             loginButton.setVisible(true);
             registerButton.setVisible(false);
+            recuperarSenhaLabel.setVisible(true);
             toggleButton.setText("Não tem conta? Cadastre-se");
         } else {
             // Modo registro
@@ -167,6 +189,7 @@ public class LoginView extends JFrame {
             registerPanel.setVisible(true);
             loginButton.setVisible(false);
             registerButton.setVisible(true);
+            recuperarSenhaLabel.setVisible(false);
             toggleButton.setText("Já tem conta? Faça login");
         }
         
@@ -269,6 +292,7 @@ public class LoginView extends JFrame {
         loginButton.setEnabled(enabled);
         registerButton.setEnabled(enabled);
         toggleButton.setEnabled(enabled);
+        recuperarSenhaLabel.setEnabled(enabled);
     }
     
     private void abrirDashboard(model.Usuario usuario) {
@@ -277,5 +301,10 @@ public class LoginView extends JFrame {
             DashboardView dashboard = new DashboardView(authController, usuario);
             dashboard.setVisible(true);
         });
+    }
+    
+    private void abrirRecuperarSenha() {
+        RecuperarSenhaDialog dialog = new RecuperarSenhaDialog(this, authController);
+        dialog.setVisible(true);
     }
 }

@@ -113,14 +113,21 @@ public class LoginActivity extends AppCompatActivity {
 
     private void mostrarDialogRecuperacaoSenha() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Recuperar Senha");
-        builder.setMessage("Digite seu email para recuperar a senha:");
+        builder.setTitle("🔐 Recuperar Senha");
+        builder.setMessage("Digite seu email para gerar uma nova senha temporária:");
         
         // Criar campo de input para email
         android.widget.EditText inputEmailRecuperacao = new android.widget.EditText(this);
         inputEmailRecuperacao.setHint("Digite seu email");
         inputEmailRecuperacao.setInputType(android.text.InputType.TYPE_TEXT_EMAIL_ADDRESS);
         inputEmailRecuperacao.setPadding(50, 30, 50, 30);
+        
+        // Se há email preenchido no campo de login, usar como sugestão
+        String emailAtual = inputEmail.getText() != null ? inputEmail.getText().toString().trim() : "";
+        if (!emailAtual.isEmpty()) {
+            inputEmailRecuperacao.setText(emailAtual);
+        }
+        
         builder.setView(inputEmailRecuperacao);
         
         builder.setPositiveButton("Recuperar", (dialog, which) -> {
@@ -129,14 +136,23 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(this, "Digite um email válido", Toast.LENGTH_SHORT).show();
                 return;
             }
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                Toast.makeText(this, "Formato de email inválido", Toast.LENGTH_SHORT).show();
+                return;
+            }
             recuperarSenha(email);
         });
         
         builder.setNegativeButton("Cancelar", null);
-        builder.show();
+        
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void recuperarSenha(String email) {
+        // Mostrar feedback visual durante processamento
+        Toast.makeText(this, "Processando recuperação...", Toast.LENGTH_SHORT).show();
+        
         authManager.recuperarSenha(email, new AuthManager.AuthCallback() {
             @Override
             public void onSuccess(Usuario usuario) {
@@ -148,7 +164,14 @@ public class LoginActivity extends AppCompatActivity {
                     builder.setPositiveButton("OK", (dialog, which) -> {
                         // Preencher automaticamente o email no campo de login
                         LoginActivity.this.inputEmail.setText(email);
+                        // Limpar campo de senha para que usuário digite a nova
+                        LoginActivity.this.inputSenha.setText("");
+                        // Mostrar dica sobre onde alterar senha
+                        Toast.makeText(LoginActivity.this, 
+                            "Use a senha temporária para entrar. Altere-a em Perfil > Editar Perfil.", 
+                            Toast.LENGTH_LONG).show();
                     });
+                    builder.setCancelable(false); // Força usuário a ver a senha
                     builder.show();
                 });
             }

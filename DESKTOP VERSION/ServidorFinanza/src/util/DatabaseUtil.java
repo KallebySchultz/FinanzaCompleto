@@ -8,15 +8,15 @@ import java.sql.SQLException;
  * Classe utilitária para gerenciar conexões com o banco de dados
  */
 public class DatabaseUtil {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/finanza_db";
-    private static final String DB_USER = "root";
+    private static final String DB_URL = "jdbc:sqlite:finanza_test.db";
+    private static final String DB_USER = "";
     private static final String DB_PASSWORD = "";
     
     static {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            Class.forName("org.sqlite.JDBC");
         } catch (ClassNotFoundException e) {
-            System.err.println("Driver MySQL não encontrado: " + e.getMessage());
+            System.err.println("Driver SQLite não encontrado: " + e.getMessage());
         }
     }
     

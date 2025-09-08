@@ -1055,6 +1055,7 @@ public class ClientHandler extends Thread {
     }
     
 <<<<<<< HEAD
+<<<<<<< HEAD
     private void processarRecuperarSenha(String[] partes) {
         if (partes.length < 2) {
             enviarResposta(Protocol.createErrorResponse("Email é obrigatório para recuperação de senha"));
@@ -1099,6 +1100,8 @@ public class ClientHandler extends Thread {
         }
     }
     
+=======
+>>>>>>> parent of 23a5558 (Implement password recovery feature with minimal UI changes)
 =======
 >>>>>>> parent of 23a5558 (Implement password recovery feature with minimal UI changes)
     private void fecharConexao() {

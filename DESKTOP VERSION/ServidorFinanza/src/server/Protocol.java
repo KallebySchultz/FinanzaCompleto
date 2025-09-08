@@ -36,7 +36,6 @@ public class Protocol {
     public static final String CMD_GET_PERFIL = "GET_PERFIL";
     public static final String CMD_UPDATE_PERFIL = "UPDATE_PERFIL";
     public static final String CMD_CHANGE_PASSWORD = "CHANGE_PASSWORD";
-    public static final String CMD_RECOVER_PASSWORD = "RECOVER_PASSWORD";
     
     // Status de resposta
     public static final String STATUS_OK = "OK";

@@ -9,7 +9,6 @@ import model.Conta;
 import model.Categoria;
 import model.Movimentacao;
 import util.SecurityUtil;
-import util.EmailUtil;
 
 import java.io.*;
 import java.net.Socket;
@@ -155,9 +154,6 @@ public class ClientHandler extends Thread {
                 break;
             case Protocol.CMD_CHANGE_PASSWORD:
                 processarAlterarSenha(partes);
-                break;
-            case Protocol.CMD_RECOVER_PASSWORD:
-                processarRecuperarSenha(partes);
                 break;
                 
             default:
@@ -1070,6 +1066,7 @@ public class ClientHandler extends Thread {
         }
     }
     
+<<<<<<< HEAD
     private void processarRecuperarSenha(String[] partes) {
         if (partes.length < 2) {
             enviarResposta(Protocol.createErrorResponse("Email é obrigatório para recuperação de senha"));
@@ -1127,6 +1124,8 @@ public class ClientHandler extends Thread {
         }
     }
     
+=======
+>>>>>>> parent of 23a5558 (Implement password recovery feature with minimal UI changes)
     private void fecharConexao() {
         try {
             if (input != null) input.close();

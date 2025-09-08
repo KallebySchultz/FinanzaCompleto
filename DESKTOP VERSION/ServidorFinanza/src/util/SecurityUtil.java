@@ -53,21 +53,4 @@ public class SecurityUtil {
     public static boolean validarSenha(String senha) {
         return senha != null && senha.length() >= 6;
     }
-    
-    /**
-     * Gera uma senha temporária aleatória
-     * @return senha temporária de 8 caracteres
-     */
-    public static String gerarSenhaTemporaria() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        SecureRandom random = new SecureRandom();
-        StringBuilder senha = new StringBuilder();
-        
-        for (int i = 0; i < 8; i++) {
-            int index = random.nextInt(chars.length());
-            senha.append(chars.charAt(index));
-        }
-        
-        return senha.toString();
-    }
 }

@@ -484,38 +484,6 @@ public class AuthManager {
     }
 
     /**
-     * Recupera senha do usuário
-     * 
-     * @param email Email do usuário
-     * @param callback Callback para resultado da operação
-     */
-    public void recuperarSenha(String email, AuthCallback callback) {
-        try {
-            // Buscar usuário por email
-            Usuario usuario = database.usuarioDao().buscarPorEmail(email);
-            
-            if (usuario == null) {
-                callback.onError("Usuário não encontrado com este email");
-                return;
-            }
-            
-            // Gerar senha temporária simples
-            String senhaTemporaria = "temp" + String.valueOf(System.currentTimeMillis()).substring(7);
-            
-            // Atualizar senha no banco local
-            usuario.senha = senhaTemporaria;
-            database.usuarioDao().atualizar(usuario);
-            
-            Log.d(TAG, "Senha recuperada para usuário: " + email);
-            callback.onSuccess(usuario);
-            
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao recuperar senha: " + e.getMessage());
-            callback.onError("Erro ao recuperar senha: " + e.getMessage());
-        }
-    }
-
-    /**
      * Obtém dados do usuário logado
      */
     public Usuario getLoggedUser() {

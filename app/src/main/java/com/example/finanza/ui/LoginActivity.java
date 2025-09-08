@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.app.AlertDialog;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -58,6 +59,12 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(LoginActivity.this, SettingsActivity.class);
             startActivity(intent);
         });
+
+        // Adicionar listener de longo clique no campo de senha para recuperação de senha
+        inputSenha.setOnLongClickListener(v -> {
+            mostrarDialogRecuperacaoSenha();
+            return true;
+        });
     }
 
     private void realizarLogin() {
@@ -98,6 +105,57 @@ public class LoginActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     btnLogin.setEnabled(true);
                     btnLogin.setText("Entrar");
+                    Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private void mostrarDialogRecuperacaoSenha() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Recuperar Senha");
+        builder.setMessage("Digite seu email para recuperar a senha:");
+        
+        // Criar campo de input para email
+        android.widget.EditText inputEmailRecuperacao = new android.widget.EditText(this);
+        inputEmailRecuperacao.setHint("Digite seu email");
+        inputEmailRecuperacao.setInputType(android.text.InputType.TYPE_TEXT_EMAIL_ADDRESS);
+        inputEmailRecuperacao.setPadding(50, 30, 50, 30);
+        builder.setView(inputEmailRecuperacao);
+        
+        builder.setPositiveButton("Recuperar", (dialog, which) -> {
+            String email = inputEmailRecuperacao.getText().toString().trim();
+            if (email.isEmpty()) {
+                Toast.makeText(this, "Digite um email válido", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            recuperarSenha(email);
+        });
+        
+        builder.setNegativeButton("Cancelar", null);
+        builder.show();
+    }
+
+    private void recuperarSenha(String email) {
+        authManager.recuperarSenha(email, new AuthManager.AuthCallback() {
+            @Override
+            public void onSuccess(Usuario usuario) {
+                runOnUiThread(() -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(LoginActivity.this);
+                    builder.setTitle("Senha Recuperada");
+                    builder.setMessage("Sua nova senha temporária é: " + usuario.senha + 
+                                     "\n\nVocê pode alterá-la após fazer login.");
+                    builder.setPositiveButton("OK", (dialog, which) -> {
+                        // Preencher automaticamente o email no campo de login
+                        LoginActivity.this.inputEmail.setText(email);
+                    });
+                    builder.show();
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                runOnUiThread(() -> {
                     Toast.makeText(LoginActivity.this, error, Toast.LENGTH_LONG).show();
                 });
             }

@@ -36,6 +36,7 @@ public class Protocol {
     public static final String CMD_GET_PERFIL = "GET_PERFIL";
     public static final String CMD_UPDATE_PERFIL = "UPDATE_PERFIL";
     public static final String CMD_CHANGE_PASSWORD = "CHANGE_PASSWORD";
+    public static final String CMD_RESET_PASSWORD = "RESET_PASSWORD";
     
     // Status de resposta
     public static final String STATUS_OK = "OK";
@@ -87,5 +88,16 @@ public class Protocol {
             return new String[0];
         }
         return data.split(FIELD_SEPARATOR);
+    }
+    
+    /**
+     * Constrói comando com parâmetros
+     */
+    public static String buildCommand(String command, String... params) {
+        StringBuilder sb = new StringBuilder(command);
+        for (String param : params) {
+            sb.append(SEPARATOR).append(param != null ? param : "");
+        }
+        return sb.toString();
     }
 }

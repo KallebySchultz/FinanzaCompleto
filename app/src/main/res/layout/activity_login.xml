@@ -125,7 +125,19 @@
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Link para recuperar senha -->
+            <TextView
+                android:id="@+id/txt_recuperar_senha"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Esqueceu a senha?"
+                android:textColor="@color/accentBlue"
+                android:textSize="14sp"
+                android:padding="8dp"
+                android:layout_marginBottom="8dp"/>
 
             <!-- Link para registro -->
             <TextView

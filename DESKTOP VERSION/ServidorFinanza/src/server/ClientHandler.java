@@ -67,6 +67,9 @@ public class ClientHandler extends Thread {
                 case Protocol.CMD_RECOVER_PASSWORD:
                     return processRecoverPassword(parts);
                     
+                case Protocol.CMD_LOGOUT:
+                    return processLogout(parts);
+                    
                 default:
                     return Protocol.createErrorResponse("Comando não reconhecido: " + cmd);
             }
@@ -156,5 +159,10 @@ public class ClientHandler extends Thread {
         } else {
             return Protocol.createErrorResponse("Erro ao alterar senha");
         }
+    }
+    
+    private String processLogout(String[] parts) {
+        // Para logout, simplesmente retornamos sucesso
+        return Protocol.createSuccessResponse("Logout realizado com sucesso");
     }
 }

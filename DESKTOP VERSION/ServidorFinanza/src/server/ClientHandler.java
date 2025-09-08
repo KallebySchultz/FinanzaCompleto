@@ -1,11 +1,14 @@
 package server;
 
-import dao.UsuarioDAO;
-import model.Usuario;
+import dao.*;
+import model.*;
 import util.SecurityUtil;
 
 import java.io.*;
 import java.net.Socket;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Manipulador de clientes conectados ao servidor
@@ -17,12 +20,18 @@ public class ClientHandler extends Thread {
     private PrintWriter output;
     private boolean testMode;
     private UsuarioDAO usuarioDAO;
+    private ContaDAO contaDAO;
+    private CategoriaDAO categoriaDAO;
+    private MovimentacaoDAO movimentacaoDAO;
     private Usuario usuarioLogado;
     
     public ClientHandler(Socket clientSocket, boolean testMode) {
         this.clientSocket = clientSocket;
         this.testMode = testMode;
         this.usuarioDAO = new UsuarioDAO();
+        this.contaDAO = new ContaDAO();
+        this.categoriaDAO = new CategoriaDAO();
+        this.movimentacaoDAO = new MovimentacaoDAO();
     }
     
     @Override
@@ -339,8 +348,50 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse(dashboardData);
         }
         
-        // TODO: Implementar busca real no banco de dados
-        return Protocol.createSuccessResponse("0.00;0.00;0.00;0");
+        try {
+            // Calcular dados reais do dashboard usando DAOs
+            
+            // 1. Calcular saldo total de todas as contas
+            double saldoTotal = 0.0;
+            List<Conta> contas = contaDAO.listarPorUsuario(usuarioLogado.getId());
+            for (Conta conta : contas) {
+                saldoTotal += contaDAO.calcularSaldoAtual(conta.getId());
+            }
+            
+            // 2. Calcular receitas e despesas do mês atual
+            LocalDate hoje = LocalDate.now();
+            LocalDate inicioMes = hoje.withDayOfMonth(1);
+            LocalDate fimMes = hoje.withDayOfMonth(hoje.lengthOfMonth());
+            
+            Date dataInicio = Date.valueOf(inicioMes);
+            Date dataFim = Date.valueOf(fimMes);
+            
+            double receitasMes = movimentacaoDAO.calcularTotalReceitas(usuarioLogado.getId(), dataInicio, dataFim);
+            double despesasMes = movimentacaoDAO.calcularTotalDespesas(usuarioLogado.getId(), dataInicio, dataFim);
+            
+            // 3. Contar total de transações
+            int numTransacoes = movimentacaoDAO.contarMovimentacoes(usuarioLogado.getId());
+            
+            // Formatar os dados usando vírgula como separador decimal (formato brasileiro)
+            String saldoTotalStr = String.format("%.2f", saldoTotal).replace(".", ",");
+            String receitasMesStr = String.format("%.2f", receitasMes).replace(".", ",");
+            String despesasMesStr = String.format("%.2f", despesasMes).replace(".", ",");
+            
+            String dashboardData = saldoTotalStr + Protocol.FIELD_SEPARATOR + 
+                                 receitasMesStr + Protocol.FIELD_SEPARATOR + 
+                                 despesasMesStr + Protocol.FIELD_SEPARATOR + 
+                                 numTransacoes;
+            
+            return Protocol.createSuccessResponse(dashboardData);
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao calcular dados do dashboard: " + e.getMessage());
+            e.printStackTrace();
+            // Em caso de erro, retornar zeros
+            return Protocol.createSuccessResponse("0,00" + Protocol.FIELD_SEPARATOR + 
+                                                "0,00" + Protocol.FIELD_SEPARATOR + 
+                                                "0,00" + Protocol.FIELD_SEPARATOR + "0");
+        }
     }
     
     // ========== MÉTODOS PARA CONTAS ==========
@@ -360,8 +411,42 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse(contas);
         }
         
-        // TODO: Implementar busca real no banco de dados
-        return Protocol.createSuccessResponse("");
+        try {
+            // Buscar contas reais do banco de dados
+            List<Conta> contas = contaDAO.listarPorUsuario(usuarioLogado.getId());
+            
+            if (contas.isEmpty()) {
+                return Protocol.createSuccessResponse("");
+            }
+            
+            StringBuilder contasData = new StringBuilder();
+            for (int i = 0; i < contas.size(); i++) {
+                Conta conta = contas.get(i);
+                double saldoAtual = contaDAO.calcularSaldoAtual(conta.getId());
+                
+                if (i > 0) {
+                    contasData.append(Protocol.FIELD_SEPARATOR);
+                }
+                
+                // Formato: id,nome,tipo,saldo_inicial_formatado,saldo_atual_formatado
+                // Usar vírgula como separador decimal brasileiro
+                String saldoInicialStr = String.format("%.2f", conta.getSaldoInicial()).replace(".", ",");
+                String saldoAtualStr = String.format("%.2f", saldoAtual).replace(".", ",");
+                
+                contasData.append(conta.getId()).append(",")
+                         .append(conta.getNome()).append(",")
+                         .append(conta.getTipo().getValor()).append(",")
+                         .append(saldoInicialStr).append(",")
+                         .append(saldoAtualStr);
+            }
+            
+            return Protocol.createSuccessResponse(contasData.toString());
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao listar contas: " + e.getMessage());
+            e.printStackTrace();
+            return Protocol.createErrorResponse("Erro ao carregar contas");
+        }
     }
     
     /**
@@ -372,7 +457,7 @@ public class ClientHandler extends Thread {
             return Protocol.createErrorResponse("Usuário não está logado");
         }
         
-        if (partes.length < 3) {
+        if (partes.length < 4) {
             return Protocol.createErrorResponse("Parâmetros insuficientes para adicionar conta");
         }
         
@@ -381,8 +466,36 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Conta adicionada com sucesso (modo teste)");
         }
         
-        // TODO: Implementar inserção real no banco de dados
-        return Protocol.createSuccessResponse("Conta adicionada com sucesso");
+        try {
+            String nome = partes[1];
+            String tipoStr = partes[2];
+            double saldoInicial = Double.parseDouble(partes[3]);
+            
+            // Validar tipo de conta
+            Conta.TipoConta tipo = Conta.TipoConta.fromString(tipoStr);
+            if (tipo == null) {
+                return Protocol.createErrorResponse("Tipo de conta inválido");
+            }
+            
+            // Criar nova conta
+            Conta novaConta = new Conta();
+            novaConta.setNome(nome);
+            novaConta.setTipo(tipo);
+            novaConta.setSaldoInicial(saldoInicial);
+            novaConta.setIdUsuario(usuarioLogado.getId());
+            
+            if (contaDAO.inserir(novaConta)) {
+                return Protocol.createSuccessResponse(String.valueOf(novaConta.getId()));
+            } else {
+                return Protocol.createErrorResponse("Erro ao criar conta");
+            }
+            
+        } catch (NumberFormatException e) {
+            return Protocol.createErrorResponse("Saldo inicial inválido");
+        } catch (Exception e) {
+            System.err.println("Erro ao adicionar conta: " + e.getMessage());
+            return Protocol.createErrorResponse("Erro interno do servidor");
+        }
     }
     
     /**
@@ -444,8 +557,35 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse(categorias);
         }
         
-        // TODO: Implementar busca real no banco de dados
-        return Protocol.createSuccessResponse("");
+        try {
+            // Buscar categorias reais do banco de dados
+            List<Categoria> categorias = categoriaDAO.listarPorUsuario(usuarioLogado.getId());
+            
+            if (categorias.isEmpty()) {
+                return Protocol.createSuccessResponse("");
+            }
+            
+            StringBuilder categoriasData = new StringBuilder();
+            for (int i = 0; i < categorias.size(); i++) {
+                Categoria categoria = categorias.get(i);
+                
+                if (i > 0) {
+                    categoriasData.append(Protocol.FIELD_SEPARATOR);
+                }
+                
+                // Formato: id,nome,tipo
+                categoriasData.append(categoria.getId()).append(",")
+                             .append(categoria.getNome()).append(",")
+                             .append(categoria.getTipo().getValor());
+            }
+            
+            return Protocol.createSuccessResponse(categoriasData.toString());
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao listar categorias: " + e.getMessage());
+            e.printStackTrace();
+            return Protocol.createErrorResponse("Erro ao carregar categorias");
+        }
     }
     
     /**
@@ -556,8 +696,46 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse(movimentacoes);
         }
         
-        // TODO: Implementar busca real no banco de dados
-        return Protocol.createSuccessResponse("");
+        try {
+            // Buscar movimentações reais do banco de dados
+            List<Movimentacao> movimentacoes = movimentacaoDAO.listarPorUsuario(usuarioLogado.getId());
+            
+            if (movimentacoes.isEmpty()) {
+                return Protocol.createSuccessResponse("");
+            }
+            
+            StringBuilder movimentacoesData = new StringBuilder();
+            for (int i = 0; i < movimentacoes.size(); i++) {
+                Movimentacao movimentacao = movimentacoes.get(i);
+                
+                if (i > 0) {
+                    movimentacoesData.append(Protocol.FIELD_SEPARATOR);
+                }
+                
+                // Formato: id,valor_formatado,data,descricao,tipo,idConta,idCategoria
+                // Usar vírgula como separador decimal brasileiro - mas dividir em partes inteira e decimal
+                String valorStr = String.format("%.2f", movimentacao.getValor());
+                String[] valorParts = valorStr.split("\\.");
+                String valorInteiro = valorParts[0];
+                String valorDecimal = valorParts[1];
+                
+                movimentacoesData.append(movimentacao.getId()).append(",")
+                                .append(valorInteiro).append(",")
+                                .append(valorDecimal).append(",")
+                                .append(movimentacao.getData().toString()).append(",")
+                                .append(movimentacao.getDescricao()).append(",")
+                                .append(movimentacao.getTipo().getValor()).append(",")
+                                .append(movimentacao.getIdConta()).append(",")
+                                .append(movimentacao.getIdCategoria());
+            }
+            
+            return Protocol.createSuccessResponse(movimentacoesData.toString());
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao listar movimentações: " + e.getMessage());
+            e.printStackTrace();
+            return Protocol.createErrorResponse("Erro ao carregar movimentações");
+        }
     }
     
     /**

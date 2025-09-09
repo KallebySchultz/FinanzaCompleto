@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Sequência - Sistema Finanza</title>
+    <script src="https://unpkg.com/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 2px solid #3498db;
+            margin-top: 40px;
+        }
+        .diagram-container {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .legend {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .legend h3 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        .legend-item {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .user { background: #e3f2fd; border: 2px solid #1976d2; }
+        .service { background: #e8f5e8; border: 2px solid #2e7d32; }
+        .database { background: #fff8e1; border: 2px solid #f9a825; }
+        .sync { background: #f3e5f5; border: 2px solid #7b1fa2; }
+        .description {
+            font-style: italic;
+            color: #555;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Diagrama de Sequência - Sistema Finanza</h1>
+        <p><strong>Fluxos de Interação - Mobile (Android) + Desktop (Java)</strong></p>
+        
+        <h2>1. Autenticação de Usuário</h2>
+        <div class="description">
+            <strong>Descrição:</strong> Fluxo completo de autenticação mostrando validação de credenciais, 
+            geração de token de sessão e inicialização da sincronização automática após login bem-sucedido.
+        </div>
+        <div class="diagram-container">
+            <div class="mermaid">
+sequenceDiagram
+    participant U as 👤 Usuário
+    participant MA as 📱 Mobile App
+    participant AS as 🔐 AuthService
+    participant UD as 🗄️ UsuarioDAO
+    participant DB as 🗃️ MySQL
+    participant SS as 🔄 SyncService
+    
+    Note over U, SS: Fluxo de Autenticação
+    
+    U->>MA: Informa email/senha
+    activate MA
+    
+    MA->>AS: login(email, senha)
+    activate AS
+    
+    AS->>UD: buscarPorEmail(email)
+    activate UD
+    
+    UD->>DB: SELECT * FROM USUARIO WHERE email = ?
+    activate DB
+    DB-->>UD: Retorna dados do usuário
+    deactivate DB
+    
+    UD-->>AS: Usuario encontrado
+    deactivate UD
+    
+    AS->>AS: validarSenha(senha, senhaHash)
+    
+    alt Senha válida
+        AS->>AS: gerarToken(usuario)
+        AS->>AS: criarSessao(usuario)
+        AS-->>MA: Login sucesso + token
+        
+        MA->>SS: iniciarSincronizacaoAutomatica()
+        activate SS
+        SS-->>MA: Sincronização iniciada
+        deactivate SS
+        
+        MA-->>U: Redireciona para Dashboard
+    else Senha inválida
+        AS-->>MA: Erro de autenticação
+        MA-->>U: Exibe mensagem de erro
+    end
+    
+    deactivate AS
+    deactivate MA
+            </div>
+        </div>
+        
+        <h2>2. Adicionar Nova Transação (Mobile)</h2>
+        <div class="description">
+            <strong>Descrição:</strong> Criação de nova transação no aplicativo mobile com persistência local 
+            e marcação para sincronização posterior com o servidor.
+        </div>
+        <div class="diagram-container">
+            <div class="mermaid">
+sequenceDiagram
+    participant U as 👤 Usuário
+    participant MA as 📱 Mobile App
+    participant TD as 💰 TransacaoDAO
+    participant LDB as 📱 SQLite Local
+    participant SS as 🔄 SyncService
+    participant SD as 📡 SyncData
+    
+    Note over U, SD: Criação de Transação no Mobile
+    
+    U->>MA: Preenche formulário transação
+    U->>MA: Clica "Salvar"
+    activate MA
+    
+    MA->>MA: validarDados(transacao)
+    
+    alt Dados válidos
+        MA->>TD: inserir(transacao)
+        activate TD
+        
+        TD->>LDB: INSERT INTO transacao VALUES (...)
+        activate LDB
+        LDB-->>TD: Sucesso na inserção
+        deactivate LDB
+        
+        TD-->>MA: Transação salva localmente
+        deactivate TD
+        
+        MA->>SS: adicionarParaSincronizacao(transacao, "CREATE")
+        activate SS
+        
+        SS->>SD: criar(tipo:"TRANSACAO", acao:"CREATE", dados:transacao)
+        activate SD
+        SD-->>SS: Registro de sync criado
+        deactivate SD
+        
+        SS-->>MA: Adicionado à fila de sincronização
+        deactivate SS
+        
+        MA-->>U: Transação salva com sucesso
+    else Dados inválidos
+        MA-->>U: Exibe erros de validação
+    end
+    
+    deactivate MA
+            </div>
+        </div>
+        
+        <h2>3. Processo de Sincronização</h2>
+        <div class="description">
+            <strong>Descrição:</strong> Sincronização automática entre dispositivo mobile e servidor, 
+            incluindo detecção e resolução de conflitos de dados.
+        </div>
+        <div class="diagram-container">
+            <div class="mermaid">
+sequenceDiagram
+    participant MA as 📱 Mobile App
+    participant SS as 🔄 SyncService
+    participant SD as 📡 SyncDataDAO
+    participant NM as 🌐 NetworkManager
+    participant SV as 🖥️ Servidor
+    participant CR as ⚖️ ConflictResolver
+    
+    Note over MA, CR: Processo de Sincronização Automática
+    
+    MA->>SS: iniciarSincronizacao()
+    activate SS
+    
+    SS->>NM: verificarConectividade()
+    activate NM
+    NM-->>SS: Conectividade OK
+    deactivate NM
+    
+    SS->>SD: obterDadosPendentes()
+    activate SD
+    SD-->>SS: Lista de registros para sync
+    deactivate SD
+    
+    loop Para cada registro pendente
+        SS->>SV: enviarDados(dadosLocal)
+        activate SV
+        
+        alt Sucesso sem conflito
+            SV-->>SS: Confirmação de recebimento
+            SS->>SD: marcarComoSincronizado(uuid)
+            
+        else Conflito detectado
+            SV-->>SS: Conflito + dadosServidor
+            SS->>CR: resolverConflito(dadosLocal, dadosServidor)
+            activate CR
+            
+            CR->>CR: aplicarEstrategiaResolucao()
+            CR-->>SS: Dados resolvidos
+            deactivate CR
+            
+            SS->>SV: reenviarDados(dadosResolvidos)
+            SV-->>SS: Confirmação final
+            SS->>SD: marcarComoSincronizado(uuid)
+        end
+        
+        deactivate SV
+    end
+    
+    SS-->>MA: Sincronização concluída
+    deactivate SS
+            </div>
+        </div>
+        
+        <h2>4. Geração de Relatório (Desktop)</h2>
+        <div class="description">
+            <strong>Descrição:</strong> Processo completo de geração de relatório financeiro na aplicação desktop, 
+            incluindo consulta aos dados, processamento e exportação em diferentes formatos.
+        </div>
+        <div class="diagram-container">
+            <div class="mermaid">
+sequenceDiagram
+    participant U as 👤 Admin Desktop
+    participant DT as 🖥️ Desktop UI
+    participant RS as 📊 RelatorioService
+    participant TD as 💰 TransacaoDAO
+    participant MySQL as 🗃️ MySQL
+    participant EX as 📄 ExportService
+    participant FS as 📁 FileSystem
+    
+    Note over U, FS: Geração de Relatório Financeiro
+    
+    U->>DT: Acessa tela de relatórios
+    DT->>DT: carregarParametros()
+    DT-->>U: Exibe formulário de relatório
+    
+    U->>DT: Define período e filtros
+    U->>DT: Clica "Gerar Relatório"
+    activate DT
+    
+    DT->>RS: gerarRelatorio(parametros)
+    activate RS
+    
+    RS->>TD: consultarTransacoes(filtros)
+    activate TD
+    
+    TD->>MySQL: SELECT com JOINs e filtros
+    activate MySQL
+    MySQL-->>TD: Dados das transações
+    deactivate MySQL
+    
+    TD-->>RS: Lista de transações
+    deactivate TD
+    
+    RS->>RS: processarDados(transacoes)
+    RS->>RS: calcularTotais()
+    RS->>RS: agruparPorCategoria()
+    
+    RS->>EX: exportar(dados, formato)
+    activate EX
+    
+    alt Formato PDF
+        EX->>EX: gerarPDF(dados)
+        EX->>FS: salvarArquivo(pdf, caminho)
+    else Formato Excel
+        EX->>EX: gerarExcel(dados)
+        EX->>FS: salvarArquivo(excel, caminho)
+    else Formato CSV
+        EX->>EX: gerarCSV(dados)
+        EX->>FS: salvarArquivo(csv, caminho)
+    end
+    
+    FS-->>EX: Arquivo salvo
+    EX-->>RS: Caminho do arquivo
+    deactivate EX
+    
+    RS->>RS: criarRegistroRelatorio(parametros, caminho)
+    RS-->>DT: Relatório gerado com sucesso
+    deactivate RS
+    
+    DT-->>U: Exibe link para download
+    
+    U->>DT: Clica para baixar
+    DT->>FS: abrirArquivo(caminho)
+    FS-->>U: Download do relatório
+    
+    deactivate DT
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h3>🎨 Legenda dos Participantes:</h3>
+            <div class="legend-item user">👤 Usuários e Interfaces</div>
+            <div class="legend-item service">🔧 Serviços e Lógica de Negócio</div>
+            <div class="legend-item database">💾 Persistência e Dados</div>
+            <div class="legend-item sync">🔄 Sincronização e Rede</div>
+        </div>
+        
+        <div class="legend">
+            <h3>📊 Análise dos Fluxos:</h3>
+            <ul>
+                <li><strong>Autenticação:</strong> 2-3 segundos para login completo</li>
+                <li><strong>Transação Mobile:</strong> Persistência local instantânea + sync em background</li>
+                <li><strong>Sincronização:</strong> Automática a cada 30 segundos ou manual</li>
+                <li><strong>Relatórios:</strong> 5-15 segundos dependendo do volume de dados</li>
+                <li><strong>Resolução de Conflitos:</strong> 3 estratégias (local, remoto, merge)</li>
+            </ul>
+        </div>
+        
+        <div class="legend">
+            <h3>🎯 Padrões de Design Identificados:</h3>
+            <ul>
+                <li><strong>Command Pattern:</strong> Operações offline encapsuladas como comandos</li>
+                <li><strong>Observer Pattern:</strong> Notificações de mudanças de estado</li>
+                <li><strong>Strategy Pattern:</strong> Múltiplas estratégias de resolução de conflitos</li>
+                <li><strong>Chain of Responsibility:</strong> Pipeline de validações e processamento</li>
+                <li><strong>Repository Pattern:</strong> Abstração da camada de persistência</li>
+            </ul>
+        </div>
+        
+        <div class="legend">
+            <h3>🛡️ Tratamento de Erros:</h3>
+            <ul>
+                <li><strong>Autenticação:</strong> Validação de credenciais + bloqueio após tentativas</li>
+                <li><strong>Transações:</strong> Validações de negócio + rollback automático</li>
+                <li><strong>Sincronização:</strong> Retry automático + queue de dados offline</li>
+                <li><strong>Relatórios:</strong> Timeout configurável + cache de resultados</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            sequence: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                wrap: true,
+                width: 150
+            }
+        });
+    </script>
+</body>
+</html>

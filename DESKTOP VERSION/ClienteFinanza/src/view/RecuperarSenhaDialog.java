@@ -26,7 +26,7 @@ public class RecuperarSenhaDialog extends JDialog {
     }
     
     private void initComponents() {
-        setSize(450, 300);
+        setSize(500, 400);
         setLocationRelativeTo(getParent());
         setResizable(false);
         

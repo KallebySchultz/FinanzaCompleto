@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="14dp">
 
     <TextView
         android:layout_width="wrap_content"
@@ -12,7 +12,7 @@
         android:text="Recuperar Senha"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/primaryDarkBlue"
+        android:textColor="@color/white"
         android:layout_marginBottom="16dp"/>
 
     <TextView
@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:text="Digite seu email para receber instruções de recuperação de senha:"
         android:textSize="14sp"
-        android:textColor="@color/darkGray"
+        android:textColor="@color/white"
         android:layout_marginBottom="20dp"/>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -46,21 +46,21 @@
 
         <Button
             android:id="@+id/btn_cancelar_recovery"
-            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="100dp"
+            android:background="@drawable/button_blue"
             android:text="Cancelar"
-            android:textColor="@color/darkGray"
-            android:layout_marginEnd="8dp"/>
+            android:textColor="@color/white" />
 
         <Button
             android:id="@+id/btn_enviar_recovery"
-            android:layout_width="wrap_content"
+            android:layout_width="95dp"
             android:layout_height="wrap_content"
             android:background="@drawable/button_blue"
+            android:minWidth="100dp"
             android:text="Enviar"
-            android:textColor="@color/white"
-            android:minWidth="100dp"/>
+            android:textColor="@color/white" />
 
     </LinearLayout>
 

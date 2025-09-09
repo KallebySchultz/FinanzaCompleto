@@ -743,7 +743,8 @@ public class ClientHandler extends Thread {
                     continue;
                 }
                 // Validação: valor nulo ou mal formatado
-                String valorStr = String.format("%.2f", mov.getValor());
+                // Use US locale to ensure dot as decimal separator
+                String valorStr = String.format(java.util.Locale.US, "%.2f", mov.getValor());
                 String[] valorParts = valorStr.split("\\.");
                 if (valorParts.length < 2) {
                     System.err.println("Valor mal formatado para movimentação ID: " + mov.getId() + " - valor: " + valorStr);

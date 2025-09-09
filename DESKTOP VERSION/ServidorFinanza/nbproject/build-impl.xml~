@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ServidorFinanza-impl" default="default" basedir="..">
+    
+    <!-- Initialize properties -->
+    <target name="init">
+        <loadproperties srcFile="nbproject/project.properties"/>
+        <property name="src.dir" value="src"/>
+        <property name="build.dir" value="build"/>
+        <property name="build.classes.dir" value="${build.dir}/classes"/>
+        <property name="dist.dir" value="dist"/>
+        <property name="dist.jar" value="${dist.dir}/ServidorFinanza.jar"/>
+        <property name="main.class" value="MainServidor"/>
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <!-- Compile source files -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" 
+               destdir="${build.classes.dir}" 
+               includeantruntime="false"
+               debug="true"
+               source="1.8"
+               target="1.8">
+            <classpath>
+                <pathelement path="${javac.classpath}"/>
+                <pathelement location="../lib/mysql-connector-j-8.0.33.jar"/>
+            </classpath>
+        </javac>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.dir}" excludes="**/*.java"/>
+        </copy>
+    </target>
+
+    <!-- Build JAR file -->
+    <target name="jar" depends="compile">
+        <jar destfile="${dist.jar}" basedir="${build.classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+                <attribute name="Class-Path" value="../lib/mysql-connector-j-8.0.33.jar"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Run the application -->
+    <target name="run" depends="jar">
+        <java classname="${main.class}" fork="true">
+            <classpath>
+                <pathelement location="${dist.jar}"/>
+                <pathelement location="../lib/mysql-connector-j-8.0.33.jar"/>
+            </classpath>
+        </java>
+    </target>
+
+    <!-- Clean build products -->
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <!-- Default target -->
+    <target name="default" depends="jar"/>
+
+</project>

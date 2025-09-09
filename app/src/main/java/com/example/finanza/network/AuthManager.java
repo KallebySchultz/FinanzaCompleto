@@ -78,6 +78,9 @@ public class AuthManager {
         this.context = context.getApplicationContext();
         this.database = AppDatabase.getDatabase(context);
         this.serverClient = ServerClient.getInstance(context);
+        
+        // Create test user for development/testing
+        criarUsuarioTesteSeMecessario();
     }
 
     /**
@@ -282,12 +285,12 @@ public class AuthManager {
     }
 
     /**
-     * Busca usuário local por email
+     * Busca usuário local por email e valida a senha
      */
     private Usuario buscarUsuarioLocal(String email, String senha) {
         try {
-            // Busca por email primeiro
-            return database.usuarioDao().buscarPorEmail(email);
+            // Busca usuário por email e senha usando o método de login do DAO
+            return database.usuarioDao().login(email, senha);
         } catch (Exception e) {
             Log.e(TAG, "Erro ao buscar usuário local: " + e.getMessage());
             return null;
@@ -340,6 +343,36 @@ public class AuthManager {
     }
 
     /**
+     * Creates default test user if it doesn't exist (for development/testing)
+     */
+    private void criarUsuarioTesteSeMecessario() {
+        try {
+            // Check if test user already exists
+            Usuario usuarioTeste = database.usuarioDao().buscarPorEmail("teste1@gmail.com");
+            if (usuarioTeste == null) {
+                Log.d(TAG, "Criando usuário de teste local...");
+                
+                // Create test user
+                Usuario usuario = new Usuario();
+                usuario.nome = "Usuário Teste";
+                usuario.email = "teste1@gmail.com";
+                usuario.senha = "123456"; // Plain text for local auth
+                usuario.dataCriacao = System.currentTimeMillis();
+
+                long id = database.usuarioDao().inserir(usuario);
+                usuario.id = (int) id;
+
+                // Create default data for test user
+                criarDadosIniciais(usuario.id);
+                
+                Log.d(TAG, "Usuário de teste criado com sucesso");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao criar usuário de teste: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Creates default data for new users (account and categories)
      */
     private void criarDadosIniciais(int usuarioId) {
@@ -353,6 +386,14 @@ public class AuthManager {
             contaPadrao.saldoInicial = 0.0;
             contaPadrao.usuarioId = usuarioId;
             database.contaDao().inserir(contaPadrao);
+            
+            // Create additional test account for nubank
+            Conta contaNubank = new Conta();
+            contaNubank.nome = "nubank";
+            contaNubank.tipo = "corrente";
+            contaNubank.saldoInicial = 0.0;
+            contaNubank.usuarioId = usuarioId;
+            database.contaDao().inserir(contaNubank);
 
             // Create default expense categories if none exist
             if (database.categoriaDao().listarPorTipo("despesa").isEmpty()) {

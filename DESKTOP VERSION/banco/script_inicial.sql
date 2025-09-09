@@ -54,6 +54,15 @@ CREATE TABLE IF NOT EXISTS movimentacao (
 
 -- Inserção de dados iniciais para teste
 
+-- Usuário de teste
+INSERT IGNORE INTO usuario (nome, email, senha_hash) VALUES 
+('Usuário Teste', 'teste1@gmail.com', 'jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=');
+
+-- Conta padrão para usuário de teste
+INSERT IGNORE INTO conta (nome, tipo, saldo_inicial, id_usuario) VALUES 
+('Conta Padrão', 'corrente', 0.00, 1),
+('nubank', 'corrente', 0.00, 1);
+
 -- Categorias padrão de despesa
 INSERT IGNORE INTO categoria (nome, tipo, id_usuario) VALUES 
 ('Alimentação', 'despesa', 1),

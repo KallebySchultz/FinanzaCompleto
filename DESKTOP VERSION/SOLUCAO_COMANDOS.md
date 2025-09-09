@@ -62,6 +62,12 @@ Testei todos os comandos que falhavam anteriormente:
 
 ## Como Resolver o Problema Original
 
+### Passo 1: Configurar Dependências (IMPORTANTE)
+```bash
+cd "DESKTOP VERSION"
+./setup_dependencies.sh
+```
+
 ### Opção 1: Usar Scripts Atualizados
 ```bash
 # Para o servidor
@@ -108,6 +114,11 @@ Para funcionamento completo (não modo de teste), é necessário:
 
 ## Conclusão
 
-O código do servidor estava correto desde o início. O problema era apenas que uma versão desatualizada estava sendo executada. Com as melhorias implementadas nos scripts de build, isso não deve mais acontecer.
+O código do servidor estava correto desde o início. O problema era uma combinação de:
 
-Todos os comandos agora funcionam corretamente quando o servidor é propriamente recompilado e reiniciado.
+1. **Versão desatualizada sendo executada** - Resolvido pelos scripts de build melhorados
+2. **MySQL Connector ausente** - Resolvido pelo script `setup_dependencies.sh` que baixa a dependência automaticamente
+
+Com as melhorias implementadas nos scripts de build e o novo script de configuração de dependências, todos os problemas foram solucionados.
+
+Todos os comandos agora funcionam corretamente quando o servidor é propriamente configurado, recompilado e reiniciado.

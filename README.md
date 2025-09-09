@@ -260,10 +260,19 @@ Finanza-Mobile/
    - Edite `DESKTOP VERSION/ServidorFinanza/src/util/DatabaseUtil.java`
    - Atualize URL, usuário e senha do MySQL
 
-3. **Execute o Servidor**
+3. **Configure as dependências primeiro**
    ```bash
    cd "DESKTOP VERSION"
-   # Compile e execute ServidorFinanza
+   ./setup_dependencies.sh
+   ```
+
+4. **Execute o Servidor**
+   ```bash
+   # Usando o script automático (recomendado)
+   ./run_server.sh
+   
+   # Ou manualmente
+   cd ServidorFinanza
    javac -cp ".:lib/*" src/**/*.java
    java -cp ".:lib/*:src" MainServidor
    ```

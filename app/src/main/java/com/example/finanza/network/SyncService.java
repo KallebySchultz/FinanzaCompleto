@@ -26,6 +26,7 @@ public class SyncService {
     private AppDatabase database;
     private ServerClient serverClient;
     private ExecutorService executor;
+    private boolean isServerAuthenticated = false;
 
     // Callbacks para sincronização
     public interface SyncCallback {
@@ -67,6 +68,15 @@ public class SyncService {
                     Log.d(TAG, "Não conectado ao servidor - operação offline");
                     if (callback != null) {
                         callback.onSyncCompleted(true, "Modo offline - dados salvos localmente");
+                    }
+                    return;
+                }
+
+                // Ensure user is authenticated with server before syncing
+                if (!ensureServerAuthentication(usuarioId)) {
+                    Log.e(TAG, "Falha na autenticação com servidor");
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Erro de autenticação com servidor");
                     }
                     return;
                 }
@@ -136,7 +146,7 @@ public class SyncService {
                         categoria.corHex
                 );
                 Log.d(TAG, "Sincronizando categoria: " + categoria.nome);
-                if (serverClient.isConnected()) {
+                if (serverClient.isConnected() && ensureServerAuthentication(usuarioId)) {
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
@@ -193,7 +203,7 @@ public class SyncService {
                         String.valueOf(conta.saldoInicial)
                 );
                 Log.d(TAG, "Sincronizando conta: " + conta.nome);
-                if (serverClient.isConnected()) {
+                if (serverClient.isConnected() && ensureServerAuthentication(usuarioId)) {
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
@@ -255,7 +265,7 @@ public class SyncService {
                         String.valueOf(lancamento.categoriaId)
                 );
                 Log.d(TAG, "Sincronizando lançamento: " + lancamento.descricao);
-                if (serverClient.isConnected()) {
+                if (serverClient.isConnected() && ensureServerAuthentication(usuarioId)) {
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
@@ -288,22 +298,31 @@ public class SyncService {
                 Log.d(TAG, "Categoria salva localmente: " + categoria.nome);
                 if (serverClient.isConnected()) {
                     Log.d(TAG, "Sincronizando categoria com servidor...");
-                    String comando = Protocol.buildCommand(
-                            Protocol.CMD_ADD_CATEGORIA,
-                            categoria.nome,
-                            categoria.tipo,
-                            categoria.corHex
-                    );
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Categoria sincronizada com servidor: " + categoria.nome);
-                        }
-                        @Override
-                        public void onError(String error) {
-                            Log.e(TAG, "Erro ao sincronizar categoria com servidor: " + error);
-                        }
-                    });
+                    
+                    // Get current user ID from AuthManager
+                    AuthManager authManager = AuthManager.getInstance(context);
+                    int currentUserId = authManager.getLoggedUserId();
+                    
+                    if (currentUserId != -1 && ensureServerAuthentication(currentUserId)) {
+                        String comando = Protocol.buildCommand(
+                                Protocol.CMD_ADD_CATEGORIA,
+                                categoria.nome,
+                                categoria.tipo,
+                                categoria.corHex
+                        );
+                        serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                            @Override
+                            public void onSuccess(String result) {
+                                Log.d(TAG, "Categoria sincronizada com servidor: " + categoria.nome);
+                            }
+                            @Override
+                            public void onError(String error) {
+                                Log.e(TAG, "Erro ao sincronizar categoria com servidor: " + error);
+                            }
+                        });
+                    } else {
+                        Log.w(TAG, "Falha na autenticação - categoria não sincronizada: " + categoria.nome);
+                    }
                 }
                 if (callback != null) {
                     callback.onSyncCompleted(true, "Categoria adicionada");
@@ -334,26 +353,32 @@ public class SyncService {
                 Log.d(TAG, "Conta salva localmente: " + conta.nome);
                 if (serverClient.isConnected()) {
                     Log.d(TAG, "Sincronizando conta com servidor...");
-                    String comando = Protocol.buildCommand(
-                            Protocol.CMD_ADD_CONTA,
-                            conta.nome,
-                            conta.tipo != null ? conta.tipo : "corrente",
-                            String.valueOf(conta.saldoInicial)
-                    );
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Conta sincronizada com servidor: " + conta.nome);
-                        }
-                        @Override
-                        public void onError(String error) {
-                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Conta já existe no servidor: " + conta.nome);
-                            } else {
-                                Log.e(TAG, "Erro ao sincronizar conta com servidor: " + error);
+                    
+                    // Ensure authentication before sending data
+                    if (ensureServerAuthentication(conta.usuarioId)) {
+                        String comando = Protocol.buildCommand(
+                                Protocol.CMD_ADD_CONTA,
+                                conta.nome,
+                                conta.tipo != null ? conta.tipo : "corrente",
+                                String.valueOf(conta.saldoInicial)
+                        );
+                        serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                            @Override
+                            public void onSuccess(String result) {
+                                Log.d(TAG, "Conta sincronizada com servidor: " + conta.nome);
                             }
-                        }
-                    });
+                            @Override
+                            public void onError(String error) {
+                                if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
+                                    Log.d(TAG, "Conta já existe no servidor: " + conta.nome);
+                                } else {
+                                    Log.e(TAG, "Erro ao sincronizar conta com servidor: " + error);
+                                }
+                            }
+                        });
+                    } else {
+                        Log.w(TAG, "Falha na autenticação - conta não sincronizada: " + conta.nome);
+                    }
                 }
                 if (callback != null) {
                     callback.onSyncCompleted(true, "Conta adicionada");
@@ -392,29 +417,35 @@ public class SyncService {
                 Log.d(TAG, "Lançamento salvo localmente: " + lancamento.descricao);
                 if (serverClient.isConnected()) {
                     Log.d(TAG, "Sincronizando lançamento com servidor...");
-                    String comando = Protocol.buildCommand(
-                            Protocol.CMD_ADD_MOVIMENTACAO,
-                            String.valueOf(lancamento.valor),
-                            new java.sql.Date(lancamento.data).toString(),
-                            lancamento.descricao,
-                            lancamento.tipo,
-                            String.valueOf(lancamento.contaId),
-                            String.valueOf(lancamento.categoriaId)
-                    );
-                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
-                        @Override
-                        public void onSuccess(String result) {
-                            Log.d(TAG, "Lançamento sincronizado com servidor: " + lancamento.descricao);
-                        }
-                        @Override
-                        public void onError(String error) {
-                            if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Lançamento já existe no servidor: " + lancamento.descricao);
-                            } else {
-                                Log.e(TAG, "Erro ao sincronizar lançamento com servidor: " + error);
+                    
+                    // Ensure authentication before sending data
+                    if (ensureServerAuthentication(lancamento.usuarioId)) {
+                        String comando = Protocol.buildCommand(
+                                Protocol.CMD_ADD_MOVIMENTACAO,
+                                String.valueOf(lancamento.valor),
+                                new java.sql.Date(lancamento.data).toString(),
+                                lancamento.descricao,
+                                lancamento.tipo,
+                                String.valueOf(lancamento.contaId),
+                                String.valueOf(lancamento.categoriaId)
+                        );
+                        serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                            @Override
+                            public void onSuccess(String result) {
+                                Log.d(TAG, "Lançamento sincronizado com servidor: " + lancamento.descricao);
                             }
-                        }
-                    });
+                            @Override
+                            public void onError(String error) {
+                                if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
+                                    Log.d(TAG, "Lançamento já existe no servidor: " + lancamento.descricao);
+                                } else {
+                                    Log.e(TAG, "Erro ao sincronizar lançamento com servidor: " + error);
+                                }
+                            }
+                        });
+                    } else {
+                        Log.w(TAG, "Falha na autenticação - lançamento não sincronizado: " + lancamento.descricao);
+                    }
                 }
                 if (callback != null) {
                     callback.onSyncCompleted(true, "Movimentação adicionada");
@@ -783,5 +814,83 @@ public class SyncService {
             Log.e(TAG, "Erro ao mapear conta do servidor: " + e.getMessage(), e);
             return -1;
         }
+    }
+
+    /**
+     * Ensures that the user is authenticated with the server before sending commands
+     * This is critical for database submissions to work properly
+     */
+    private boolean ensureServerAuthentication(int usuarioId) {
+        try {
+            if (!serverClient.isConnected()) {
+                Log.w(TAG, "Servidor não conectado - resetando autenticação");
+                isServerAuthenticated = false;
+                return false;
+            }
+
+            if (isServerAuthenticated) {
+                Log.d(TAG, "Usuário já autenticado com o servidor");
+                return true;
+            }
+
+            // Get user credentials from local database
+            Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
+            if (usuario == null) {
+                Log.e(TAG, "Usuário não encontrado no banco local para autenticação");
+                return false;
+            }
+
+            // Perform authentication synchronously (we're already in background thread)
+            final boolean[] authResult = {false};
+            final Object lock = new Object();
+
+            Log.d(TAG, "Autenticando usuário com servidor: " + usuario.email);
+            serverClient.login(usuario.email, usuario.senha, new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.d(TAG, "Autenticação com servidor bem-sucedida");
+                    isServerAuthenticated = true;
+                    authResult[0] = true;
+                    synchronized (lock) {
+                        lock.notifyAll();
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Falha na autenticação com servidor: " + error);
+                    isServerAuthenticated = false;
+                    authResult[0] = false;
+                    synchronized (lock) {
+                        lock.notifyAll();
+                    }
+                }
+            });
+
+            // Wait for authentication result
+            synchronized (lock) {
+                try {
+                    lock.wait(10000); // Wait max 10 seconds for authentication
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    Log.e(TAG, "Autenticação interrompida");
+                    return false;
+                }
+            }
+
+            return authResult[0];
+        } catch (Exception e) {
+            Log.e(TAG, "Erro durante autenticação com servidor: " + e.getMessage(), e);
+            isServerAuthenticated = false;
+            return false;
+        }
+    }
+
+    /**
+     * Reset authentication status (to be called when connection is lost)
+     */
+    public void resetServerAuthentication() {
+        isServerAuthenticated = false;
+        Log.d(TAG, "Status de autenticação resetado");
     }
 }

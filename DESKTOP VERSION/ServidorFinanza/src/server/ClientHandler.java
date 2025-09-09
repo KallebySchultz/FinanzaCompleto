@@ -506,7 +506,7 @@ public class ClientHandler extends Thread {
             return Protocol.createErrorResponse("Usuário não está logado");
         }
         
-        if (partes.length < 4) {
+        if (partes.length < 5) {
             return Protocol.createErrorResponse("Parâmetros insuficientes para atualizar conta");
         }
         
@@ -515,8 +515,36 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Conta atualizada com sucesso (modo teste)");
         }
         
-        // TODO: Implementar atualização real no banco de dados
-        return Protocol.createSuccessResponse("Conta atualizada com sucesso");
+        try {
+            int id = Integer.parseInt(partes[1]);
+            String nome = partes[2];
+            String tipoStr = partes[3];
+            double saldoInicial = Double.parseDouble(partes[4]);
+            
+            // Criar objeto conta para atualização
+            Conta conta = new Conta();
+            conta.setId(id);
+            conta.setNome(nome);
+            conta.setTipo(Conta.TipoConta.fromString(tipoStr));
+            conta.setSaldoInicial(saldoInicial);
+            conta.setIdUsuario(usuarioLogado.getId());
+            
+            // Chamar DAO para atualizar
+            boolean sucesso = contaDAO.atualizar(conta);
+            
+            if (sucesso) {
+                return Protocol.createSuccessResponse("Conta atualizada com sucesso");
+            } else {
+                return Protocol.createErrorResponse("Erro ao atualizar conta no banco de dados");
+            }
+            
+        } catch (NumberFormatException e) {
+            return Protocol.createErrorResponse("Parâmetros numéricos inválidos: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return Protocol.createErrorResponse("Tipo de conta inválido: " + e.getMessage());
+        } catch (Exception e) {
+            return Protocol.createErrorResponse("Erro interno: " + e.getMessage());
+        }
     }
     
     /**
@@ -536,8 +564,23 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Conta removida com sucesso (modo teste)");
         }
         
-        // TODO: Implementar remoção real no banco de dados
-        return Protocol.createSuccessResponse("Conta removida com sucesso");
+        try {
+            int id = Integer.parseInt(partes[1]);
+            
+            // Chamar DAO para remover
+            boolean sucesso = contaDAO.remover(id, usuarioLogado.getId());
+            
+            if (sucesso) {
+                return Protocol.createSuccessResponse("Conta removida com sucesso");
+            } else {
+                return Protocol.createErrorResponse("Erro ao remover conta - conta não encontrada ou não pertence ao usuário");
+            }
+            
+        } catch (NumberFormatException e) {
+            return Protocol.createErrorResponse("ID da conta deve ser um número válido");
+        } catch (Exception e) {
+            return Protocol.createErrorResponse("Erro interno: " + e.getMessage());
+        }
     }
     
     // ========== MÉTODOS PARA CATEGORIAS ==========
@@ -676,8 +719,34 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Categoria atualizada com sucesso (modo teste)");
         }
         
-        // TODO: Implementar atualização real no banco de dados
-        return Protocol.createSuccessResponse("Categoria atualizada com sucesso");
+        try {
+            int id = Integer.parseInt(partes[1]);
+            String nome = partes[2];
+            String tipoStr = partes[3];
+            
+            // Criar objeto categoria para atualização
+            Categoria categoria = new Categoria();
+            categoria.setId(id);
+            categoria.setNome(nome);
+            categoria.setTipo(Categoria.TipoCategoria.fromString(tipoStr));
+            categoria.setIdUsuario(usuarioLogado.getId());
+            
+            // Chamar DAO para atualizar
+            boolean sucesso = categoriaDAO.atualizar(categoria);
+            
+            if (sucesso) {
+                return Protocol.createSuccessResponse("Categoria atualizada com sucesso");
+            } else {
+                return Protocol.createErrorResponse("Erro ao atualizar categoria no banco de dados");
+            }
+            
+        } catch (NumberFormatException e) {
+            return Protocol.createErrorResponse("ID da categoria deve ser um número válido");
+        } catch (IllegalArgumentException e) {
+            return Protocol.createErrorResponse("Tipo de categoria inválido: " + e.getMessage());
+        } catch (Exception e) {
+            return Protocol.createErrorResponse("Erro interno: " + e.getMessage());
+        }
     }
     
     /**
@@ -697,8 +766,23 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Categoria removida com sucesso (modo teste)");
         }
         
-        // TODO: Implementar remoção real no banco de dados
-        return Protocol.createSuccessResponse("Categoria removida com sucesso");
+        try {
+            int id = Integer.parseInt(partes[1]);
+            
+            // Chamar DAO para remover
+            boolean sucesso = categoriaDAO.remover(id, usuarioLogado.getId());
+            
+            if (sucesso) {
+                return Protocol.createSuccessResponse("Categoria removida com sucesso");
+            } else {
+                return Protocol.createErrorResponse("Erro ao remover categoria - categoria não encontrada, não pertence ao usuário ou está em uso");
+            }
+            
+        } catch (NumberFormatException e) {
+            return Protocol.createErrorResponse("ID da categoria deve ser um número válido");
+        } catch (Exception e) {
+            return Protocol.createErrorResponse("Erro interno: " + e.getMessage());
+        }
     }
     
     // ========== MÉTODOS PARA MOVIMENTAÇÕES ==========
@@ -890,7 +974,7 @@ public class ClientHandler extends Thread {
             return Protocol.createErrorResponse("Usuário não está logado");
         }
         
-        if (partes.length < 6) {
+        if (partes.length < 8) {
             return Protocol.createErrorResponse("Parâmetros insuficientes para atualizar movimentação");
         }
         
@@ -899,8 +983,47 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Movimentação atualizada com sucesso (modo teste)");
         }
         
-        // TODO: Implementar atualização real no banco de dados
-        return Protocol.createSuccessResponse("Movimentação atualizada com sucesso");
+        try {
+            int id = Integer.parseInt(partes[1]);
+            double valor = Double.parseDouble(partes[2]);
+            Date data = Date.valueOf(partes[3]);
+            String descricao = partes[4];
+            String tipoStr = partes[5];
+            int idConta = Integer.parseInt(partes[6]);
+            int idCategoria = Integer.parseInt(partes[7]);
+            
+            // Criar objeto movimentação para atualização
+            Movimentacao movimentacao = new Movimentacao();
+            movimentacao.setId(id);
+            movimentacao.setValor(valor);
+            movimentacao.setData(data);
+            movimentacao.setDescricao(descricao);
+            movimentacao.setTipo(Movimentacao.TipoMovimentacao.fromString(tipoStr));
+            movimentacao.setIdConta(idConta);
+            movimentacao.setIdCategoria(idCategoria);
+            movimentacao.setIdUsuario(usuarioLogado.getId());
+            
+            // Validar tipo de movimentação
+            if (movimentacao.getTipo() == null) {
+                return Protocol.createErrorResponse("Tipo de movimentação inválido");
+            }
+            
+            // Chamar DAO para atualizar
+            boolean sucesso = movimentacaoDAO.atualizar(movimentacao);
+            
+            if (sucesso) {
+                return Protocol.createSuccessResponse("Movimentação atualizada com sucesso");
+            } else {
+                return Protocol.createErrorResponse("Erro ao atualizar movimentação no banco de dados");
+            }
+            
+        } catch (NumberFormatException e) {
+            return Protocol.createErrorResponse("Parâmetros numéricos inválidos: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return Protocol.createErrorResponse("Data inválida: " + e.getMessage());
+        } catch (Exception e) {
+            return Protocol.createErrorResponse("Erro interno: " + e.getMessage());
+        }
     }
     
     /**
@@ -920,8 +1043,23 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Movimentação removida com sucesso (modo teste)");
         }
         
-        // TODO: Implementar remoção real no banco de dados
-        return Protocol.createSuccessResponse("Movimentação removida com sucesso");
+        try {
+            int id = Integer.parseInt(partes[1]);
+            
+            // Chamar DAO para remover
+            boolean sucesso = movimentacaoDAO.remover(id, usuarioLogado.getId());
+            
+            if (sucesso) {
+                return Protocol.createSuccessResponse("Movimentação removida com sucesso");
+            } else {
+                return Protocol.createErrorResponse("Erro ao remover movimentação - movimentação não encontrada ou não pertence ao usuário");
+            }
+            
+        } catch (NumberFormatException e) {
+            return Protocol.createErrorResponse("ID da movimentação deve ser um número válido");
+        } catch (Exception e) {
+            return Protocol.createErrorResponse("Erro interno: " + e.getMessage());
+        }
     }
     
     // ========== MÉTODOS PARA PERFIL ==========

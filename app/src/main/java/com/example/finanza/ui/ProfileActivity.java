@@ -170,10 +170,17 @@ public class ProfileActivity extends AppCompatActivity {
                 usuarioAtual.senha = novaSenha;
             }
 
-            db.usuarioDao().atualizar(usuarioAtual);
-            carregarDadosUsuario();
-            dialog.dismiss();
-            Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();
+            // Mark as modified for future sync
+            usuarioAtual.markAsModified();
+            
+            try {
+                db.usuarioDao().atualizar(usuarioAtual);
+                carregarDadosUsuario();
+                dialog.dismiss();
+                Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Erro ao atualizar perfil: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         });
 
         btnCancelar.setOnClickListener(v -> dialog.dismiss());

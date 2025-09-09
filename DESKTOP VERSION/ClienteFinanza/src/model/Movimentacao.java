@@ -45,12 +45,15 @@ public class Movimentacao {
         }
         
         public static TipoMovimentacao fromString(String tipo) {
+            if (tipo == null || tipo.trim().isEmpty()) {
+                return null;
+            }
             for (TipoMovimentacao t : TipoMovimentacao.values()) {
                 if (t.getValor().equalsIgnoreCase(tipo)) {
                     return t;
                 }
             }
-            throw new IllegalArgumentException("Tipo de movimentação inválido: " + tipo);
+            return null; // Return null instead of throwing exception for invalid types
         }
     }
     

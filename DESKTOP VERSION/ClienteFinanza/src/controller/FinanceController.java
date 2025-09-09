@@ -396,6 +396,13 @@ public class FinanceController {
                             Date data = Date.valueOf(campos[3]);
                             String descricao = campos[4];
                             Movimentacao.TipoMovimentacao tipo = Movimentacao.TipoMovimentacao.fromString(campos[5]);
+                            
+                            // Skip this record if tipo is null (invalid type)
+                            if (tipo == null) {
+                                System.err.println("Tipo de movimentação inválido, ignorando registro: " + movStr);
+                                continue;
+                            }
+                            
                             int idConta = Integer.parseInt(campos[6]);
                             int idCategoria = Integer.parseInt(campos[7]);
                             

@@ -323,10 +323,32 @@ public class MovementsActivity extends AppCompatActivity {
                     lancamento.categoriaId = categoriaSelecionadaDialog[0].id;
                     lancamento.usuarioId = usuarioIdAtual;
                     lancamento.tipo = isReceitaPanel ? "receita" : "despesa";
-                    db.lancamentoDao().inserir(lancamento);
-                    updateMovements();
-                    dialog.dismiss();
-                    Toast.makeText(this, "Transação salva!", Toast.LENGTH_SHORT).show();
+                    
+                    // Use sync service instead of direct DAO call
+                    syncService.adicionarLancamento(lancamento, new SyncService.SyncCallback() {
+                        @Override
+                        public void onSyncStarted() {
+                            // Optional: show loading indicator
+                        }
+
+                        @Override
+                        public void onSyncCompleted(boolean success, String message) {
+                            runOnUiThread(() -> {
+                                if (success) {
+                                    updateMovements();
+                                    dialog.dismiss();
+                                    Toast.makeText(MovementsActivity.this, "Transação salva!", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(MovementsActivity.this, "Erro ao salvar: " + message, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onSyncProgress(String operation) {
+                            // Optional: show progress
+                        }
+                    });
                 } catch (NumberFormatException e) {
                     inputValor.setError("Valor inválido! Use apenas números e ponto para decimais.");
                 }
@@ -488,10 +510,32 @@ public class MovementsActivity extends AppCompatActivity {
                     lancamento.descricao = novaDescricao;
                     lancamento.valor = novoValor;
                     lancamento.categoriaId = categoriaFinal[0].id;
-                    db.lancamentoDao().atualizar(lancamento);
-                    updateMovements();
-                    dialog.dismiss();
-                    Toast.makeText(this, "Transação atualizada!", Toast.LENGTH_SHORT).show();
+                    
+                    // Use sync service instead of direct DAO call
+                    syncService.atualizarLancamento(lancamento, new SyncService.SyncCallback() {
+                        @Override
+                        public void onSyncStarted() {
+                            // Optional: show loading indicator
+                        }
+
+                        @Override
+                        public void onSyncCompleted(boolean success, String message) {
+                            runOnUiThread(() -> {
+                                if (success) {
+                                    updateMovements();
+                                    dialog.dismiss();
+                                    Toast.makeText(MovementsActivity.this, "Transação atualizada!", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(MovementsActivity.this, "Erro ao atualizar: " + message, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onSyncProgress(String operation) {
+                            // Optional: show progress
+                        }
+                    });
                 } catch (NumberFormatException e) {
                     Toast.makeText(this, "Valor inválido", Toast.LENGTH_SHORT).show();
                 }
@@ -522,10 +566,31 @@ public class MovementsActivity extends AppCompatActivity {
         dialog.show();
 
         btnExcluir.setOnClickListener(v -> {
-            db.lancamentoDao().deletar(lancamento);
-            updateMovements();
-            dialog.dismiss();
-            Toast.makeText(this, "Transação excluída!", Toast.LENGTH_SHORT).show();
+            // Use sync service instead of direct DAO call
+            syncService.deletarLancamento(lancamento, new SyncService.SyncCallback() {
+                @Override
+                public void onSyncStarted() {
+                    // Optional: show loading indicator
+                }
+
+                @Override
+                public void onSyncCompleted(boolean success, String message) {
+                    runOnUiThread(() -> {
+                        if (success) {
+                            updateMovements();
+                            dialog.dismiss();
+                            Toast.makeText(MovementsActivity.this, "Transação excluída!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MovementsActivity.this, "Erro ao excluir: " + message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onSyncProgress(String operation) {
+                    // Optional: show progress
+                }
+            });
         });
 
         btnCancelar.setOnClickListener(v -> dialog.dismiss());

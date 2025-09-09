@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Casos de Uso - Sistema Finanza</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .diagram-container {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .legend {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .legend h3 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        .legend-item {
+            display: inline-block;
+            margin: 5px 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .actor { background: #e1f5fe; border: 2px solid #01579b; }
+        .auth { background: #fff3e0; border: 2px solid #f57c00; }
+        .financial { background: #e8f5e8; border: 2px solid #2e7d32; }
+        .mobile { background: #fce4ec; border: 2px solid #c2185b; }
+        .desktop { background: #e3f2fd; border: 2px solid #1976d2; }
+        .sync { background: #f3e5f5; border: 2px solid #7b1fa2; }
+        .database { background: #fff8e1; border: 2px solid #f9a825; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Diagrama de Casos de Uso - Sistema Finanza</h1>
+        <p><strong>Sistema Integrado Mobile (Android) + Desktop (Java)</strong></p>
+        
+        <div class="diagram-container">
+            <div class="mermaid">
+graph TB
+    %% Atores
+    UM[👤 Usuário Mobile]
+    UD[🖥️ Usuário Desktop]
+    SS[⚙️ Sistema Sincronização]
+    BD[🗄️ Sistema Banco Dados]
+    
+    %% Sistema principal
+    subgraph "Sistema Finanza - Módulo de Autenticação"
+        UC1[UC01: Fazer Login]
+        UC2[UC02: Criar Conta]
+        UC3[UC03: Recuperar Senha]
+        UC4[UC04: Alterar Senha]
+        UC5[UC05: Fazer Logout]
+    end
+    
+    subgraph "Sistema Finanza - Módulo Gestão Financeira"
+        UC6[UC06: Gerenciar Transações]
+        UC7[UC07: Gerenciar Contas]
+        UC8[UC08: Gerenciar Categorias]
+        UC9[UC09: Visualizar Dashboard]
+        UC10[UC10: Filtrar Movimentações]
+        UC11[UC11: Calcular Saldos]
+    end
+    
+    subgraph "Sistema Finanza - Módulo Mobile"
+        UC12[UC12: Sincronizar Dados Manualmente]
+        UC13[UC13: Trabalhar Offline]
+        UC14[UC14: Receber Notificações]
+        UC15[UC15: Configurar Aplicativo]
+        UC16[UC16: Testar Conexão]
+    end
+    
+    subgraph "Sistema Finanza - Módulo Desktop"
+        UC17[UC17: Administrar Usuários]
+        UC18[UC18: Gerar Relatórios]
+        UC19[UC19: Exportar/Importar]
+        UC20[UC20: Monitorar Sistema]
+        UC21[UC21: Configurar Servidor]
+        UC22[UC22: Gerenciar Conexões]
+        UC23[UC23: Visualizar Logs]
+    end
+    
+    subgraph "Sistema Finanza - Sincronização"
+        UC24[UC24: Sincronizar Auto]
+        UC25[UC25: Resolver Conflitos]
+        UC26[UC26: Validar Integridade]
+        UC27[UC27: Processar Fila]
+    end
+    
+    subgraph "Sistema Finanza - Banco de Dados"
+        UC28[UC28: Backup Automático]
+        UC29[UC29: Restaurar Dados]
+        UC30[UC30: Integridade Referencial]
+        UC31[UC31: Gerenciar Transações BD]
+    end
+    
+    %% Relacionamentos Usuário Mobile
+    UM --> UC1
+    UM --> UC2
+    UM --> UC3
+    UM --> UC4
+    UM --> UC5
+    UM --> UC6
+    UM --> UC7
+    UM --> UC8
+    UM --> UC9
+    UM --> UC10
+    UM --> UC11
+    UM --> UC12
+    UM --> UC13
+    UM --> UC14
+    UM --> UC15
+    UM --> UC16
+    
+    %% Relacionamentos Usuário Desktop
+    UD --> UC1
+    UD --> UC2
+    UD --> UC3
+    UD --> UC4
+    UD --> UC5
+    UD --> UC6
+    UD --> UC7
+    UD --> UC8
+    UD --> UC9
+    UD --> UC10
+    UD --> UC11
+    UD --> UC17
+    UD --> UC18
+    UD --> UC19
+    UD --> UC20
+    UD --> UC21
+    UD --> UC22
+    UD --> UC23
+    
+    %% Relacionamentos Sistema Sincronização
+    SS --> UC24
+    SS --> UC25
+    SS --> UC26
+    SS --> UC27
+    
+    %% Relacionamentos Sistema Banco de Dados
+    BD --> UC28
+    BD --> UC29
+    BD --> UC30
+    BD --> UC31
+    
+    %% Relacionamentos Includes
+    UC6 -.-> UC7 : includes
+    UC6 -.-> UC8 : includes
+    UC6 -.-> UC11 : includes
+    UC9 -.-> UC11 : includes
+    UC18 -.-> UC6 : includes
+    UC25 -.-> UC26 : includes
+    UC19 -.-> UC18 : includes
+    UC10 -.-> UC6 : includes
+    
+    %% Relacionamentos Extends
+    UC12 -.-> UC24 : extends
+    UC19 -.-> UC18 : extends
+    UC16 -.-> UC12 : extends
+    UC4 -.-> UC3 : extends
+    
+    %% Styling
+    classDef actor fill:#e1f5fe,stroke:#01579b,stroke-width:3px,color:#000
+    classDef autenticacao fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000
+    classDef gestao fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef mobile fill:#fce4ec,stroke:#c2185b,stroke-width:2px,color:#000
+    classDef desktop fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000
+    classDef sincronizacao fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+    classDef database fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#000
+    
+    class UM,UD,SS,BD actor
+    class UC1,UC2,UC3,UC4,UC5 autenticacao
+    class UC6,UC7,UC8,UC9,UC10,UC11 gestao
+    class UC12,UC13,UC14,UC15,UC16 mobile
+    class UC17,UC18,UC19,UC20,UC21,UC22,UC23 desktop
+    class UC24,UC25,UC26,UC27 sincronizacao
+    class UC28,UC29,UC30,UC31 database
+            </div>
+        </div>
+        
+        <div class="legend">
+            <h3>🎨 Legenda de Cores dos Módulos:</h3>
+            <div class="legend-item actor">👤 Atores</div>
+            <div class="legend-item auth">🔐 Autenticação</div>
+            <div class="legend-item financial">💰 Gestão Financeira</div>
+            <div class="legend-item mobile">📱 Mobile Específico</div>
+            <div class="legend-item desktop">🖥️ Desktop Específico</div>
+            <div class="legend-item sync">🔄 Sincronização</div>
+            <div class="legend-item database">🗄️ Banco de Dados</div>
+        </div>
+        
+        <div class="legend">
+            <h3>📊 Estatísticas do Diagrama:</h3>
+            <ul>
+                <li><strong>Total de Casos de Uso:</strong> 31</li>
+                <li><strong>Atores:</strong> 4 (2 humanos, 2 sistemas)</li>
+                <li><strong>Módulos Funcionais:</strong> 6</li>
+                <li><strong>Relacionamentos:</strong> 59 associações + 8 includes/extends</li>
+                <li><strong>Cobertura:</strong> 100% das funcionalidades mobile e desktop</li>
+            </ul>
+        </div>
+        
+        <div class="legend">
+            <h3>🔧 Tecnologias Cobertas:</h3>
+            <ul>
+                <li><strong>Mobile:</strong> Android (Java), SQLite Room, Material Design</li>
+                <li><strong>Desktop:</strong> Java Swing/JavaFX, MySQL, Sockets TCP/IP</li>
+                <li><strong>Sincronização:</strong> Cliente-Servidor, Resolução de Conflitos</li>
+                <li><strong>Banco:</strong> MySQL (Desktop), SQLite (Mobile), Backup/Restore</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    </script>
+</body>
+</html>

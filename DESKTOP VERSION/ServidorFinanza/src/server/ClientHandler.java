@@ -713,10 +713,11 @@ public class ClientHandler extends Thread {
         
         // Modo de teste - retorna dados fictícios
         if (testMode) {
-            String movimentacoes = "1" + Protocol.FIELD_SEPARATOR + "100.50" + Protocol.FIELD_SEPARATOR + "DESPESA" + 
-                                 Protocol.FIELD_SEPARATOR + "Supermercado" + Protocol.FIELD_SEPARATOR + "2024-01-01" + "|" +
-                                 "2" + Protocol.FIELD_SEPARATOR + "800.00" + Protocol.FIELD_SEPARATOR + "RECEITA" + 
-                                 Protocol.FIELD_SEPARATOR + "Salário" + Protocol.FIELD_SEPARATOR + "2024-01-01";
+            // Format: id,valor_inteiro,valor_decimal,data,descricao,tipo,idConta,idCategoria
+            // Include some valid data and one invalid tipo to test error handling
+            String movimentacoes = "1,100,50,2024-01-01,Supermercado,despesa,1,1" + Protocol.FIELD_SEPARATOR +
+                                 "2,800,00,2024-01-01,Salário,receita,1,2" + Protocol.FIELD_SEPARATOR +
+                                 "3,50,25,2024-01-02,Teste,invalid_type,1,3"; // Invalid type for testing
             return Protocol.createSuccessResponse(movimentacoes);
         }
         

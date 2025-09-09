@@ -526,6 +526,226 @@ public class SyncService {
         });
     }
 
+    /**
+     * Atualiza uma conta localmente e sincroniza com o servidor
+     */
+    public void atualizarConta(Conta conta, SyncCallback callback) {
+        ensureExecutorAvailable();
+        executor.execute(() -> {
+            try {
+                // Update locally first
+                conta.markAsModified();
+                database.contaDao().atualizar(conta);
+                Log.d(TAG, "Conta atualizada localmente: " + conta.nome);
+                
+                // Sync with server if connected
+                if (serverClient.isConnected()) {
+                    Log.d(TAG, "Sincronizando atualização de conta com servidor...");
+                    String comando = Protocol.buildCommand(
+                            Protocol.CMD_UPDATE_CONTA,
+                            String.valueOf(conta.id),
+                            conta.nome,
+                            conta.tipo != null ? conta.tipo : "corrente",
+                            String.valueOf(conta.saldoInicial)
+                    );
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Atualização de conta sincronizada com servidor: " + conta.nome);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Conta atualizada e sincronizada");
+                            }
+                        }
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar atualização com servidor: " + error);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Conta atualizada localmente (erro no servidor: " + error + ")");
+                            }
+                        }
+                    });
+                } else {
+                    Log.d(TAG, "Servidor não conectado - atualização salva apenas localmente");
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Conta atualizada localmente (servidor offline)");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Erro ao atualizar conta: " + e.getMessage(), e);
+                if (callback != null) {
+                    callback.onSyncCompleted(false, "Erro ao atualizar conta: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Deleta uma conta localmente e sincroniza com o servidor
+     */
+    public void deletarConta(Conta conta, SyncCallback callback) {
+        ensureExecutorAvailable();
+        executor.execute(() -> {
+            try {
+                // Check for transactions linked to this account
+                List<Lancamento> lancamentos = database.lancamentoDao().listarPorConta(conta.id);
+                
+                // Delete transactions first (cascading delete)
+                for (Lancamento lancamento : lancamentos) {
+                    database.lancamentoDao().deletar(lancamento);
+                }
+                
+                // Delete account locally
+                database.contaDao().deletar(conta);
+                Log.d(TAG, "Conta deletada localmente: " + conta.nome);
+                
+                // Sync with server if connected
+                if (serverClient.isConnected()) {
+                    Log.d(TAG, "Sincronizando exclusão de conta com servidor...");
+                    String comando = Protocol.buildCommand(
+                            Protocol.CMD_DELETE_CONTA,
+                            String.valueOf(conta.id)
+                    );
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Exclusão de conta sincronizada com servidor: " + conta.nome);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Conta excluída e sincronizada");
+                            }
+                        }
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar exclusão com servidor: " + error);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Conta excluída localmente (erro no servidor: " + error + ")");
+                            }
+                        }
+                    });
+                } else {
+                    Log.d(TAG, "Servidor não conectado - exclusão salva apenas localmente");
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Conta excluída localmente (servidor offline)");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Erro ao deletar conta: " + e.getMessage(), e);
+                if (callback != null) {
+                    callback.onSyncCompleted(false, "Erro ao deletar conta: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Atualiza uma categoria localmente e sincroniza com o servidor
+     */
+    public void atualizarCategoria(Categoria categoria, SyncCallback callback) {
+        ensureExecutorAvailable();
+        executor.execute(() -> {
+            try {
+                // Update locally first
+                categoria.markAsModified();
+                database.categoriaDao().atualizar(categoria);
+                Log.d(TAG, "Categoria atualizada localmente: " + categoria.nome);
+                
+                // Sync with server if connected
+                if (serverClient.isConnected()) {
+                    Log.d(TAG, "Sincronizando atualização de categoria com servidor...");
+                    String comando = Protocol.buildCommand(
+                            Protocol.CMD_UPDATE_CATEGORIA,
+                            String.valueOf(categoria.id),
+                            categoria.nome,
+                            categoria.tipo,
+                            categoria.corHex != null ? categoria.corHex : "#666666"
+                    );
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Atualização de categoria sincronizada com servidor: " + categoria.nome);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Categoria atualizada e sincronizada");
+                            }
+                        }
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar atualização com servidor: " + error);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Categoria atualizada localmente (erro no servidor: " + error + ")");
+                            }
+                        }
+                    });
+                } else {
+                    Log.d(TAG, "Servidor não conectado - atualização salva apenas localmente");
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Categoria atualizada localmente (servidor offline)");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Erro ao atualizar categoria: " + e.getMessage(), e);
+                if (callback != null) {
+                    callback.onSyncCompleted(false, "Erro ao atualizar categoria: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Deleta uma categoria localmente e sincroniza com o servidor
+     */
+    public void deletarCategoria(Categoria categoria, SyncCallback callback) {
+        ensureExecutorAvailable();
+        executor.execute(() -> {
+            try {
+                // Check for transactions linked to this category
+                List<Lancamento> lancamentos = database.lancamentoDao().listarPorCategoria(categoria.id);
+                
+                // Delete transactions linked to this category
+                for (Lancamento lancamento : lancamentos) {
+                    database.lancamentoDao().deletar(lancamento);
+                }
+                
+                // Delete category locally
+                database.categoriaDao().deletar(categoria);
+                Log.d(TAG, "Categoria deletada localmente: " + categoria.nome);
+                
+                // Sync with server if connected
+                if (serverClient.isConnected()) {
+                    Log.d(TAG, "Sincronizando exclusão de categoria com servidor...");
+                    String comando = Protocol.buildCommand(
+                            Protocol.CMD_DELETE_CATEGORIA,
+                            String.valueOf(categoria.id)
+                    );
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Exclusão de categoria sincronizada com servidor: " + categoria.nome);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Categoria excluída e sincronizada");
+                            }
+                        }
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar exclusão com servidor: " + error);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Categoria excluída localmente (erro no servidor: " + error + ")");
+                            }
+                        }
+                    });
+                } else {
+                    Log.d(TAG, "Servidor não conectado - exclusão salva apenas localmente");
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Categoria excluída localmente (servidor offline)");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Erro ao deletar categoria: " + e.getMessage(), e);
+                if (callback != null) {
+                    callback.onSyncCompleted(false, "Erro ao deletar categoria: " + e.getMessage());
+                }
+            }
+        });
+    }
+
     public boolean isOnline() {
         return serverClient.isConnected();
     }

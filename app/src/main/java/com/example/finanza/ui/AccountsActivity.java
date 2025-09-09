@@ -136,15 +136,37 @@ public class AccountsActivity extends AppCompatActivity {
             Conta novaConta = new Conta();
             novaConta.nome = nomeConta;
             novaConta.saldoInicial = saldoInicial;
+            novaConta.saldoAtual = saldoInicial; // Initialize current balance
             novaConta.usuarioId = usuarioIdAtual;
-            // Keep direct database insert for now, but ensure tipo is set by constructor
-            db.contaDao().inserir(novaConta);
-            updateAccounts();
-            contasPanel.setVisibility(View.GONE);
-            navAdd.setImageResource(R.drawable.ic_add);
-            inputNomeConta.setText("");
-            inputSaldoInicial.setText("");
-            Toast.makeText(this, "Conta cadastrada!", Toast.LENGTH_SHORT).show();
+            
+            // Use SyncService instead of direct DAO call
+            syncService.adicionarConta(novaConta, new SyncService.SyncCallback() {
+                @Override
+                public void onSyncStarted() {
+                    // Optional: show loading indicator
+                }
+
+                @Override
+                public void onSyncCompleted(boolean success, String message) {
+                    runOnUiThread(() -> {
+                        if (success) {
+                            updateAccounts();
+                            contasPanel.setVisibility(View.GONE);
+                            navAdd.setImageResource(R.drawable.ic_add);
+                            inputNomeConta.setText("");
+                            inputSaldoInicial.setText("");
+                            Toast.makeText(AccountsActivity.this, "Conta cadastrada!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(AccountsActivity.this, "Erro ao cadastrar conta: " + message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onSyncProgress(String operation) {
+                    // Optional: show progress
+                }
+            });
         });
 
         final ImageView navHome = findViewById(R.id.nav_home);
@@ -299,16 +321,40 @@ public class AccountsActivity extends AppCompatActivity {
                 conta.nome = novoNome;
                 if (!novoSaldoStr.isEmpty()) {
                     try {
-                        conta.saldoInicial = Double.parseDouble(novoSaldoStr.replace(",", "."));
+                        double novoSaldo = Double.parseDouble(novoSaldoStr.replace(",", "."));
+                        conta.saldoInicial = novoSaldo;
+                        conta.saldoAtual = novoSaldo; // Update current balance too
                     } catch (NumberFormatException e) {
                         Toast.makeText(this, "Saldo inválido", Toast.LENGTH_SHORT).show();
                         return;
                     }
                 }
-                db.contaDao().atualizar(conta);
-                updateAccounts();
-                dialog.dismiss();
-                Toast.makeText(this, "Conta atualizada!", Toast.LENGTH_SHORT).show();
+                
+                // Use SyncService instead of direct DAO call
+                syncService.atualizarConta(conta, new SyncService.SyncCallback() {
+                    @Override
+                    public void onSyncStarted() {
+                        // Optional: show loading indicator
+                    }
+
+                    @Override
+                    public void onSyncCompleted(boolean success, String message) {
+                        runOnUiThread(() -> {
+                            if (success) {
+                                updateAccounts();
+                                dialog.dismiss();
+                                Toast.makeText(AccountsActivity.this, "Conta atualizada!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(AccountsActivity.this, "Erro ao atualizar conta: " + message, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onSyncProgress(String operation) {
+                        // Optional: show progress
+                    }
+                });
             } else {
                 Toast.makeText(this, "Preencha o nome da conta", Toast.LENGTH_SHORT).show();
             }
@@ -341,13 +387,31 @@ public class AccountsActivity extends AppCompatActivity {
         dialog.show();
 
         btnExcluir.setOnClickListener(v -> {
-            for (Lancamento lancamento : lancamentos) {
-                db.lancamentoDao().deletar(lancamento);
-            }
-            db.contaDao().deletar(conta);
-            updateAccounts();
-            dialog.dismiss();
-            Toast.makeText(this, "Conta excluída!", Toast.LENGTH_SHORT).show();
+            // Use SyncService instead of direct DAO calls
+            syncService.deletarConta(conta, new SyncService.SyncCallback() {
+                @Override
+                public void onSyncStarted() {
+                    // Optional: show loading indicator
+                }
+
+                @Override
+                public void onSyncCompleted(boolean success, String message) {
+                    runOnUiThread(() -> {
+                        if (success) {
+                            updateAccounts();
+                            dialog.dismiss();
+                            Toast.makeText(AccountsActivity.this, "Conta excluída!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(AccountsActivity.this, "Erro ao excluir conta: " + message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onSyncProgress(String operation) {
+                    // Optional: show progress
+                }
+            });
         });
 
         btnCancelar.setOnClickListener(v -> dialog.dismiss());

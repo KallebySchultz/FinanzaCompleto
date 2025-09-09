@@ -233,10 +233,32 @@ public class CategoriaActivity extends AppCompatActivity {
                 categoria.nome = nome;
                 categoria.tipo = tipo;
                 categoria.corHex = tipo.equals("receita") ? "#22BB33" : "#FF2222";
-                db.categoriaDao().inserir(categoria);
-                carregarCategorias(); // ATUALIZA IMEDIATAMENTE APÓS ADICIONAR
-                dialog.dismiss();
-                Toast.makeText(this, "Categoria criada!", Toast.LENGTH_SHORT).show();
+                
+                // Use SyncService instead of direct DAO call
+                syncService.adicionarCategoria(categoria, new SyncService.SyncCallback() {
+                    @Override
+                    public void onSyncStarted() {
+                        // Optional: show loading indicator
+                    }
+
+                    @Override
+                    public void onSyncCompleted(boolean success, String message) {
+                        runOnUiThread(() -> {
+                            if (success) {
+                                carregarCategorias(); // ATUALIZA IMEDIATAMENTE APÓS ADICIONAR
+                                dialog.dismiss();
+                                Toast.makeText(CategoriaActivity.this, "Categoria criada!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(CategoriaActivity.this, "Erro ao criar categoria: " + message, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onSyncProgress(String operation) {
+                        // Optional: show progress
+                    }
+                });
             } else {
                 Toast.makeText(this, "Digite o nome da categoria", Toast.LENGTH_SHORT).show();
             }
@@ -272,10 +294,32 @@ public class CategoriaActivity extends AppCompatActivity {
                 categoria.nome = novoNome;
                 categoria.tipo = novoTipo;
                 categoria.corHex = novoTipo.equals("receita") ? "#22BB33" : "#FF2222";
-                db.categoriaDao().atualizar(categoria);
-                carregarCategorias();
-                dialog.dismiss();
-                Toast.makeText(this, "Categoria atualizada!", Toast.LENGTH_SHORT).show();
+                
+                // Use SyncService instead of direct DAO call
+                syncService.atualizarCategoria(categoria, new SyncService.SyncCallback() {
+                    @Override
+                    public void onSyncStarted() {
+                        // Optional: show loading indicator
+                    }
+
+                    @Override
+                    public void onSyncCompleted(boolean success, String message) {
+                        runOnUiThread(() -> {
+                            if (success) {
+                                carregarCategorias();
+                                dialog.dismiss();
+                                Toast.makeText(CategoriaActivity.this, "Categoria atualizada!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(CategoriaActivity.this, "Erro ao atualizar categoria: " + message, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onSyncProgress(String operation) {
+                        // Optional: show progress
+                    }
+                });
             } else {
                 Toast.makeText(this, "Digite o nome da categoria", Toast.LENGTH_SHORT).show();
             }
@@ -306,13 +350,31 @@ public class CategoriaActivity extends AppCompatActivity {
         dialog.show();
 
         btnExcluir.setOnClickListener(v -> {
-            for (Lancamento lancamento : lancamentos) {
-                db.lancamentoDao().deletar(lancamento);
-            }
-            db.categoriaDao().deletar(categoria);
-            carregarCategorias();
-            dialog.dismiss();
-            Toast.makeText(this, "Categoria excluída!", Toast.LENGTH_SHORT).show();
+            // Use SyncService instead of direct DAO calls
+            syncService.deletarCategoria(categoria, new SyncService.SyncCallback() {
+                @Override
+                public void onSyncStarted() {
+                    // Optional: show loading indicator
+                }
+
+                @Override
+                public void onSyncCompleted(boolean success, String message) {
+                    runOnUiThread(() -> {
+                        if (success) {
+                            carregarCategorias();
+                            dialog.dismiss();
+                            Toast.makeText(CategoriaActivity.this, "Categoria excluída!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(CategoriaActivity.this, "Erro ao excluir categoria: " + message, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+
+                @Override
+                public void onSyncProgress(String operation) {
+                    // Optional: show progress
+                }
+            });
         });
 
         btnCancelar.setOnClickListener(v -> dialog.dismiss());

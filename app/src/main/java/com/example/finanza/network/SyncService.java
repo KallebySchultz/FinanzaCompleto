@@ -404,6 +404,8 @@ public class SyncService {
                 
                 Usuario usuario = database.usuarioDao().buscarPorId(lancamento.usuarioId);
                 Conta conta = database.contaDao().buscarPorId(lancamento.contaId);
+                Categoria categoria = database.categoriaDao().buscarPorId(lancamento.categoriaId);
+                
                 if (usuario == null) {
                     Log.e(TAG, "Erro: Usuário não existe (ID: " + lancamento.usuarioId + ")");
                     if (callback != null) {
@@ -415,6 +417,13 @@ public class SyncService {
                     Log.e(TAG, "Erro: Conta não existe (ID: " + lancamento.contaId + ")");
                     if (callback != null) {
                         callback.onSyncCompleted(false, "Conta não encontrada");
+                    }
+                    return;
+                }
+                if (categoria == null) {
+                    Log.e(TAG, "Erro: Categoria não existe (ID: " + lancamento.categoriaId + ")");
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Categoria não encontrada");
                     }
                     return;
                 }

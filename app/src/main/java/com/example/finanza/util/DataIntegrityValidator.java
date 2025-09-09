@@ -367,8 +367,8 @@ public class DataIntegrityValidator {
             return ValidationResult.error("valor", "Invalid transaction value");
         }
         
-        if (valor == 0.0) {
-            return ValidationResult.warning("valor", "Transaction value is zero");
+        if (valor <= 0.0) {
+            return ValidationResult.error("valor", "Transaction value must be greater than zero");
         }
         
         return ValidationResult.success();
@@ -407,6 +407,10 @@ public class DataIntegrityValidator {
     public static ValidationResult validateTransactionForeignKeys(int contaId, int categoriaId, int usuarioId) {
         if (contaId <= 0) {
             return ValidationResult.error("contaId", "Invalid account ID");
+        }
+        
+        if (categoriaId <= 0) {
+            return ValidationResult.error("categoriaId", "Invalid category ID");
         }
         
         if (usuarioId <= 0) {

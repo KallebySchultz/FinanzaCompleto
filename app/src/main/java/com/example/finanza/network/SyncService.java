@@ -8,6 +8,7 @@ import com.example.finanza.model.Categoria;
 import com.example.finanza.model.Conta;
 import com.example.finanza.model.Lancamento;
 import com.example.finanza.model.Usuario;
+import com.example.finanza.util.DataIntegrityValidator;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -283,6 +284,16 @@ public class SyncService {
         ensureExecutorAvailable();
         executor.execute(() -> {
             try {
+                // Validate category data first
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateCategoria(categoria);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Validation failed: " + validation.toString());
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Dados inválidos: " + validation.errorMessage);
+                    }
+                    return;
+                }
+                
                 long id = database.categoriaDao().inserir(categoria);
                 categoria.id = (int) id;
                 Log.d(TAG, "Categoria salva localmente: " + categoria.nome);
@@ -321,6 +332,16 @@ public class SyncService {
         ensureExecutorAvailable();
         executor.execute(() -> {
             try {
+                // Validate account data first
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateConta(conta);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Validation failed: " + validation.toString());
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Dados inválidos: " + validation.errorMessage);
+                    }
+                    return;
+                }
+                
                 Usuario usuario = database.usuarioDao().buscarPorId(conta.usuarioId);
                 if (usuario == null) {
                     Log.e(TAG, "Erro: Usuário não existe (ID: " + conta.usuarioId + ")");
@@ -371,6 +392,16 @@ public class SyncService {
         ensureExecutorAvailable();
         executor.execute(() -> {
             try {
+                // Validate transaction data first
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateLancamento(lancamento);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Validation failed: " + validation.toString());
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Dados inválidos: " + validation.errorMessage);
+                    }
+                    return;
+                }
+                
                 Usuario usuario = database.usuarioDao().buscarPorId(lancamento.usuarioId);
                 Conta conta = database.contaDao().buscarPorId(lancamento.contaId);
                 if (usuario == null) {
@@ -432,6 +463,16 @@ public class SyncService {
         ensureExecutorAvailable();
         executor.execute(() -> {
             try {
+                // Validate transaction data first
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateLancamento(lancamento);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Validation failed: " + validation.toString());
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Dados inválidos: " + validation.errorMessage);
+                    }
+                    return;
+                }
+                
                 // Update locally first
                 database.lancamentoDao().atualizar(lancamento);
                 Log.d(TAG, "Lançamento atualizado localmente: " + lancamento.descricao);
@@ -533,6 +574,16 @@ public class SyncService {
         ensureExecutorAvailable();
         executor.execute(() -> {
             try {
+                // Validate account data first
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateConta(conta);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Validation failed: " + validation.toString());
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Dados inválidos: " + validation.errorMessage);
+                    }
+                    return;
+                }
+                
                 // Update locally first
                 conta.markAsModified();
                 database.contaDao().atualizar(conta);
@@ -643,6 +694,16 @@ public class SyncService {
         ensureExecutorAvailable();
         executor.execute(() -> {
             try {
+                // Validate category data first
+                DataIntegrityValidator.ValidationResult validation = DataIntegrityValidator.validateCategoria(categoria);
+                if (!validation.isValid) {
+                    Log.e(TAG, "Validation failed: " + validation.toString());
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Dados inválidos: " + validation.errorMessage);
+                    }
+                    return;
+                }
+                
                 // Update locally first
                 categoria.markAsModified();
                 database.categoriaDao().atualizar(categoria);

@@ -406,8 +406,8 @@ public class ClientHandler extends Thread {
         
         // Modo de teste - retorna dados fictícios
         if (testMode) {
-            String contas = "1" + Protocol.FIELD_SEPARATOR + "Banco Principal" + Protocol.FIELD_SEPARATOR + "1500.50" + "|" +
-                           "2" + Protocol.FIELD_SEPARATOR + "Poupança" + Protocol.FIELD_SEPARATOR + "500.00";
+            String contas = "1,Banco Principal,corrente,1500,50,1500,50" + Protocol.FIELD_SEPARATOR +
+                           "2,Poupança,poupanca,500,00,500,00";
             return Protocol.createSuccessResponse(contas);
         }
         
@@ -428,16 +428,25 @@ public class ClientHandler extends Thread {
                     contasData.append(Protocol.FIELD_SEPARATOR);
                 }
                 
-                // Formato: id,nome,tipo,saldo_inicial_formatado,saldo_atual_formatado
-                // Usar vírgula como separador decimal brasileiro
-                String saldoInicialStr = String.format("%.2f", conta.getSaldoInicial()).replace(".", ",");
-                String saldoAtualStr = String.format("%.2f", saldoAtual).replace(".", ",");
+                // Formato: id,nome,tipo,saldo_inicial_inteiro,saldo_inicial_decimal,saldo_atual_inteiro,saldo_atual_decimal
+                // Separar parte inteira e decimal como esperado pelo mobile app
+                String saldoInicialFormatted = String.format("%.2f", conta.getSaldoInicial());
+                String[] saldoInicialParts = saldoInicialFormatted.split("\\.");
+                String saldoInicialInteiro = saldoInicialParts[0];
+                String saldoInicialDecimal = saldoInicialParts[1];
+                
+                String saldoAtualFormatted = String.format("%.2f", saldoAtual);
+                String[] saldoAtualParts = saldoAtualFormatted.split("\\.");
+                String saldoAtualInteiro = saldoAtualParts[0];
+                String saldoAtualDecimal = saldoAtualParts[1];
                 
                 contasData.append(conta.getId()).append(",")
                          .append(conta.getNome()).append(",")
                          .append(conta.getTipo().getValor()).append(",")
-                         .append(saldoInicialStr).append(",")
-                         .append(saldoAtualStr);
+                         .append(saldoInicialInteiro).append(",")
+                         .append(saldoInicialDecimal).append(",")
+                         .append(saldoAtualInteiro).append(",")
+                         .append(saldoAtualDecimal);
             }
             
             return Protocol.createSuccessResponse(contasData.toString());
@@ -552,8 +561,8 @@ public class ClientHandler extends Thread {
         
         // Modo de teste - retorna dados fictícios
         if (testMode) {
-            String categorias = "1" + Protocol.FIELD_SEPARATOR + "Alimentação" + Protocol.FIELD_SEPARATOR + "DESPESA" + "|" +
-                               "2" + Protocol.FIELD_SEPARATOR + "Salário" + Protocol.FIELD_SEPARATOR + "RECEITA";
+            String categorias = "1,Alimentação,DESPESA" + Protocol.FIELD_SEPARATOR +
+                               "2,Salário,RECEITA";
             return Protocol.createSuccessResponse(categorias);
         }
         
@@ -604,9 +613,9 @@ public class ClientHandler extends Thread {
         if (testMode) {
             String tipo = partes[1];
             if ("RECEITA".equals(tipo)) {
-                return Protocol.createSuccessResponse("2" + Protocol.FIELD_SEPARATOR + "Salário" + Protocol.FIELD_SEPARATOR + "RECEITA");
+                return Protocol.createSuccessResponse("2,Salário,RECEITA");
             } else {
-                return Protocol.createSuccessResponse("1" + Protocol.FIELD_SEPARATOR + "Alimentação" + Protocol.FIELD_SEPARATOR + "DESPESA");
+                return Protocol.createSuccessResponse("1,Alimentação,DESPESA");
             }
         }
         
@@ -713,10 +722,8 @@ public class ClientHandler extends Thread {
         
         // Modo de teste - retorna dados fictícios
         if (testMode) {
-            String movimentacoes = "1" + Protocol.FIELD_SEPARATOR + "100.50" + Protocol.FIELD_SEPARATOR + "DESPESA" + 
-                                 Protocol.FIELD_SEPARATOR + "Supermercado" + Protocol.FIELD_SEPARATOR + "2024-01-01" + "|" +
-                                 "2" + Protocol.FIELD_SEPARATOR + "800.00" + Protocol.FIELD_SEPARATOR + "RECEITA" + 
-                                 Protocol.FIELD_SEPARATOR + "Salário" + Protocol.FIELD_SEPARATOR + "2024-01-01";
+            String movimentacoes = "1,100,50,2024-01-01,Supermercado,DESPESA,1,1" + Protocol.FIELD_SEPARATOR +
+                                 "2,800,00,2024-01-01,Salário,RECEITA,1,2";
             return Protocol.createSuccessResponse(movimentacoes);
         }
         
@@ -776,8 +783,7 @@ public class ClientHandler extends Thread {
         
         // Modo de teste
         if (testMode) {
-            return Protocol.createSuccessResponse("1" + Protocol.FIELD_SEPARATOR + "100.50" + Protocol.FIELD_SEPARATOR + "DESPESA" + 
-                                                 Protocol.FIELD_SEPARATOR + "Supermercado" + Protocol.FIELD_SEPARATOR + partes[1]);
+            return Protocol.createSuccessResponse("1,100,50," + partes[1] + ",Supermercado,DESPESA,1,1");
         }
         
         // TODO: Implementar busca real no banco de dados
@@ -798,8 +804,7 @@ public class ClientHandler extends Thread {
         
         // Modo de teste
         if (testMode) {
-            return Protocol.createSuccessResponse("1" + Protocol.FIELD_SEPARATOR + "100.50" + Protocol.FIELD_SEPARATOR + "DESPESA" + 
-                                                 Protocol.FIELD_SEPARATOR + "Supermercado" + Protocol.FIELD_SEPARATOR + "2024-01-01");
+            return Protocol.createSuccessResponse("1,100,50,2024-01-01,Supermercado,DESPESA,1,1");
         }
         
         // TODO: Implementar busca real no banco de dados

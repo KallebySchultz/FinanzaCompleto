@@ -438,6 +438,17 @@ public class SyncService {
         }
     }
 
+    /**
+     * Converte string no formato português (decimal com vírgula) para double
+     */
+    private double parsePortugueseDouble(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return 0.0;
+        }
+        // Substitui vírgula por ponto para parsing
+        return Double.parseDouble(value.replace(",", "."));
+    }
+
     private boolean buscarCategoriasDoServidor(int usuarioId) {
         try {
             Log.d(TAG, "Buscando categorias do servidor...");
@@ -639,8 +650,42 @@ public class SyncService {
             for (String contaData : contas) {
                 if (contaData == null || contaData.trim().isEmpty()) continue;
                 String[] campos = contaData.split(",");
-                // Suporta tanto formato antigo quanto novo (4 campos = id, nome, tipo, saldo)
-                if (campos.length >= 4) {
+                // Suporta formato com 7 campos: id,nome,tipo,saldo_inicial_inteiro,saldo_inicial_decimal,saldo_atual_inteiro,saldo_atual_decimal
+                if (campos.length >= 7) {
+                    try {
+                        int serverId = Integer.parseInt(campos[0].trim());
+                        String nome = campos[1].trim();
+                        String tipo = campos[2].trim();
+                        
+                        // Reconstrói valores decimais brasileiros 
+                        String saldoInicialStr = campos[3].trim() + "," + campos[4].trim();
+                        String saldoAtualStr = campos[5].trim() + "," + campos[6].trim();
+                        double saldoInicial = parsePortugueseDouble(saldoInicialStr);
+                        double saldoAtual = parsePortugueseDouble(saldoAtualStr);
+                        
+                        if (nome.isEmpty()) {
+                            Log.w(TAG, "Conta com nome vazio: " + contaData);
+                            continue;
+                        }
+                        Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
+                        if (usuario != null) {
+                            long contaId = database.contaDao().sincronizarDoServidor(serverId, nome, tipo, saldoAtual, usuarioId);
+                            if (contaId > 0) {
+                                contasProcessadas++;
+                                Log.d(TAG, "Conta sincronizada com ID do servidor " + serverId + ": " + nome + " (tipo: " + tipo + ")");
+                            } else {
+                                Log.d(TAG, "Conta já existia com ID " + serverId + ": " + nome);
+                            }
+                        } else {
+                            Log.w(TAG, "Não é possível criar conta para usuário inexistente: " + usuarioId);
+                        }
+                    } catch (NumberFormatException e) {
+                        Log.w(TAG, "Erro ao converter dados da conta: " + contaData + " - " + e.getMessage());
+                    } catch (Exception e) {
+                        Log.w(TAG, "Erro ao processar conta individual: " + contaData + " - " + e.getMessage());
+                    }
+                } else if (campos.length >= 4) {
+                    // Formato legado: id,nome,tipo,saldo
                     try {
                         int serverId = Integer.parseInt(campos[0].trim());
                         String nome = campos[1].trim();

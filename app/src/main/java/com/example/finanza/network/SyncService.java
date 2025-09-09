@@ -428,6 +428,104 @@ public class SyncService {
         });
     }
 
+    public void atualizarLancamento(Lancamento lancamento, SyncCallback callback) {
+        ensureExecutorAvailable();
+        executor.execute(() -> {
+            try {
+                // Update locally first
+                database.lancamentoDao().atualizar(lancamento);
+                Log.d(TAG, "Lançamento atualizado localmente: " + lancamento.descricao);
+                
+                // Sync with server if connected
+                if (serverClient.isConnected()) {
+                    Log.d(TAG, "Sincronizando atualização de lançamento com servidor...");
+                    String comando = Protocol.buildCommand(
+                            Protocol.CMD_UPDATE_MOVIMENTACAO,
+                            String.valueOf(lancamento.id),
+                            String.valueOf(lancamento.valor),
+                            new java.sql.Date(lancamento.data).toString(),
+                            lancamento.descricao,
+                            lancamento.tipo,
+                            String.valueOf(lancamento.contaId),
+                            String.valueOf(lancamento.categoriaId)
+                    );
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Atualização de lançamento sincronizada com servidor: " + lancamento.descricao);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Movimentação atualizada e sincronizada");
+                            }
+                        }
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar atualização com servidor: " + error);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Movimentação atualizada localmente (erro no servidor: " + error + ")");
+                            }
+                        }
+                    });
+                } else {
+                    Log.d(TAG, "Servidor não conectado - atualização salva apenas localmente");
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Movimentação atualizada localmente (servidor offline)");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Erro ao atualizar lançamento: " + e.getMessage(), e);
+                if (callback != null) {
+                    callback.onSyncCompleted(false, "Erro ao atualizar lançamento: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    public void deletarLancamento(Lancamento lancamento, SyncCallback callback) {
+        ensureExecutorAvailable();
+        executor.execute(() -> {
+            try {
+                // Delete locally first
+                database.lancamentoDao().deletar(lancamento);
+                Log.d(TAG, "Lançamento deletado localmente: " + lancamento.descricao);
+                
+                // Sync with server if connected
+                if (serverClient.isConnected()) {
+                    Log.d(TAG, "Sincronizando exclusão de lançamento com servidor...");
+                    String comando = Protocol.buildCommand(
+                            Protocol.CMD_DELETE_MOVIMENTACAO,
+                            String.valueOf(lancamento.id)
+                    );
+                    serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Log.d(TAG, "Exclusão de lançamento sincronizada com servidor: " + lancamento.descricao);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Movimentação excluída e sincronizada");
+                            }
+                        }
+                        @Override
+                        public void onError(String error) {
+                            Log.e(TAG, "Erro ao sincronizar exclusão com servidor: " + error);
+                            if (callback != null) {
+                                callback.onSyncCompleted(true, "Movimentação excluída localmente (erro no servidor: " + error + ")");
+                            }
+                        }
+                    });
+                } else {
+                    Log.d(TAG, "Servidor não conectado - exclusão salva apenas localmente");
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Movimentação excluída localmente (servidor offline)");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Erro ao deletar lançamento: " + e.getMessage(), e);
+                if (callback != null) {
+                    callback.onSyncCompleted(false, "Erro ao deletar lançamento: " + e.getMessage());
+                }
+            }
+        });
+    }
+
     public boolean isOnline() {
         return serverClient.isConnected();
     }

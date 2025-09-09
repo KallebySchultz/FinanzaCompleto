@@ -705,57 +705,74 @@ public class ClientHandler extends Thread {
     
     /**
      * Processa comando LIST_MOVIMENTACOES
+     * CORRIGIDO: Adicionada validação antes de acessar índices do split e campos nulos.
      */
     private String processarListMovimentacoes() {
         if (usuarioLogado == null) {
             return Protocol.createErrorResponse("Usuário não está logado");
         }
-        
+
         // Modo de teste - retorna dados fictícios
         if (testMode) {
-            // Format: id,valor_inteiro,valor_decimal,data,descricao,tipo,idConta,idCategoria
-            // Include some valid data and one invalid tipo to test error handling
             String movimentacoes = "1,100,50,2024-01-01,Supermercado,despesa,1,1" + Protocol.FIELD_SEPARATOR +
-                                 "2,800,00,2024-01-01,Salário,receita,1,2" + Protocol.FIELD_SEPARATOR +
-                                 "3,50,25,2024-01-02,Teste,invalid_type,1,3"; // Invalid type for testing
+                                   "2,800,00,2024-01-01,Salário,receita,1,2" + Protocol.FIELD_SEPARATOR +
+                                   "3,50,25,2024-01-02,Teste,invalid_type,1,3";
             return Protocol.createSuccessResponse(movimentacoes);
         }
-        
+
         try {
-            // Buscar movimentações reais do banco de dados
             List<Movimentacao> movimentacoes = movimentacaoDAO.listarPorUsuario(usuarioLogado.getId());
-            
+
             if (movimentacoes.isEmpty()) {
                 return Protocol.createSuccessResponse("");
             }
-            
+
             StringBuilder movimentacoesData = new StringBuilder();
+            boolean firstItem = true;
             for (int i = 0; i < movimentacoes.size(); i++) {
-                Movimentacao movimentacao = movimentacoes.get(i);
-                
-                if (i > 0) {
-                    movimentacoesData.append(Protocol.FIELD_SEPARATOR);
+                Movimentacao mov = movimentacoes.get(i);
+
+                // Validação: movimentação nula
+                if (mov == null) {
+                    System.err.println("Movimentação nula encontrada na posição " + i + " da lista.");
+                    continue;
                 }
-                
-                // Formato: id,valor_formatado,data,descricao,tipo,idConta,idCategoria
-                // Usar vírgula como separador decimal brasileiro - mas dividir em partes inteira e decimal
-                String valorStr = String.format("%.2f", movimentacao.getValor());
+                // Validação: tipo nulo
+                if (mov.getTipo() == null) {
+                    System.err.println("Movimentação com tipo nulo (ID: " + mov.getId() + ")");
+                    continue;
+                }
+                // Validação: valor nulo ou mal formatado
+                String valorStr = String.format("%.2f", mov.getValor());
                 String[] valorParts = valorStr.split("\\.");
+                if (valorParts.length < 2) {
+                    System.err.println("Valor mal formatado para movimentação ID: " + mov.getId() + " - valor: " + valorStr);
+                    continue;
+                }
                 String valorInteiro = valorParts[0];
                 String valorDecimal = valorParts[1];
+
+                if (!firstItem) {
+                    movimentacoesData.append(Protocol.FIELD_SEPARATOR);
+                }
+                firstItem = false;
                 
-                movimentacoesData.append(movimentacao.getId()).append(",")
-                                .append(valorInteiro).append(",")
-                                .append(valorDecimal).append(",")
-                                .append(movimentacao.getData().toString()).append(",")
-                                .append(movimentacao.getDescricao()).append(",")
-                                .append(movimentacao.getTipo().getValor()).append(",")
-                                .append(movimentacao.getIdConta()).append(",")
-                                .append(movimentacao.getIdCategoria());
+                String descricao = mov.getDescricao() != null ? mov.getDescricao() : "";
+                int idConta = mov.getIdConta();
+                int idCategoria = mov.getIdCategoria();
+
+                movimentacoesData.append(mov.getId()).append(",")
+                                 .append(valorInteiro).append(",")
+                                 .append(valorDecimal).append(",")
+                                 .append(mov.getData().toString()).append(",")
+                                 .append(descricao).append(",")
+                                 .append(mov.getTipo().getValor()).append(",")
+                                 .append(idConta).append(",")
+                                 .append(idCategoria);
             }
-            
+
             return Protocol.createSuccessResponse(movimentacoesData.toString());
-            
+
         } catch (Exception e) {
             System.err.println("Erro ao listar movimentações: " + e.getMessage());
             e.printStackTrace();

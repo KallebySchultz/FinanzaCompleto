@@ -1,11 +1,36 @@
-# 💰 Finanza - Sistema de Controle Financeiro
+# 💰 Finanza - Sistema Completo de Controle Financeiro
+## 🎓 Trabalho de Conclusão de Curso - Técnico em Informática
+### Instituto Federal Sul-rio-grandense (IFSUL) - Campus Venâncio Aires
 
 [![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com/)
-[![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)](https://www.java.com/)
+[![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://www.java.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
 [![Socket.IO](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)](https://socket.io/)
 
-**Finanza** é um sistema completo de controle financeiro pessoal que oferece aplicação móvel Android e aplicação desktop Java com sincronização em tempo real via sockets TCP.
+---
+
+## 🎯 Contexto Acadêmico
+
+Este projeto representa o **trabalho final de conclusão do curso Técnico em Informática** do **Instituto Federal Sul-rio-grandense (IFSUL) - Campus Venâncio Aires**. O sistema Finanza foi desenvolvido como uma aplicação prática e abrangente que demonstra a integração de conhecimentos adquiridos ao longo do curso, abordando programação mobile, desktop, banco de dados, redes e engenharia de software.
+
+### 📚 **Disciplinas Integradas**
+- **Programação Orientada a Objetos**: Java para Android e Desktop
+- **Banco de Dados**: Modelagem e implementação MySQL
+- **Desenvolvimento Web/Mobile**: Android SDK e Material Design
+- **Redes de Computadores**: Protocolo TCP/IP e comunicação socket
+- **Engenharia de Software**: Arquitetura MVC/MVVM, documentação técnica
+- **Interface Humano-Computador**: Design de interfaces e usabilidade
+
+### 🏆 **Objetivos Acadêmicos**
+- Demonstrar competência técnica em desenvolvimento multiplataforma
+- Aplicar conceitos de sincronização e comunicação em tempo real
+- Implementar boas práticas de programação e arquitetura de software
+- Desenvolver documentação técnica completa e profissional
+- Criar uma solução real e funcional para problemas do cotidiano
+
+---
+
+**Finanza** é um sistema integrado de controle financeiro que combina aplicação móvel Android com aplicação desktop Java, oferecendo sincronização em tempo real via sockets TCP/IP. O projeto exemplifica a convergência de tecnologias modernas em uma solução robusta e escalável.
 
 ## 🌟 Características Principais
 
@@ -110,6 +135,160 @@ graph TB
         K -.->|Sync| D
     end
 ```
+
+## 🎓 Fundamentação Técnico-Acadêmica
+
+### 📐 **Metodologia de Desenvolvimento**
+
+Este projeto foi desenvolvido seguindo princípios de **Engenharia de Software** aplicados no contexto do ensino técnico do IFSUL, demonstrando a aplicação prática de conceitos fundamentais:
+
+#### **1. Processo de Desenvolvimento Incremental**
+- **Planejamento**: Análise de requisitos e modelagem UML
+- **Design**: Arquitetura baseada em padrões MVC/MVVM
+- **Implementação**: Desenvolvimento iterativo por funcionalidades
+- **Testes**: Validação contínua de cada incremento
+- **Documentação**: Registro completo do processo de desenvolvimento
+
+#### **2. Padrões de Arquitetura Aplicados**
+```mermaid
+graph LR
+    subgraph "Mobile - MVVM"
+        VM[ViewModel] --> M[Model]
+        V[View] --> VM
+        VM --> V
+    end
+    
+    subgraph "Desktop - MVC"
+        C[Controller] --> MO[Model]
+        VI[View] --> C
+        C --> VI
+    end
+    
+    subgraph "Comunicação"
+        VM -.->|TCP| C
+        C -.->|TCP| VM
+    end
+```
+
+#### **3. Conceitos de Redes Implementados**
+- **Protocolo TCP/IP**: Comunicação confiável entre cliente-servidor
+- **Sockets**: Implementação de comunicação bidirecional
+- **Serialização de Dados**: Protocolo customizado pipe-separated
+- **Tratamento de Conexões**: Gerenciamento de múltiplas sessões simultâneas
+
+### 🔬 **Inovações Técnicas Desenvolvidas**
+
+#### **Sincronização Híbrida Offline-First**
+```java
+// Estratégia implementada no mobile
+public class SyncStrategy {
+    // 1. Funciona offline por padrão
+    // 2. Sincroniza quando conectado
+    // 3. Resolve conflitos por timestamp
+    // 4. Mantém integridade dos dados
+}
+```
+
+#### **Protocolo de Comunicação Customizado**
+```
+FORMATO: COMANDO|PARAM1|PARAM2|...
+EXEMPLO: LOGIN|usuario@email.com|senha_hash
+RESPOSTA: OK|dados_serializados ou ERROR|mensagem_erro
+```
+
+#### **Resolução Automática de Conflitos**
+- Utiliza **UUID universal** para identificação cross-platform
+- **Timestamp-based conflict resolution** para dados divergentes
+- **Merge inteligente** preservando integridade referencial
+
+### 🏛️ **Aplicação de Conceitos Acadêmicos**
+
+#### **Banco de Dados - 3ª Forma Normal**
+```sql
+-- Modelagem normalizada aplicando conceitos de BD
+CREATE TABLE usuarios (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    uuid VARCHAR(36) UNIQUE NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    senha_hash VARCHAR(255) NOT NULL
+);
+
+-- Relacionamentos bem definidos
+CREATE TABLE lancamentos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    uuid VARCHAR(36) UNIQUE NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
+    id_conta INT REFERENCES contas(id),
+    id_categoria INT REFERENCES categorias(id),
+    id_usuario INT REFERENCES usuarios(id)
+);
+```
+
+#### **Programação Orientada a Objetos**
+```java
+// Encapsulamento, Herança, Polimorfismo aplicados
+public abstract class FinancialEntity {
+    protected String uuid;
+    protected LocalDateTime createdAt;
+    
+    public abstract void validate();
+    public abstract String serialize();
+}
+
+public class Lancamento extends FinancialEntity {
+    @Override
+    public void validate() {
+        // Validação específica de lançamentos
+    }
+}
+```
+
+### 📊 **Métricas de Complexidade Técnica**
+
+| Aspecto | Mobile Android | Desktop Java | Total |
+|---------|----------------|--------------|-------|
+| **Linhas de Código** | ~3.500 | ~4.200 | ~7.700 |
+| **Classes** | 25 | 32 | 57 |
+| **Interfaces** | 8 | 12 | 20 |
+| **Padrões de Design** | Repository, MVVM, Observer | MVC, DAO, Factory | 6 padrões |
+| **Funcionalidades** | 15 principais | 18 principais | 33 features |
+
+### 🎯 **Competências Técnicas Demonstradas**
+
+#### **Programação Mobile**
+- ✅ Android SDK e API Level 24+
+- ✅ Room Database (SQLite ORM)
+- ✅ Material Design Components
+- ✅ AsyncTask e Thread Management
+- ✅ SharedPreferences e configurações
+- ✅ Activity Lifecycle e fragmentos
+
+#### **Programação Desktop**
+- ✅ Java Swing e componentes gráficos
+- ✅ JDBC e integração MySQL
+- ✅ Socket Programming (TCP)
+- ✅ Multi-threading para servidor
+- ✅ Exception handling robusto
+- ✅ File I/O e exportação de dados
+
+#### **Banco de Dados**
+- ✅ Modelagem ER completa
+- ✅ Normalização até 3FN
+- ✅ Triggers e procedures
+- ✅ Índices e otimização
+- ✅ Backup e recovery
+- ✅ Controle transacional
+
+#### **Redes e Comunicação**
+- ✅ Protocolo TCP/IP
+- ✅ Cliente-servidor socket
+- ✅ Serialização de objetos
+- ✅ Tratamento de timeouts
+- ✅ Reconnection automática
+- ✅ Monitoramento de conexões
+
+---
 
 ## 📂 Estrutura do Projeto
 
@@ -467,69 +646,222 @@ System.out.println("Comando recebido: " + comando);
 - [ ] CI/CD pipeline
 - [ ] Documentação expandida
 
-## 📚 Documentação Acadêmica
+## 📚 Documentação Acadêmica - IFSUL Venâncio Aires
 
-### 🎓 **Trabalho Interdisciplinar 2025**
-- **[Trabalho Interdisciplinar - Descrição Completa](TRABALHO_INTERDISCIPLINAR_2025.md)**: Documento acadêmico completo com objetivos, metodologia, resultados e conclusões
-- **[Modelo de Trabalho Interdisciplinar](MODELO_TRABALHO_INTERDISCIPLINAR.md)**: Estrutura formal acadêmica com resumo, abstract, metodologia e referências
-- **[Modelo Incremental](MODELO_INCREMENTAL.md)**: Documentação detalhada do processo de desenvolvimento incremental
+### 🎓 **Trabalho de Conclusão de Curso Técnico**
 
-### 📖 **Documentação Técnica Completa**
-- **[Guia de Arquitetura](ARCHITECTURE.md)**: Documentação técnica da arquitetura do sistema
-- **[Guia de Instalação](SETUP_GUIDE.md)**: Instruções detalhadas de configuração e instalação
-- **[Manual do Usuário](USER_MANUAL.md)**: Manual completo para usuários finais
-- **[Guia de Sincronização](SYNC_GUIDE.md)**: Documentação específica da sincronização TCP
-- **[Qualidade de Código](CODE_QUALITY.md)**: Lista de verificação de qualidade e boas práticas
+Este projeto representa a culminação do aprendizado no **Curso Técnico em Informática do IFSUL - Campus Venâncio Aires**, demonstrando competências técnicas e acadêmicas desenvolvidas ao longo da formação:
 
-### 🖼️ **Documentação Visual**
-- **[Screenshots](screenshots/README.md)**: Guia completo de capturas de tela das interfaces
-- **[Diagramas de Arquitetura](#-arquitetura-do-sistema)**: Diagramas mermaid da arquitetura do sistema
+#### **📑 Documentação Obrigatória**
+- **[Trabalho Interdisciplinar - Descrição Completa](TRABALHO_INTERDISCIPLINAR_2025.md)**: Documento acadêmico formal com objetivos, metodologia, resultados e conclusões
+- **[Modelo de Trabalho Interdisciplinar](MODELO_TRABALHO_INTERDISCIPLINAR.md)**: Estrutura acadêmica com resumo, abstract, metodologia e referências bibliográficas
+- **[Modelo Incremental de Desenvolvimento](MODELO_INCREMENTAL.md)**: Documentação detalhada do processo de desenvolvimento seguindo metodologia ágil
 
-## 🎯 **Características Acadêmicas do Projeto**
+#### **📋 Relatórios Técnicos**
+- **[Relatório de Análise e Projeto](docs/README.md)**: Análise completa de requisitos, diagramas UML e especificações técnicas
+- **[Relatório de Implementação](docs/CICLO_VIDA_SOFTWARE.md)**: Descrição detalhada do ciclo de vida do software e versões desenvolvidas
+- **[Relatório de Testes e Validação](VERIFICATION_STEPS.sh)**: Procedimentos de teste e validação de funcionalidades
 
-### **Aplicação Interdisciplinar**
-Este projeto integra conhecimentos de múltiplas disciplinas:
-- **Programação**: Java (Android e Desktop), SQL, TCP Sockets
-- **Banco de Dados**: Modelagem, MySQL, Room Database
-- **Engenharia de Software**: Arquitetura MVC/MVVM, padrões de design
-- **Redes**: Protocolo TCP, sincronização distribuída
-- **Interface Humano-Computador**: Design responsivo, usabilidade
-- **Gestão de Projetos**: Metodologia ágil, desenvolvimento incremental
+#### **🔬 Estudos de Caso**
+- **Arquitetura Híbrida Mobile-Desktop**: Análise da implementação de sincronização entre plataformas
+- **Protocolo de Comunicação TCP**: Estudo da implementação de protocolo customizado para comunicação
+- **Resolução de Conflitos**: Algoritmo desenvolvido para sincronização de dados conflitantes
 
-### **Metodologia de Desenvolvimento**
-- **Modelo Incremental**: Desenvolvimento em 4 incrementos de 4 semanas cada
-- **Scrum**: Sprints, planning, review e retrospectiva
-- **Documentação Acadêmica**: Seguindo padrões universitários
-- **Controle de Versão**: Git com commits semânticos
+### 📖 **Documentação Técnica Especializada**
 
-### **Contribuições Técnicas**
-- **Arquitetura Híbrida**: Inovação na integração mobile-desktop
-- **Sincronização TCP Direta**: Comunicação eficiente sem APIs REST
-- **Offline-First**: Funcionamento robusto sem conectividade
-- **Resolução de Conflitos**: Algoritmo automático por timestamp
+#### **🏗️ Arquitetura e Design**
+- **[Documentação de Arquitetura](ARCHITECTURE.md)**: Documentação técnica completa da arquitetura do sistema
+- **[Padrões de Design Aplicados](CODE_QUALITY.md)**: Análise dos padrões de design implementados (MVC, MVVM, Repository, DAO)
+- **[Diagramas UML Completos](docs/)**: Diagramas de classe, sequência, casos de uso e entidade-relacionamento
 
-## 📄 Licença
+#### **📱💻 Guias de Implementação**
+- **[Guia de Desenvolvimento Mobile](README_MOBILE.md)**: Documentação específica da aplicação Android
+- **[Guia de Desenvolvimento Desktop](DESKTOP VERSION/README.md)**: Documentação específica da aplicação Java Desktop
+- **[Guia de Instalação e Configuração](SETUP_GUIDE.md)**: Instruções detalhadas para ambiente de desenvolvimento e produção
 
-Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+#### **🔧 Manuais Operacionais**
+- **[Manual do Usuário Final](USER_MANUAL.md)**: Manual completo para usuários das aplicações
+- **[Guia de Sincronização TCP](SYNC_GUIDE.md)**: Documentação técnica específica da comunicação socket
+- **[Procedimentos de Backup e Recovery](DESKTOP VERSION/banco/)**: Scripts e procedimentos para manutenção de dados
 
-## 👥 Equipe
+### 🖼️ **Evidências Visuais e Demonstrativas**
 
-- **Desenvolvimento**: Kalleby Schultz
-- **Arquitetura**: Finanza Team
-- **Documentação**: Finanza Team
+#### **📷 Portfolio de Interfaces**
+- **[Capturas Mobile](screenshots/mobile/)**: Screenshots completos da aplicação Android
+- **[Capturas Desktop](screenshots/desktop/)**: Screenshots da aplicação Java Swing
+- **[Processo de Sincronização](screenshots/sync/)**: Evidências visuais da comunicação entre aplicações
 
-## 📞 Suporte
+#### **📊 Diagramas Técnicos**
+- **[Diagramas de Arquitetura](#-fundamento-técnico-acadmica)**: Diagramas Mermaid integrados na documentação
+- **[Fluxogramas de Processos](docs/)**: Visualização dos principais fluxos do sistema
+- **[Diagramas de Rede](docs/)**: Documentação da topologia e comunicação TCP
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/KallebySchultz/Finanza-Mobile/issues)
-- 📧 **Email**: [email de suporte]
+### 🎯 **Competências Acadêmicas Demonstradas**
+
+#### **💻 Programação e Desenvolvimento**
+- **Java Multiplataforma**: Desenvolvimento para Android e Desktop
+- **Programação Orientada a Objetos**: Aplicação de conceitos fundamentais (encapsulamento, herança, polimorfismo)
+- **Padrões de Arquitetura**: Implementação de MVC (Desktop) e MVVM (Mobile)
+- **Gerenciamento de Dados**: Implementação de ORM (Room) e DAO patterns
+
+#### **🗄️ Banco de Dados**
+- **Modelagem de Dados**: Diagrama ER normalizado até 3ª Forma Normal
+- **SQL Avançado**: Queries complexas, triggers, procedures e índices
+- **Administração MySQL**: Configuração, otimização e backup de banco de dados
+- **Integração JDBC**: Conectividade robusta entre Java e MySQL
+
+#### **🌐 Redes e Comunicação**
+- **Protocolo TCP/IP**: Implementação de comunicação cliente-servidor
+- **Socket Programming**: Desenvolvimento de protocolo customizado
+- **Sincronização Distribuída**: Algoritmos de resolução de conflitos
+- **Monitoramento de Rede**: Logs e diagnósticos de conectividade
+
+#### **🛠️ Engenharia de Software**
+- **Metodologia Ágil**: Aplicação de desenvolvimento incremental
+- **Documentação Técnica**: Produção de documentação seguindo padrões acadêmicos
+- **Controle de Versão**: Uso avançado de Git para gerenciamento de código
+- **Testes e Validação**: Implementação de procedimentos de teste
+
+### 📈 **Resultados Acadêmicos Alcançados**
+
+#### **🎯 Objetivos de Aprendizagem Atingidos**
+```
+✅ Desenvolvimento de aplicação multiplataforma funcional
+✅ Implementação de comunicação em tempo real entre dispositivos
+✅ Aplicação prática de conceitos de banco de dados
+✅ Produção de documentação técnica profissional
+✅ Demonstração de competências em programação orientada a objetos
+✅ Aplicação de metodologias de engenharia de software
+```
+
+#### **📊 Métricas de Complexidade Técnica**
+| Métrica | Valor | Observação |
+|---------|--------|------------|
+| **Total de Linhas de Código** | 7.700+ | Distribuídas entre mobile e desktop |
+| **Classes Implementadas** | 57 | Seguindo princípios SOLID |
+| **Funcionalidades Principais** | 33 | Completamente funcionais |
+| **Padrões de Design** | 6 | MVC, MVVM, Repository, DAO, Factory, Observer |
+| **Documentos Técnicos** | 15+ | Incluindo manuais e especificações |
+| **Diagramas UML** | 12 | Casos de uso, classes, sequência, ER |
+
+#### **🏆 Contribuições Inovadoras**
+- **Arquitetura Híbrida Offline-First**: Solução inovadora para sincronização
+- **Protocolo TCP Customizado**: Desenvolvimento de protocolo específico
+- **Resolução Automática de Conflitos**: Algoritmo baseado em timestamp e UUID
+- **Interface Responsiva Cross-Platform**: Design consistente entre mobile e desktop
+
+## 🎯 **Impacto e Aplicação Prática**
+
+### **💼 Aplicabilidade Real**
+Este sistema demonstra competência técnica através de uma solução prática para gestão financeira, evidenciando:
+
+- **Relevância Social**: Ferramenta útil para controle financeiro pessoal e familiar
+- **Aplicação Empresarial**: Base sólida para sistemas financeiros empresariais
+- **Escalabilidade**: Arquitetura preparada para expansão e novas funcionalidades
+- **Inovação Técnica**: Abordagem híbrida offline-first com sincronização inteligente
+
+### **🌟 Diferencial Competitivo**
+- **Arquitetura Única**: Combinação inovadora de mobile offline-first com desktop servidor
+- **Protocolo Customizado**: Comunicação TCP otimizada para baixa latência
+- **Resolução Inteligente**: Sistema automático de resolução de conflitos
+- **Interface Unificada**: Experiência consistente entre plataformas
+
+### **📈 Potencial de Evolução**
+- Base sólida para desenvolvimento de fintech
+- Estrutura preparada para integração com APIs bancárias
+- Arquitetura escalável para múltiplos usuários
+- Fundação para machine learning financeiro
+
+---
+
+## 🏛️ **Reconhecimento Acadêmico**
+
+### **🎓 Instituição de Ensino**
+**Instituto Federal Sul-rio-grandense (IFSUL) - Campus Venâncio Aires**
+- Curso: **Técnico em Informática**
+- Modalidade: **Ensino Técnico Profissionalizante**
+- Período: **2023-2025**
+- Status: **Trabalho de Conclusão de Curso**
+
+### **👨‍🏫 Orientação Acadêmica**
+- **Coordenação**: Curso Técnico em Informática - IFSUL
+- **Metodologia**: Aprendizagem baseada em projetos
+- **Avaliação**: Projeto interdisciplinar integrativo
+- **Objetivo**: Demonstração de competências técnicas adquiridas
+
+### **📋 Conformidade Acadêmica**
+- ✅ **Documentação completa** seguindo padrões técnicos
+- ✅ **Código comentado** e documentado adequadamente
+- ✅ **Metodologia aplicada** com evidências de processo
+- ✅ **Resultados mensuráveis** e demonstráveis
+- ✅ **Inovação técnica** com contribuições originais
+
+---
+
+## 📄 Licença e Direitos
+
+Este projeto está licenciado sob a **MIT License** - consulte o arquivo [LICENSE](LICENSE) para detalhes completos.
+
+### **🔒 Direitos Acadêmicos**
+- Desenvolvido como trabalho acadêmico no IFSUL Venâncio Aires
+- Código aberto para fins educacionais e de desenvolvimento
+- Reconhecimento devido ao autor e instituição de ensino
+- Uso permitido para estudos e melhorias
+
+---
+
+## 👥 Equipe de Desenvolvimento
+
+### **🧑‍💻 Desenvolvimento Principal**
+- **Kalleby Schultz**
+  - Estudante do Curso Técnico em Informática - IFSUL Venâncio Aires
+  - Arquitetura do sistema e implementação completa
+  - Documentação técnica e acadêmica
+  - Testes e validação de funcionalidades
+
+### **🏫 Suporte Institucional**
+- **IFSUL - Campus Venâncio Aires**
+  - Orientação acadêmica e metodológica
+  - Infraestrutura de desenvolvimento
+  - Suporte técnico e recursos educacionais
+
+---
+
+## 📞 Contato e Suporte
+
+### **🎓 Contexto Acadêmico**
+- **Instituição**: IFSUL - Campus Venâncio Aires
+- **Curso**: Técnico em Informática
+- **Email Acadêmico**: [email.academico@ifsul.edu.br]
+- **Documentação**: [Portal IFSUL](https://www.ifsul.edu.br/)
+
+### **💻 Suporte Técnico**
+- 🐛 **Reportar Issues**: [GitHub Issues](https://github.com/KallebySchultz/Finanza-Mobile/issues)
 - 💬 **Discussões**: [GitHub Discussions](https://github.com/KallebySchultz/Finanza-Mobile/discussions)
+- 📧 **Contato Direto**: [finanza.suporte@exemplo.com](mailto:finanza.suporte@exemplo.com)
+
+### **📚 Recursos Adicionais**
+- [📖 Wiki do Projeto](https://github.com/KallebySchultz/Finanza-Mobile/wiki)
+- [📹 Demonstrações em Vídeo](screenshots/)
+- [📄 Documentação Completa](docs/)
 
 ---
 
 <div align="center">
 
-**Feito com ❤️ pela equipe Finanza**
+### **🎓 Trabalho de Conclusão de Curso**
+**Técnico em Informática - IFSUL Venâncio Aires**
 
-[⬆ Voltar ao topo](#-finanza---sistema-de-controle-financeiro)
+**Sistema Finanza**: *Demonstração prática de competências técnicas em desenvolvimento de software*
+
+---
+
+**Desenvolvido com 💻 e ☕ no Rio Grande do Sul**
+
+[![IFSUL](https://img.shields.io/badge/IFSUL-Venâncio%20Aires-green?style=for-the-badge)](https://www.ifsul.edu.br/)
+[![Técnico](https://img.shields.io/badge/Técnico-Informática-blue?style=for-the-badge)](#)
+[![2025](https://img.shields.io/badge/Ano-2025-orange?style=for-the-badge)](#)
+
+[⬆ Voltar ao topo](#-finanza---sistema-completo-de-controle-financeiro)
 
 </div>

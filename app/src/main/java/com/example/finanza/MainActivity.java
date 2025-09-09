@@ -27,7 +27,6 @@ import com.example.finanza.ui.AccountsActivity;
 import com.example.finanza.ui.MenuActivity;
 import com.example.finanza.ui.MovementsActivity;
 import com.google.android.material.textfield.TextInputEditText;
-import androidx.recyclerview.widget.RecyclerView
 import java.util.Calendar;
 import java.util.List;
 /**

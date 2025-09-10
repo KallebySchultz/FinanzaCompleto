@@ -79,7 +79,6 @@ public class MovimentacaoFormDialog extends JDialog {
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         tipoCombo = new JComboBox<>(new String[]{"receita", "despesa"});
-        tipoCombo.setSelectedIndex(0); // Selecionar "receita" como padrão
         tipoCombo.addActionListener(e -> atualizarCategorias());
         formPanel.add(tipoCombo, gbc);
         

@@ -45,6 +45,8 @@ public class Lancamento {
     public String serverHash; // Hash of server data to detect changes
     @ColumnInfo(defaultValue = "0")
     public boolean isDeleted; // Soft delete flag for sync
+    @ColumnInfo(defaultValue = "0")
+    public int serverId; // ID from server for sync operations
 
     public Lancamento() {
         // Generate UUID for new transactions

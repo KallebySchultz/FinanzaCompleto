@@ -123,6 +123,33 @@ public class MovimentacaoDAO {
     }
     
     /**
+     * Busca movimentação por ID e usuário (para validação de segurança)
+     * @param id ID da movimentação
+     * @param idUsuario ID do usuário
+     * @return Movimentacao encontrada ou null
+     */
+    public Movimentacao buscarPorIdEUsuario(int id, int idUsuario) {
+        String sql = "SELECT * FROM movimentacao WHERE id = ? AND id_usuario = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            stmt.setInt(2, idUsuario);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToMovimentacao(rs);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar movimentação por ID e usuário: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
      * Lista todas as movimentações de um usuário
      * @param idUsuario ID do usuário
      * @return Lista de movimentações
@@ -240,6 +267,14 @@ public class MovimentacaoDAO {
      * @return true se atualizada com sucesso
      */
     public boolean atualizar(Movimentacao movimentacao) {
+        // First check if the movimentacao exists and belongs to the user
+        Movimentacao existente = buscarPorIdEUsuario(movimentacao.getId(), movimentacao.getIdUsuario());
+        if (existente == null) {
+            System.err.println("Erro ao atualizar movimentação: ID " + movimentacao.getId() + 
+                             " não encontrado ou não pertence ao usuário " + movimentacao.getIdUsuario());
+            return false;
+        }
+        
         String sql = "UPDATE movimentacao SET valor = ?, data = ?, descricao = ?, tipo = ?, id_conta = ?, id_categoria = ? WHERE id = ? AND id_usuario = ?";
         
         try (Connection conn = DatabaseUtil.getConnection();
@@ -254,10 +289,13 @@ public class MovimentacaoDAO {
             stmt.setInt(7, movimentacao.getId());
             stmt.setInt(8, movimentacao.getIdUsuario());
             
-            return stmt.executeUpdate() > 0;
+            int rowsUpdated = stmt.executeUpdate();
+            System.out.println("Movimentação atualizada: ID " + movimentacao.getId() + 
+                             ", rows affected: " + rowsUpdated);
+            return rowsUpdated > 0;
             
         } catch (SQLException e) {
-            System.err.println("Erro ao atualizar movimentação: " + e.getMessage());
+            System.err.println("Erro SQL ao atualizar movimentação ID " + movimentacao.getId() + ": " + e.getMessage());
         }
         
         return false;
@@ -270,6 +308,14 @@ public class MovimentacaoDAO {
      * @return true se removida com sucesso
      */
     public boolean remover(int id, int idUsuario) {
+        // First check if the movimentacao exists and belongs to the user
+        Movimentacao existente = buscarPorIdEUsuario(id, idUsuario);
+        if (existente == null) {
+            System.err.println("Erro ao remover movimentação: ID " + id + 
+                             " não encontrado ou não pertence ao usuário " + idUsuario);
+            return false;
+        }
+        
         String sql = "DELETE FROM movimentacao WHERE id = ? AND id_usuario = ?";
         
         try (Connection conn = DatabaseUtil.getConnection();
@@ -278,10 +324,13 @@ public class MovimentacaoDAO {
             stmt.setInt(1, id);
             stmt.setInt(2, idUsuario);
             
-            return stmt.executeUpdate() > 0;
+            int rowsDeleted = stmt.executeUpdate();
+            System.out.println("Movimentação removida: ID " + id + 
+                             ", rows affected: " + rowsDeleted);
+            return rowsDeleted > 0;
             
         } catch (SQLException e) {
-            System.err.println("Erro ao remover movimentação: " + e.getMessage());
+            System.err.println("Erro SQL ao remover movimentação ID " + id + ": " + e.getMessage());
         }
         
         return false;

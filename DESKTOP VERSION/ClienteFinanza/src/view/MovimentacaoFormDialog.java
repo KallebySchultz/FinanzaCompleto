@@ -182,6 +182,10 @@ public class MovimentacaoFormDialog extends JDialog {
     
     private void carregarDados() {
         carregarContas();
+        // Garantir que um tipo esteja selecionado antes de carregar categorias
+        if (tipoCombo.getSelectedItem() == null) {
+            tipoCombo.setSelectedIndex(0);
+        }
         atualizarCategorias();
     }
     
@@ -229,25 +233,32 @@ public class MovimentacaoFormDialog extends JDialog {
         dataField.setText(dateFormat.format(mov.getData()));
         descricaoField.setText(mov.getDescricao() != null ? mov.getDescricao() : "");
         
-        // Selecionar conta e categoria após carregamento
+        // Garantir que as categorias sejam carregadas após a seleção do tipo
+        // e antes de tentar selecionar a categoria específica
         SwingUtilities.invokeLater(() -> {
-            // Encontrar e selecionar a conta
-            for (int i = 0; i < contaCombo.getItemCount(); i++) {
-                Conta conta = contaCombo.getItemAt(i);
-                if (conta.getId() == mov.getIdConta()) {
-                    contaCombo.setSelectedIndex(i);
-                    break;
-                }
-            }
+            // Forçar atualização das categorias para o tipo selecionado
+            atualizarCategorias();
             
-            // Encontrar e selecionar a categoria
-            for (int i = 0; i < categoriaCombo.getItemCount(); i++) {
-                Categoria categoria = categoriaCombo.getItemAt(i);
-                if (categoria.getId() == mov.getIdCategoria()) {
-                    categoriaCombo.setSelectedIndex(i);
-                    break;
+            // Aguardar um ciclo do EDT para garantir que as categorias foram carregadas
+            SwingUtilities.invokeLater(() -> {
+                // Encontrar e selecionar a conta
+                for (int i = 0; i < contaCombo.getItemCount(); i++) {
+                    Conta conta = contaCombo.getItemAt(i);
+                    if (conta.getId() == mov.getIdConta()) {
+                        contaCombo.setSelectedIndex(i);
+                        break;
+                    }
                 }
-            }
+                
+                // Encontrar e selecionar a categoria
+                for (int i = 0; i < categoriaCombo.getItemCount(); i++) {
+                    Categoria categoria = categoriaCombo.getItemAt(i);
+                    if (categoria.getId() == mov.getIdCategoria()) {
+                        categoriaCombo.setSelectedIndex(i);
+                        break;
+                    }
+                }
+            });
         });
     }
     

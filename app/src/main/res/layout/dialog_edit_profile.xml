@@ -52,18 +52,36 @@
             android:textColorHint="@color/darkGray" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Campo Senha Atual (para confirmação) -->
+    <!-- Campo Senha Atual -->
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp">
+        android:layout_marginBottom="12dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/input_senha_atual"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/edittext_bg"
-            android:hint="Senha atual (para confirmação)"
+            android:hint="Senha atual (obrigatório)"
+            android:inputType="textPassword"
+            android:padding="16dp"
+            android:textColor="@color/primaryDarkBlue"
+            android:textColorHint="@color/darkGray" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Campo Nova Senha -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/input_nova_senha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edittext_bg"
+            android:hint="Nova senha (opcional)"
             android:inputType="textPassword"
             android:padding="16dp"
             android:textColor="@color/primaryDarkBlue"

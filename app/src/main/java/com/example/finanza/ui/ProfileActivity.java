@@ -30,7 +30,6 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView txtEmailUsuario;
     private TextView txtDataCriacao;
     private Button btnEditarPerfil;
-    private Button btnAlterarSenha;
     private Button btnExcluirConta;
     private Button btnSair;
 
@@ -69,7 +68,6 @@ public class ProfileActivity extends AppCompatActivity {
         txtEmailUsuario = findViewById(R.id.txt_email_usuario);
         txtDataCriacao = findViewById(R.id.txt_data_criacao);
         btnEditarPerfil = findViewById(R.id.btn_editar_perfil);
-        btnAlterarSenha = findViewById(R.id.btn_alterar_senha);
         btnExcluirConta = findViewById(R.id.btn_excluir_conta);
         btnSair = findViewById(R.id.btn_sair);
 
@@ -78,7 +76,6 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Configurar listeners
         btnEditarPerfil.setOnClickListener(v -> mostrarDialogEditarPerfil());
-        btnAlterarSenha.setOnClickListener(v -> mostrarDialogAlterarSenha());
         btnExcluirConta.setOnClickListener(v -> confirmarExclusaoConta());
         
         // Adicionar listener para logout se o botão existir
@@ -119,6 +116,7 @@ public class ProfileActivity extends AppCompatActivity {
         TextInputEditText inputNome = dialogView.findViewById(R.id.input_nome_usuario);
         TextInputEditText inputEmail = dialogView.findViewById(R.id.input_email_usuario);
         TextInputEditText inputSenhaAtual = dialogView.findViewById(R.id.input_senha_atual);
+        TextInputEditText inputNovaSenha = dialogView.findViewById(R.id.input_nova_senha);
         Button btnSalvar = dialogView.findViewById(R.id.btn_salvar_perfil);
         Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar_edicao);
 
@@ -136,6 +134,7 @@ public class ProfileActivity extends AppCompatActivity {
             String novoNome = inputNome.getText() != null ? inputNome.getText().toString().trim() : "";
             String novoEmail = inputEmail.getText() != null ? inputEmail.getText().toString().trim() : "";
             String senhaAtual = inputSenhaAtual.getText() != null ? inputSenhaAtual.getText().toString().trim() : "";
+            String novaSenha = inputNovaSenha.getText() != null ? inputNovaSenha.getText().toString().trim() : "";
 
             // Validações
             if (novoNome.isEmpty()) {
@@ -164,9 +163,12 @@ public class ProfileActivity extends AppCompatActivity {
                 return;
             }
 
-            // Atualizar dados (sem senha)
+            // Atualizar dados
             usuarioAtual.nome = novoNome;
             usuarioAtual.email = novoEmail;
+            if (!novaSenha.isEmpty()) {
+                usuarioAtual.senha = novaSenha;
+            }
 
             // Mark as modified for future sync
             usuarioAtual.markAsModified();
@@ -178,80 +180,6 @@ public class ProfileActivity extends AppCompatActivity {
                 Toast.makeText(this, "Perfil atualizado com sucesso!", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
                 Toast.makeText(this, "Erro ao atualizar perfil: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        btnCancelar.setOnClickListener(v -> dialog.dismiss());
-    }
-
-    private void mostrarDialogAlterarSenha() {
-        android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_change_password, null);
-
-        TextInputEditText inputSenhaAtual = dialogView.findViewById(R.id.input_senha_atual);
-        TextInputEditText inputNovaSenha = dialogView.findViewById(R.id.input_nova_senha);
-        TextInputEditText inputConfirmarSenha = dialogView.findViewById(R.id.input_confirmar_senha);
-        Button btnConfirmar = dialogView.findViewById(R.id.btn_alterar_senha_confirmar);
-        Button btnCancelar = dialogView.findViewById(R.id.btn_cancelar_senha);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(dialogView);
-        AlertDialog dialog = builder.create();
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        dialog.show();
-
-        btnConfirmar.setOnClickListener(v -> {
-            String senhaAtual = inputSenhaAtual.getText() != null ? inputSenhaAtual.getText().toString().trim() : "";
-            String novaSenha = inputNovaSenha.getText() != null ? inputNovaSenha.getText().toString().trim() : "";
-            String confirmarSenha = inputConfirmarSenha.getText() != null ? inputConfirmarSenha.getText().toString().trim() : "";
-
-            // Validações
-            if (senhaAtual.isEmpty()) {
-                inputSenhaAtual.setError("Digite a senha atual");
-                return;
-            }
-            if (novaSenha.isEmpty()) {
-                inputNovaSenha.setError("Digite a nova senha");
-                return;
-            }
-            if (confirmarSenha.isEmpty()) {
-                inputConfirmarSenha.setError("Confirme a nova senha");
-                return;
-            }
-
-            // Verificar senha atual
-            if (!senhaAtual.equals(usuarioAtual.senha)) {
-                inputSenhaAtual.setError("Senha atual incorreta");
-                return;
-            }
-
-            // Verificar se nova senha e confirmação coincidem
-            if (!novaSenha.equals(confirmarSenha)) {
-                inputConfirmarSenha.setError("Senhas não coincidem");
-                return;
-            }
-
-            // Validar tamanho mínimo da senha
-            if (novaSenha.length() < 6) {
-                inputNovaSenha.setError("A senha deve ter pelo menos 6 caracteres");
-                return;
-            }
-
-            // Verificar se nova senha é diferente da atual
-            if (novaSenha.equals(senhaAtual)) {
-                inputNovaSenha.setError("A nova senha deve ser diferente da atual");
-                return;
-            }
-
-            // Atualizar senha
-            usuarioAtual.senha = novaSenha;
-            usuarioAtual.markAsModified();
-            
-            try {
-                db.usuarioDao().atualizar(usuarioAtual);
-                dialog.dismiss();
-                Toast.makeText(this, "Senha alterada com sucesso!", Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {
-                Toast.makeText(this, "Erro ao alterar senha: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 

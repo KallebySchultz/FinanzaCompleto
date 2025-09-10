@@ -41,10 +41,6 @@ DESKTOP\ VERSION/Servidor-Finanza/lib/
 # Configuration files (keep examples but ignore user configs)
 finanza-config.properties
 
-# Temporary compilation files
-*.args
-javac.*.args
-
 # Database files (created during runtime)
 *.db
 finanza.db

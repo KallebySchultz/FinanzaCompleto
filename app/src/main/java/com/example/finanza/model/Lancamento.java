@@ -2,6 +2,7 @@ package com.example.finanza.model;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.room.ForeignKey;
 
@@ -19,6 +20,11 @@ import androidx.room.ForeignKey;
                         parentColumns = "id",
                         childColumns = "categoriaId",
                         onDelete = ForeignKey.SET_NULL)
+        },
+        indices = {
+                @Index(name = "index_Lancamento_uuid", value = {"uuid"}),
+                @Index(name = "index_Lancamento_syncStatus", value = {"syncStatus"}),
+                @Index(name = "index_Lancamento_lastModified", value = {"lastModified"})
         }
 )
 public class Lancamento {

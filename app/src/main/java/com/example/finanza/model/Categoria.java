@@ -2,9 +2,15 @@ package com.example.finanza.model;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity
+@Entity(
+        indices = {
+                @Index(name = "index_Categoria_uuid", value = {"uuid"}),
+                @Index(name = "index_Categoria_syncStatus", value = {"syncStatus"})
+        }
+)
 public class Categoria {
     @PrimaryKey(autoGenerate = true)
     public int id;

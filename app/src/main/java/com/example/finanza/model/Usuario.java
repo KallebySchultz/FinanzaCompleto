@@ -2,6 +2,7 @@ package com.example.finanza.model;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
 /**
@@ -29,7 +30,12 @@ import androidx.room.PrimaryKey;
  * @version 1.0
  * @since 2024
  */
-@Entity
+@Entity(
+        indices = {
+                @Index(name = "index_Usuario_uuid", value = {"uuid"}),
+                @Index(name = "index_Usuario_syncStatus", value = {"syncStatus"})
+        }
+)
 public class Usuario {
     
     // ================== CAMPOS PRINCIPAIS ==================

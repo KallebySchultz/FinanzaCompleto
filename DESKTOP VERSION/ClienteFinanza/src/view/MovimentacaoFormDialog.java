@@ -182,6 +182,10 @@ public class MovimentacaoFormDialog extends JDialog {
     
     private void carregarDados() {
         carregarContas();
+        // Garantir que o tipo esteja selecionado antes de carregar categorias
+        if (tipoCombo.getSelectedItem() == null && tipoCombo.getItemCount() > 0) {
+            tipoCombo.setSelectedIndex(0);
+        }
         atualizarCategorias();
     }
     
@@ -205,15 +209,32 @@ public class MovimentacaoFormDialog extends JDialog {
         categoriaCombo.removeAllItems();
         
         String tipoSelecionado = (String) tipoCombo.getSelectedItem();
-        if (tipoSelecionado == null) return;
+        if (tipoSelecionado == null) {
+            // Garantir que há uma seleção padrão
+            if (tipoCombo.getItemCount() > 0) {
+                tipoCombo.setSelectedIndex(0);
+                tipoSelecionado = (String) tipoCombo.getSelectedItem();
+            }
+            if (tipoSelecionado == null) return;
+        }
         
         Categoria.TipoCategoria tipo = "receita".equals(tipoSelecionado) ? 
             Categoria.TipoCategoria.RECEITA : Categoria.TipoCategoria.DESPESA;
         
         FinanceController.OperationResult<List<Categoria>> result = financeController.listarCategoriasPorTipo(tipo);
         if (result.isSucesso()) {
-            for (Categoria categoria : result.getDados()) {
-                categoriaCombo.addItem(categoria);
+            List<Categoria> categorias = result.getDados();
+            if (categorias != null && !categorias.isEmpty()) {
+                for (Categoria categoria : categorias) {
+                    categoriaCombo.addItem(categoria);
+                }
+            } else {
+                // Informar o usuário quando não há categorias disponíveis
+                JOptionPane.showMessageDialog(this, 
+                    "Nenhuma categoria do tipo '" + tipoSelecionado + "' foi encontrada.\n" +
+                    "Crie categorias primeiro na tela de Categorias.", 
+                    "Aviso", 
+                    JOptionPane.WARNING_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(this, 

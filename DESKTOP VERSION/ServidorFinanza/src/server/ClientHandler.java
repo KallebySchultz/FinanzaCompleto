@@ -646,10 +646,12 @@ public class ClientHandler extends Thread {
         // Modo de teste
         if (testMode) {
             String tipo = partes[1];
-            if ("RECEITA".equals(tipo)) {
-                return Protocol.createSuccessResponse("2" + Protocol.FIELD_SEPARATOR + "Salário" + Protocol.FIELD_SEPARATOR + "RECEITA");
+            if ("receita".equalsIgnoreCase(tipo)) {
+                return Protocol.createSuccessResponse("2,Salário,receita");
+            } else if ("despesa".equalsIgnoreCase(tipo)) {
+                return Protocol.createSuccessResponse("1,Alimentação,despesa");
             } else {
-                return Protocol.createSuccessResponse("1" + Protocol.FIELD_SEPARATOR + "Alimentação" + Protocol.FIELD_SEPARATOR + "DESPESA");
+                return Protocol.createErrorResponse("Tipo de categoria inválido");
             }
         }
         

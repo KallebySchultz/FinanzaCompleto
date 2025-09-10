@@ -61,3 +61,8 @@ server-java/*.jar
 /DESKTOP VERSION/ClienteFinanza/nbproject/private/
 /DESKTOP VERSION/ClienteFinanza/build/
 /DESKTOP VERSION/ClienteFinanza/dist/
+
+# Test artifacts and logs
+*.log
+test_*.java
+test_*.class

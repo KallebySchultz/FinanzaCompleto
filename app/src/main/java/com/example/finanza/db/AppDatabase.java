@@ -93,10 +93,30 @@ public abstract class AppDatabase extends RoomDatabase {
         }
         
         private void addColumnIfNotExists(SupportSQLiteDatabase database, String tableName, String columnName, String columnDef) {
+            // Check if column exists by querying table info
+            boolean columnExists = false;
             try {
-                database.execSQL("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDef);
+                android.database.Cursor cursor = database.query("PRAGMA table_info(" + tableName + ")");
+                if (cursor != null) {
+                    while (cursor.moveToNext()) {
+                        String existingColumnName = cursor.getString(1); // column name is at index 1
+                        if (columnName.equals(existingColumnName)) {
+                            columnExists = true;
+                            break;
+                        }
+                    }
+                    cursor.close();
+                }
             } catch (Exception e) {
-                // Column already exists, this is fine
+                // If we can't check, assume column doesn't exist and try to add it
+            }
+            
+            if (!columnExists) {
+                try {
+                    database.execSQL("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDef);
+                } catch (Exception e) {
+                    // Column might exist but pragma check failed, ignore error
+                }
             }
         }
     };

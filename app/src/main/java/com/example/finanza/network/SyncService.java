@@ -261,6 +261,18 @@ public class SyncService {
                         @Override
                         public void onSuccess(String result) {
                             Log.d(TAG, "Lançamento sincronizado: " + lancamento.descricao);
+                            try {
+                                String[] partes = Protocol.parseCommand(result);
+                                if (partes.length >= 2 && Protocol.STATUS_OK.equals(partes[0])) {
+                                    int serverId = Integer.parseInt(partes[1]);
+                                    lancamento.serverId = serverId;
+                                    lancamento.markAsSynced();
+                                    database.lancamentoDao().atualizar(lancamento);
+                                    Log.d(TAG, "Server ID " + serverId + " salvo para lançamento: " + lancamento.descricao);
+                                }
+                            } catch (Exception e) {
+                                Log.w(TAG, "Erro ao processar resposta do servidor: " + e.getMessage());
+                            }
                         }
                         @Override
                         public void onError(String error) {
@@ -445,6 +457,18 @@ public class SyncService {
                         @Override
                         public void onSuccess(String result) {
                             Log.d(TAG, "Lançamento sincronizado com servidor: " + lancamento.descricao);
+                            try {
+                                String[] partes = Protocol.parseCommand(result);
+                                if (partes.length >= 2 && Protocol.STATUS_OK.equals(partes[0])) {
+                                    int serverId = Integer.parseInt(partes[1]);
+                                    lancamento.serverId = serverId;
+                                    lancamento.markAsSynced();
+                                    database.lancamentoDao().atualizar(lancamento);
+                                    Log.d(TAG, "Server ID " + serverId + " salvo para lançamento local " + lancamento.id);
+                                }
+                            } catch (Exception e) {
+                                Log.w(TAG, "Erro ao processar resposta do servidor para lançamento: " + e.getMessage());
+                            }
                         }
                         @Override
                         public void onError(String error) {
@@ -489,9 +513,11 @@ public class SyncService {
                 // Sync with server if connected
                 if (serverClient.isConnected()) {
                     Log.d(TAG, "Sincronizando atualização de lançamento com servidor...");
+                    // Use server ID for the command, fallback to local ID if server ID is not available
+                    int idParaServidor = lancamento.serverId > 0 ? lancamento.serverId : lancamento.id;
                     String comando = Protocol.buildCommand(
                             Protocol.CMD_UPDATE_MOVIMENTACAO,
-                            String.valueOf(lancamento.id),
+                            String.valueOf(idParaServidor),
                             String.valueOf(lancamento.valor),
                             new java.sql.Date(lancamento.data).toString(),
                             lancamento.descricao,
@@ -499,6 +525,7 @@ public class SyncService {
                             String.valueOf(lancamento.contaId),
                             String.valueOf(lancamento.categoriaId)
                     );
+                    Log.d(TAG, "Enviando comando UPDATE com ID " + idParaServidor + " (servidor: " + lancamento.serverId + ", local: " + lancamento.id + ")");
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
@@ -541,10 +568,13 @@ public class SyncService {
                 // Sync with server if connected
                 if (serverClient.isConnected()) {
                     Log.d(TAG, "Sincronizando exclusão de lançamento com servidor...");
+                    // Use server ID for the command, fallback to local ID if server ID is not available
+                    int idParaServidor = lancamento.serverId > 0 ? lancamento.serverId : lancamento.id;
                     String comando = Protocol.buildCommand(
                             Protocol.CMD_DELETE_MOVIMENTACAO,
-                            String.valueOf(lancamento.id)
+                            String.valueOf(idParaServidor)
                     );
+                    Log.d(TAG, "Enviando comando DELETE com ID " + idParaServidor + " (servidor: " + lancamento.serverId + ", local: " + lancamento.id + ")");
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
@@ -1124,10 +1154,12 @@ public class SyncService {
                             lancamento.categoriaId = categoriaId;
                             lancamento.usuarioId = usuarioId;
                             lancamento.tipo = tipo;
+                            lancamento.serverId = serverId; // Store server ID for sync operations
+                            lancamento.markAsSynced(); // Mark as synced since it came from server
                             long lancamentoId = database.lancamentoDao().inserirSeguro(lancamento);
                             if (lancamentoId > 0) {
                                 movimentacoesProcessadas++;
-                                Log.d(TAG, "Movimentação adicionada localmente: " + descricao);
+                                Log.d(TAG, "Movimentação adicionada localmente com server ID " + serverId + ": " + descricao);
                             }
                         } else {
                             Log.w(TAG, "Não é possível criar movimentação - referências inválidas. " +

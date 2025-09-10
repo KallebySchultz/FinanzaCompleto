@@ -1,5 +1,0 @@
--cp
-/dev/null
--Xmaxerrs
-5
-app/src/main/java/com/example/finanza/db/LancamentoDao.java

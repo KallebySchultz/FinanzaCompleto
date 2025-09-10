@@ -653,8 +653,41 @@ public class ClientHandler extends Thread {
             }
         }
         
-        // TODO: Implementar busca real no banco de dados
-        return Protocol.createSuccessResponse("");
+        try {
+            // Parse do tipo da categoria
+            String tipoStr = partes[1];
+            Categoria.TipoCategoria tipo = Categoria.TipoCategoria.fromString(tipoStr);
+            
+            // Buscar categorias reais do banco de dados por tipo
+            List<Categoria> categorias = categoriaDAO.listarPorTipo(usuarioLogado.getId(), tipo);
+            
+            if (categorias.isEmpty()) {
+                return Protocol.createSuccessResponse("");
+            }
+            
+            StringBuilder categoriasData = new StringBuilder();
+            for (int i = 0; i < categorias.size(); i++) {
+                Categoria categoria = categorias.get(i);
+                
+                if (i > 0) {
+                    categoriasData.append(Protocol.FIELD_SEPARATOR);
+                }
+                
+                // Formato: id,nome,tipo (mesmo formato que LIST_CATEGORIAS)
+                categoriasData.append(categoria.getId()).append(",")
+                             .append(categoria.getNome()).append(",")
+                             .append(categoria.getTipo().getValor());
+            }
+            
+            return Protocol.createSuccessResponse(categoriasData.toString());
+            
+        } catch (IllegalArgumentException e) {
+            return Protocol.createErrorResponse("Tipo de categoria inválido: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Erro ao listar categorias por tipo: " + e.getMessage());
+            e.printStackTrace();
+            return Protocol.createErrorResponse("Erro ao carregar categorias");
+        }
     }
     
     /**

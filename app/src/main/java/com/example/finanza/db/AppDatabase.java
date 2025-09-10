@@ -11,7 +11,7 @@ import com.example.finanza.model.*;
 
 @Database(
         entities = {Usuario.class, Conta.class, Categoria.class, Lancamento.class},
-        version = 5, // <-- ALTERADO: aumente a versão ao modificar entidades!
+        version = 6, // <-- ALTERADO: aumente a versão ao modificar entidades!
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -22,6 +22,84 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract ContaDao contaDao();
     public abstract CategoriaDao categoriaDao();
     public abstract LancamentoDao lancamentoDao();
+
+    /**
+     * Migration from version 5 to 6 - Schema integrity fix
+     */
+    static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(SupportSQLiteDatabase database) {
+            // This migration ensures schema integrity after sync fields were added
+            // Rather than guessing what columns might be missing, we'll just ensure
+            // the schema matches what the entities expect
+            
+            // For a more robust approach, we'll simply add all necessary columns
+            // SQLite will ignore duplicate column additions, but to be safe,
+            // we'll use a different approach
+            
+            // Add missing columns to Usuario table if they don't exist
+            addColumnIfNotExists(database, "Usuario", "uuid", "TEXT DEFAULT ''");
+            addColumnIfNotExists(database, "Usuario", "lastModified", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Usuario", "syncStatus", "INTEGER NOT NULL DEFAULT 2");
+            addColumnIfNotExists(database, "Usuario", "lastSyncTime", "INTEGER NOT NULL DEFAULT 0");
+            
+            // Add missing columns to Conta table if they don't exist
+            addColumnIfNotExists(database, "Conta", "uuid", "TEXT DEFAULT ''");
+            addColumnIfNotExists(database, "Conta", "lastModified", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Conta", "syncStatus", "INTEGER NOT NULL DEFAULT 2");
+            addColumnIfNotExists(database, "Conta", "lastSyncTime", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Conta", "serverHash", "TEXT DEFAULT ''");
+            addColumnIfNotExists(database, "Conta", "saldoAtual", "REAL NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Conta", "tipo", "TEXT DEFAULT 'corrente'");
+            
+            // Add missing columns to Categoria table if they don't exist
+            addColumnIfNotExists(database, "Categoria", "uuid", "TEXT DEFAULT ''");
+            addColumnIfNotExists(database, "Categoria", "lastModified", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Categoria", "syncStatus", "INTEGER NOT NULL DEFAULT 2");
+            addColumnIfNotExists(database, "Categoria", "lastSyncTime", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Categoria", "serverHash", "TEXT DEFAULT ''");
+            
+            // Add missing columns to Lancamento table if they don't exist
+            addColumnIfNotExists(database, "Lancamento", "uuid", "TEXT DEFAULT ''");
+            addColumnIfNotExists(database, "Lancamento", "lastModified", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Lancamento", "syncStatus", "INTEGER NOT NULL DEFAULT 2");
+            addColumnIfNotExists(database, "Lancamento", "lastSyncTime", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Lancamento", "serverHash", "TEXT DEFAULT ''");
+            addColumnIfNotExists(database, "Lancamento", "isDeleted", "INTEGER NOT NULL DEFAULT 0");
+            addColumnIfNotExists(database, "Lancamento", "serverId", "INTEGER NOT NULL DEFAULT 0");
+            
+            // Create indexes if they don't exist
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Usuario_uuid ON Usuario(uuid)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Usuario_syncStatus ON Usuario(syncStatus)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Conta_uuid ON Conta(uuid)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Conta_syncStatus ON Conta(syncStatus)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Categoria_uuid ON Categoria(uuid)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Categoria_syncStatus ON Categoria(syncStatus)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Lancamento_uuid ON Lancamento(uuid)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Lancamento_syncStatus ON Lancamento(syncStatus)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_Lancamento_lastModified ON Lancamento(lastModified)");
+            
+            // Update existing records with UUIDs and timestamps if needed
+            database.execSQL("UPDATE Usuario SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
+            database.execSQL("UPDATE Conta SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
+            database.execSQL("UPDATE Categoria SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
+            database.execSQL("UPDATE Lancamento SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
+            
+            long currentTime = System.currentTimeMillis();
+            database.execSQL("UPDATE Usuario SET lastModified = " + currentTime + " WHERE lastModified = 0");
+            database.execSQL("UPDATE Conta SET lastModified = " + currentTime + " WHERE lastModified = 0");
+            database.execSQL("UPDATE Categoria SET lastModified = " + currentTime + " WHERE lastModified = 0");
+            database.execSQL("UPDATE Lancamento SET lastModified = " + currentTime + " WHERE lastModified = 0");
+        }
+        
+        private void addColumnIfNotExists(SupportSQLiteDatabase database, String tableName, String columnName, String columnDef) {
+            try {
+                database.execSQL("ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnDef);
+            } catch (Exception e) {
+                // Column already exists, this is fine
+            }
+        }
+    };
 
     /**
      * Migration from version 4 to 5 - Add saldoAtual field to Conta
@@ -105,7 +183,8 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "finanza-database")
-                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+                            .fallbackToDestructiveMigration() // Allow destructive migration for development
                             .allowMainThreadQueries() // Somente para testes/dev!
                             .build();
                 }

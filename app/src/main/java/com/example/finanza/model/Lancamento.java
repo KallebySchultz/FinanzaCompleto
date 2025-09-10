@@ -50,7 +50,7 @@ public class Lancamento {
     @ColumnInfo(defaultValue = "''")
     public String serverHash; // Hash of server data to detect changes
     @ColumnInfo(defaultValue = "0")
-    public boolean isDeleted; // Soft delete flag for sync
+    public boolean isDeleted; // Soft delete flag for sync (stored as INTEGER in SQLite)
     @ColumnInfo(defaultValue = "0")
     public int serverId; // ID from server for sync operations
 

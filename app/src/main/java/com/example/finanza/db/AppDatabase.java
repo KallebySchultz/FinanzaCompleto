@@ -80,16 +80,18 @@ public abstract class AppDatabase extends RoomDatabase {
             database.execSQL("CREATE INDEX IF NOT EXISTS index_Lancamento_lastModified ON Lancamento(lastModified)");
             
             // Update existing records with UUIDs and timestamps if needed
+            // Use proper UUID format for compatibility
             database.execSQL("UPDATE Usuario SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
             database.execSQL("UPDATE Conta SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
             database.execSQL("UPDATE Categoria SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
             database.execSQL("UPDATE Lancamento SET uuid = lower(hex(randomblob(16))) WHERE uuid = '' OR uuid IS NULL");
             
+            // Update timestamps for existing records only if they are 0
             long currentTime = System.currentTimeMillis();
-            database.execSQL("UPDATE Usuario SET lastModified = " + currentTime + " WHERE lastModified = 0");
-            database.execSQL("UPDATE Conta SET lastModified = " + currentTime + " WHERE lastModified = 0");
-            database.execSQL("UPDATE Categoria SET lastModified = " + currentTime + " WHERE lastModified = 0");
-            database.execSQL("UPDATE Lancamento SET lastModified = " + currentTime + " WHERE lastModified = 0");
+            database.execSQL("UPDATE Usuario SET lastModified = " + currentTime + " WHERE lastModified = 0 OR lastModified IS NULL");
+            database.execSQL("UPDATE Conta SET lastModified = " + currentTime + " WHERE lastModified = 0 OR lastModified IS NULL");
+            database.execSQL("UPDATE Categoria SET lastModified = " + currentTime + " WHERE lastModified = 0 OR lastModified IS NULL");
+            database.execSQL("UPDATE Lancamento SET lastModified = " + currentTime + " WHERE lastModified = 0 OR lastModified IS NULL");
         }
         
         private void addColumnIfNotExists(SupportSQLiteDatabase database, String tableName, String columnName, String columnDef) {

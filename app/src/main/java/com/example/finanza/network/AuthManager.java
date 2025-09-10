@@ -373,114 +373,35 @@ public class AuthManager {
     }
 
     /**
-     * Creates default data for new users (account and categories)
+     * Creates initial data for new users (no default data - clean start)
      */
     private void criarDadosIniciais(int usuarioId) {
         try {
-            Log.d(TAG, "Criando dados iniciais para usuário: " + usuarioId);
-
-            // Create default account
-            Conta contaPadrao = new Conta();
-            contaPadrao.nome = "Conta Padrão";
-            contaPadrao.tipo = "corrente";
-            contaPadrao.saldoInicial = 0.0;
-            contaPadrao.usuarioId = usuarioId;
-            database.contaDao().inserir(contaPadrao);
-            
-            // Create additional test account for nubank
-            Conta contaNubank = new Conta();
-            contaNubank.nome = "nubank";
-            contaNubank.tipo = "corrente";
-            contaNubank.saldoInicial = 0.0;
-            contaNubank.usuarioId = usuarioId;
-            database.contaDao().inserir(contaNubank);
-
-            // Create default expense categories if none exist
-            if (database.categoriaDao().listarPorTipo("despesa").isEmpty()) {
-                criarCategoriasPadrao();
-            }
-
-            Log.d(TAG, "Dados iniciais criados com sucesso");
+            Log.d(TAG, "Usuário criado sem dados padrão: " + usuarioId);
+            // User starts with no default accounts or categories - clean slate
         } catch (Exception e) {
-            Log.e(TAG, "Erro ao criar dados iniciais: " + e.getMessage(), e);
+            Log.e(TAG, "Erro ao processar dados iniciais: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Creates default categories for the app
+     * Removed: No longer creates default categories - users start with clean slate
      */
     private void criarCategoriasPadrao() {
-        try {
-            // Default expense categories
-            String[][] categoriasDespesa = {
-                    {"Alimentação", "#FF6B6B"},
-                    {"Transporte", "#4ECDC4"},
-                    {"Saúde", "#45B7D1"},
-                    {"Educação", "#96CEB4"},
-                    {"Lazer", "#FFEAA7"},
-                    {"Casa", "#DDA0DD"},
-                    {"Roupas", "#98D8C8"},
-                    {"Tecnologia", "#F7DC6F"},
-                    {"Viagem", "#BB8FCE"},
-                    {"Outros", "#85929E"}
-            };
-
-            for (String[] cat : categoriasDespesa) {
-                Categoria categoria = new Categoria();
-                categoria.nome = cat[0];
-                categoria.tipo = "despesa";
-                categoria.corHex = cat[1];
-                database.categoriaDao().inserir(categoria);
-            }
-
-            // Default income categories
-            String[][] categoriasReceita = {
-                    {"Salário", "#2ECC71"},
-                    {"Freelance", "#3498DB"},
-                    {"Investimentos", "#9B59B6"},
-                    {"Vendas", "#E67E22"},
-                    {"Prêmios", "#F1C40F"},
-                    {"Restituição", "#1ABC9C"},
-                    {"Outros", "#34495E"}
-            };
-
-            for (String[] cat : categoriasReceita) {
-                Categoria categoria = new Categoria();
-                categoria.nome = cat[0];
-                categoria.tipo = "receita";
-                categoria.corHex = cat[1];
-                database.categoriaDao().inserir(categoria);
-            }
-
-            Log.d(TAG, "Categorias padrão criadas");
-        } catch (Exception e) {
-            Log.e(TAG, "Erro ao criar categorias padrão: " + e.getMessage(), e);
-        }
+        // Method removed - no default categories are created
+        Log.d(TAG, "Default category creation disabled - users start with clean slate");
     }
 
     /**
-     * Checks if user has necessary data and creates default data if needed
+     * No longer creates default data - users manage their own accounts and categories
      */
     private void verificarECriarDadosSeNecessario(int usuarioId) {
         try {
-            // Check if user has at least one account
-            if (database.contaDao().listarPorUsuario(usuarioId).isEmpty()) {
-                Log.d(TAG, "Usuário sem contas - criando conta padrão");
-                Conta contaPadrao = new Conta();
-                contaPadrao.nome = "Conta Padrão";
-                contaPadrao.tipo = "corrente";
-                contaPadrao.saldoInicial = 0.0;
-                contaPadrao.usuarioId = usuarioId;
-                database.contaDao().inserir(contaPadrao);
-            }
-
-            // Check if user has categories
-            if (database.categoriaDao().listarTodas().isEmpty()) {
-                Log.d(TAG, "Usuário sem categorias - criando categorias padrão");
-                criarCategoriasPadrao();
-            }
+            Log.d(TAG, "User data verification - no default data creation");
+            // No automatic creation of default accounts or categories
+            // Users must create their own data as needed
         } catch (Exception e) {
-            Log.e(TAG, "Erro ao verificar dados necessários: " + e.getMessage(), e);
+            Log.e(TAG, "Erro ao verificar dados: " + e.getMessage(), e);
         }
     }
 

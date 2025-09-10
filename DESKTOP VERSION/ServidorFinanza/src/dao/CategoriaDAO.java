@@ -243,36 +243,6 @@ public class CategoriaDAO {
     }
     
     /**
-     * Insere categorias padrão para um novo usuário
-     * @param idUsuario ID do usuário
-     * @return true se inseridas com sucesso
-     */
-    public boolean inserirCategoriasPadrao(int idUsuario) {
-        String[] categoriasReceita = {"Salário", "Freelance", "Investimentos", "Outros"};
-        String[] categoriasDespesa = {"Alimentação", "Transporte", "Moradia", "Saúde", "Educação", "Lazer"};
-        
-        try {
-            // Inserir categorias de receita
-            for (String nome : categoriasReceita) {
-                Categoria categoria = new Categoria(nome, Categoria.TipoCategoria.RECEITA, idUsuario);
-                inserir(categoria);
-            }
-            
-            // Inserir categorias de despesa
-            for (String nome : categoriasDespesa) {
-                Categoria categoria = new Categoria(nome, Categoria.TipoCategoria.DESPESA, idUsuario);
-                inserir(categoria);
-            }
-            
-            return true;
-            
-        } catch (Exception e) {
-            System.err.println("Erro ao inserir categorias padrão: " + e.getMessage());
-            return false;
-        }
-    }
-    
-    /**
      * Mapeia ResultSet para objeto Categoria
      */
     private Categoria mapResultSetToCategoria(ResultSet rs) throws SQLException {

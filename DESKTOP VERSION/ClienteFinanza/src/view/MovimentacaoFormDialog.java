@@ -246,11 +246,13 @@ public class MovimentacaoFormDialog extends JDialog {
     
     private void preencherFormulario(Movimentacao mov) {
         valorField.setText(String.format("%.2f", mov.getValor()));
-        tipoCombo.setSelectedItem(mov.getTipo().getValor());
         dataField.setText(dateFormat.format(mov.getData()));
         descricaoField.setText(mov.getDescricao() != null ? mov.getDescricao() : "");
         
-        // Selecionar conta e categoria após carregamento
+        // Primeiro definir o tipo, que irá recarregar as categorias
+        tipoCombo.setSelectedItem(mov.getTipo().getValor());
+        
+        // Selecionar conta e categoria após carregamento das categorias
         SwingUtilities.invokeLater(() -> {
             // Encontrar e selecionar a conta
             for (int i = 0; i < contaCombo.getItemCount(); i++) {
@@ -261,14 +263,17 @@ public class MovimentacaoFormDialog extends JDialog {
                 }
             }
             
-            // Encontrar e selecionar a categoria
-            for (int i = 0; i < categoriaCombo.getItemCount(); i++) {
-                Categoria categoria = categoriaCombo.getItemAt(i);
-                if (categoria.getId() == mov.getIdCategoria()) {
-                    categoriaCombo.setSelectedIndex(i);
-                    break;
+            // Aguardar um pouco mais para garantir que as categorias foram carregadas
+            SwingUtilities.invokeLater(() -> {
+                // Encontrar e selecionar a categoria
+                for (int i = 0; i < categoriaCombo.getItemCount(); i++) {
+                    Categoria categoria = categoriaCombo.getItemAt(i);
+                    if (categoria.getId() == mov.getIdCategoria()) {
+                        categoriaCombo.setSelectedIndex(i);
+                        break;
+                    }
                 }
-            }
+            });
         });
     }
     

@@ -8,13 +8,13 @@ Aqui está o modelo, bem estruturado para GitHub:
 
 ![screenshot1](IMAGENS/mobile/1.png)
 ![screenshot2](IMAGENS/mobile/2.png)
-![screenshot3](IMAGENS/desktop/1.png)
-![screenshot4](IMAGENS/desktop/2.png)
-![screenshot5](IMAGENS/desktop/3.png)
-![screenshot6](IMAGENS/desktop/4.png)
-![screenshot7](IMAGENS/desktop/5.png)
-![screenshot8](IMAGENS/desktop/6.png)
-![screenshot9](IMAGENS/desktop/7.png)
+![screenshot3](IMAGENS/desktop/1.jpeg)
+![screenshot4](IMAGENS/desktop/2.jpeg)
+![screenshot5](IMAGENS/desktop/3.jpeg)
+![screenshot6](IMAGENS/desktop/4.jpeg)
+![screenshot7](IMAGENS/desktop/5.jpeg)
+![screenshot8](IMAGENS/desktop/6.jpeg)
+![screenshot9](IMAGENS/desktop/7.jpeg)
 
 
 ---

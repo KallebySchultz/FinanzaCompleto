@@ -86,45 +86,77 @@ O controle financeiro é essencial para pessoas físicas e jurídicas. Com a cre
 ```mermaid
 classDiagram
     class Usuario {
+        +int id
         +String uuid
         +String nome
         +String email
-        +String senhaHash
-        +Date dataCriacao
+        +String senha
+        +long dataCriacao
+        +long lastModified
+        +int syncStatus
+        +login(String email, String senha) boolean
+        +logout() void
+        +alterarSenha(String novaSenha) void
+        +markAsModified() void
+        +needsSync() boolean
     }
     
     class Conta {
+        +int id
         +String uuid
         +String nome
         +String tipo
-        +BigDecimal saldo
-        +String uuidUsuario
+        +double saldoInicial
+        +double saldoAtual
+        +int usuarioId
+        +long lastModified
+        +int syncStatus
+        +criarConta() void
+        +removerConta() void
+        +atualizarSaldo(double valor) void
+        +markAsModified() void
+        +generateDataHash() String
     }
     
     class Categoria {
+        +int id
         +String uuid
         +String nome
         +String tipo
-        +String cor
-        +String uuidUsuario
+        +String corHex
+        +int usuarioId
+        +long lastModified
+        +int syncStatus
+        +criarCategoria() void
+        +removerCategoria() void
+        +markAsModified() void
+        +generateDataHash() String
     }
     
     class Lancamento {
+        +int id
         +String uuid
-        +BigDecimal valor
+        +double valor
+        +long data
         +String descricao
-        +Date data
         +String tipo
-        +String uuidConta
-        +String uuidCategoria
-        +String uuidUsuario
+        +int contaId
+        +int categoriaId
+        +int usuarioId
+        +long lastModified
+        +int syncStatus
+        +criarLancamento() void
+        +removerLancamento() void
+        +atualizarLancamento() void
+        +markAsModified() void
+        +generateDataHash() String
     }
     
-    Usuario ||--o{ Conta
-    Usuario ||--o{ Categoria
-    Usuario ||--o{ Lancamento
-    Conta ||--o{ Lancamento
-    Categoria ||--o{ Lancamento
+    Usuario ||--o{ Conta : possui
+    Usuario ||--o{ Categoria : possui
+    Usuario ||--o{ Lancamento : possui
+    Conta ||--o{ Lancamento : contém
+    Categoria ||--o{ Lancamento : classifica
 ```
 
 #### Diagrama de Arquitetura

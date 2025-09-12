@@ -247,7 +247,7 @@ public class DashboardView extends JFrame {
     
     private void abrirMovimentacoes() {
         try {
-            MovimentacoesViewImproved movimentacoesView = new MovimentacoesViewImproved(financeController, usuario);
+            MovimentacoesView movimentacoesView = new MovimentacoesView(financeController, usuario);
             movimentacoesView.setVisible(true);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, 
@@ -259,7 +259,7 @@ public class DashboardView extends JFrame {
     
     private void abrirContas() {
         try {
-            ContasViewImproved contasView = new ContasViewImproved(financeController, usuario);
+            ContasView contasView = new ContasView(financeController, usuario);
             contasView.setVisible(true);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, 

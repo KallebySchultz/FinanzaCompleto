@@ -5,6 +5,9 @@ import controller.FinanceController;
 import model.Usuario;
 import view.components.NavigationPanel;
 import view.panels.DashboardPanel;
+import view.panels.TicketsPanel;
+import view.panels.UsuariosPanel;
+import view.panels.DepartamentosPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -87,9 +90,18 @@ public class DashboardView extends JFrame {
         
         // Admin panels (only if user is admin)
         if (usuario.isAdmin()) {
-            contentPanel.add(createPlaceholderPanel("Tickets", "Aqui será o gerenciamento de tickets/chamados"), "tickets");
-            contentPanel.add(createPlaceholderPanel("Departamentos", "Aqui será o gerenciamento de departamentos"), "departamentos");
-            contentPanel.add(createPlaceholderPanel("Usuários", "Aqui será o gerenciamento de usuários"), "usuarios");
+            // Tickets panel - fully implemented
+            TicketsPanel ticketsPanel = new TicketsPanel(financeController, usuario);
+            contentPanel.add(ticketsPanel, "tickets");
+            
+            // Departments panel - fully implemented
+            DepartamentosPanel departamentosPanel = new DepartamentosPanel(financeController, usuario);
+            contentPanel.add(departamentosPanel, "departamentos");
+            
+            // Users panel - fully implemented
+            UsuariosPanel usuariosPanel = new UsuariosPanel(financeController, usuario);
+            contentPanel.add(usuariosPanel, "usuarios");
+            
             contentPanel.add(createPlaceholderPanel("Agentes", "Aqui será o gerenciamento de agentes"), "agentes");
         }
         

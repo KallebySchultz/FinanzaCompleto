@@ -6,8 +6,8 @@ Aqui está o modelo, bem estruturado para GitHub:
 
 # 💰 Finanza – Sistema Completo de Controle Financeiro
 
-![screenshot1](IMAGENS/desktop.png)
-![screenshot2](IMAGENS/mobile.png)
+![screenshot1](IMAGENS/mobile/1.png)
+![screenshot2](IMAGENS/mobile/2.png)
 
 ---
 

@@ -106,6 +106,16 @@ public class LoginView extends JFrame {
             buttonPanel.add(recuperarSenhaButton);
         }
         recuperarSenhaButton.setVisible(isLoginMode);
+        
+        // Demo button for testing
+        JButton demoButton = new JButton("Demo Admin");
+        demoButton.setPreferredSize(new Dimension(100, 30));
+        demoButton.setBackground(new Color(241, 196, 15));
+        demoButton.setForeground(Color.BLACK);
+        demoButton.addActionListener(e -> abrirDemoAdmin());
+        if (isLoginMode) {
+            buttonPanel.add(demoButton);
+        }
 
         gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
         gbc.insets = new Insets(0, 0, 10, 0);
@@ -294,6 +304,12 @@ public class LoginView extends JFrame {
             DashboardView dashboard = new DashboardView(authController, usuario);
             dashboard.setVisible(true);
         });
+    }
+    
+    private void abrirDemoAdmin() {
+        // Create a demo admin user for testing
+        model.Usuario demoAdmin = new model.Usuario(1, "Admin Demo", "admin@demo.com", model.Usuario.TipoUsuario.ADMIN);
+        abrirDashboard(demoAdmin);
     }
 
     private void abrirRecuperarSenha() {

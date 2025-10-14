@@ -1354,7 +1354,7 @@ public class ClientHandler extends Thread {
         
         // Modo de teste
         if (testMode) {
-            return Protocol.createSuccessResponse("1;Conta Teste;1000.00;Usuario Teste");
+            return Protocol.createSuccessResponse("1,Conta Teste,1000.00,Usuario Teste,2025-01-01 00:00:00");
         }
         
         // Buscar contas do usuário
@@ -1696,7 +1696,7 @@ public class ClientHandler extends Thread {
         
         // Modo de teste
         if (testMode) {
-            return Protocol.createSuccessResponse("1;Conta Teste;1000.00;Usuario Teste");
+            return Protocol.createSuccessResponse("1,Conta Teste,1000.00,Usuario Teste,2025-01-01 00:00:00");
         }
         
         try {

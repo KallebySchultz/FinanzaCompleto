@@ -53,7 +53,8 @@ Planejar e desenvolver um **sistema de informação completo e interdisciplinar*
 
 ## ⚡ Funcionalidades
 
-* **Autenticação de usuários** (login, troca de senha criptografada).
+### 📱 Mobile (Android)
+* **Autenticação de usuários** (login, registro, troca de senha criptografada).
 * **Dashboard financeiro** com visão geral das contas.
 * **Gestão de contas**: corrente, poupança, cartões, investimentos.
 * **Gestão de categorias**: personalizadas e com relatórios vinculados.
@@ -61,8 +62,17 @@ Planejar e desenvolver um **sistema de informação completo e interdisciplinar*
 * **Sincronização em tempo real** entre dispositivos via **sockets TCP/IP**.
 * **Histórico de movimentações** com filtros avançados.
 * **Relatórios financeiros** exportáveis.
-* **Interface Desktop (Java + Swing)**.
 * **Aplicativo Mobile (Android)** com suporte a uso offline e posterior sincronização.
+
+### 💻 Desktop Admin (Java + Swing)
+* **Login exclusivo para administradores**.
+* **Visualização de todos os usuários** do sistema.
+* **Gerenciamento de usuários**:
+  - Editar nome e email
+  - Alterar senhas
+  - Ver informações básicas
+* **Interface simplificada** focada em administração.
+* **Edição do próprio perfil** do administrador.
 
 ---
 
@@ -70,10 +80,15 @@ Planejar e desenvolver um **sistema de informação completo e interdisciplinar*
 
 O **Finanza** possui uma arquitetura **cliente-servidor híbrida**:
 
-* **Desktop (Java + MySQL)**
+* **Servidor (Java + MySQL)**
 
   * Servidor TCP responsável por persistência dos dados.
-  * Interface Swing para administração e relatórios.
+  * Gerencia autenticação e todas as operações de usuários e dados financeiros.
+
+* **Desktop Admin (Java + Swing)**
+
+  * Interface Swing simplificada para administração de usuários.
+  * Acesso exclusivo para administradores.
 
 * **Mobile (Android + Java)**
 

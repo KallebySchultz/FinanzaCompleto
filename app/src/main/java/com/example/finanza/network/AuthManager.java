@@ -306,7 +306,6 @@ public class AuthManager {
             usuario.nome = nome;
             usuario.email = email;
             usuario.senha = senha; // Em produção, deveria ser hash
-            usuario.dataCriacao = System.currentTimeMillis();
 
             long id = database.usuarioDao().inserir(usuario);
             usuario.id = (int) id;
@@ -357,7 +356,6 @@ public class AuthManager {
                 usuario.nome = "Usuário Teste";
                 usuario.email = "teste1@gmail.com";
                 usuario.senha = "123456"; // Plain text for local auth
-                usuario.dataCriacao = System.currentTimeMillis();
 
                 long id = database.usuarioDao().inserir(usuario);
                 usuario.id = (int) id;

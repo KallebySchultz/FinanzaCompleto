@@ -28,7 +28,6 @@ public class ProfileActivity extends AppCompatActivity {
     
     private TextView txtNomeUsuario;
     private TextView txtEmailUsuario;
-    private TextView txtDataCriacao;
     private Button btnEditarPerfil;
     private Button btnExcluirConta;
     private Button btnSair;
@@ -66,7 +65,6 @@ public class ProfileActivity extends AppCompatActivity {
         // Inicializar views
         txtNomeUsuario = findViewById(R.id.txt_nome_usuario);
         txtEmailUsuario = findViewById(R.id.txt_email_usuario);
-        txtDataCriacao = findViewById(R.id.txt_data_criacao);
         btnEditarPerfil = findViewById(R.id.btn_editar_perfil);
         btnExcluirConta = findViewById(R.id.btn_excluir_conta);
         btnSair = findViewById(R.id.btn_sair);
@@ -97,15 +95,6 @@ public class ProfileActivity extends AppCompatActivity {
             TextView txtAvatarInicial = findViewById(R.id.txt_avatar_inicial);
             if (txtAvatarInicial != null && usuarioAtual.nome != null && !usuarioAtual.nome.isEmpty()) {
                 txtAvatarInicial.setText(String.valueOf(usuarioAtual.nome.charAt(0)).toUpperCase());
-            }
-            
-            // Formatar data de criação
-            if (usuarioAtual.dataCriacao > 0) {
-                java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("dd/MM/yyyy");
-                String dataFormatada = formatter.format(new java.util.Date(usuarioAtual.dataCriacao));
-                txtDataCriacao.setText("Membro desde: " + dataFormatada);
-            } else {
-                txtDataCriacao.setText("Membro desde: Data não informada");
             }
         }
     }

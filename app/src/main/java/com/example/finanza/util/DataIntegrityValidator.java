@@ -110,7 +110,7 @@ public class DataIntegrityValidator {
         }
         
         // Validate timestamps
-        ValidationResult timestampResult = validateTimestamps(usuario.dataCriacao, usuario.lastModified);
+        ValidationResult timestampResult = validateTimestamps(usuario.lastModified);
         if (!timestampResult.isValid) {
             return timestampResult;
         }

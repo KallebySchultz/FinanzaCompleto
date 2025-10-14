@@ -53,9 +53,6 @@ public class Usuario {
     /** Senha criptografada do usuário */
     public String senha;
     
-    /** Timestamp de criação da conta */
-    public long dataCriacao;
-    
     // ================== METADADOS DE SINCRONIZAÇÃO ==================
     
     /** UUID universal para sincronização cross-platform */

@@ -1346,7 +1346,7 @@ public class ClientHandler extends Thread {
         
         // Modo de teste
         if (testMode) {
-            return Protocol.createSuccessResponse("1;Conta Teste;corrente;1000.00");
+            return Protocol.createSuccessResponse("1;Conta Teste;corrente;1000.00;Usuario Teste");
         }
         
         // Buscar contas do usuário
@@ -1356,13 +1356,18 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("");
         }
         
+        // Buscar nome do usuário
+        Usuario usuario = usuarioDAO.buscarPorId(userId);
+        String nomeUsuario = usuario != null ? usuario.getNome() : "Usuário ID " + userId;
+        
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < contas.size(); i++) {
             Conta c = contas.get(i);
             sb.append(c.getId()).append(Protocol.FIELD_SEPARATOR)
               .append(c.getNome()).append(Protocol.FIELD_SEPARATOR)
               .append(c.getTipo()).append(Protocol.FIELD_SEPARATOR)
-              .append(c.getSaldoInicial());
+              .append(c.getSaldoInicial()).append(Protocol.FIELD_SEPARATOR)
+              .append(nomeUsuario);
             if (i < contas.size() - 1) {
                 sb.append("\n");
             }
@@ -1387,7 +1392,7 @@ public class ClientHandler extends Thread {
         
         // Modo de teste
         if (testMode) {
-            return Protocol.createSuccessResponse("1;Alimentação;despesa");
+            return Protocol.createSuccessResponse("1;Alimentação;despesa;Usuario Teste");
         }
         
         // Buscar categorias do usuário
@@ -1397,12 +1402,17 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("");
         }
         
+        // Buscar nome do usuário
+        Usuario usuario = usuarioDAO.buscarPorId(userId);
+        String nomeUsuario = usuario != null ? usuario.getNome() : "Usuário ID " + userId;
+        
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < categorias.size(); i++) {
             Categoria cat = categorias.get(i);
             sb.append(cat.getId()).append(Protocol.FIELD_SEPARATOR)
               .append(cat.getNome()).append(Protocol.FIELD_SEPARATOR)
-              .append(cat.getTipo());
+              .append(cat.getTipo()).append(Protocol.FIELD_SEPARATOR)
+              .append(nomeUsuario);
             if (i < categorias.size() - 1) {
                 sb.append("\n");
             }
@@ -1427,7 +1437,7 @@ public class ClientHandler extends Thread {
         
         // Modo de teste
         if (testMode) {
-            return Protocol.createSuccessResponse("1;100.00;2024-01-01;Teste;despesa;1;1");
+            return Protocol.createSuccessResponse("1;Usuario Teste;100.00;2024-01-01;Teste;despesa;Conta Teste;Categoria Teste");
         }
         
         // Buscar movimentações do usuário
@@ -1440,13 +1450,27 @@ public class ClientHandler extends Thread {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < movimentacoes.size(); i++) {
             Movimentacao m = movimentacoes.get(i);
+            
+            // Buscar nome do usuário
+            Usuario usuario = usuarioDAO.buscarPorId(m.getIdUsuario());
+            String nomeUsuario = usuario != null ? usuario.getNome() : "Usuário ID " + m.getIdUsuario();
+            
+            // Buscar nome da conta
+            Conta conta = contaDAO.buscarPorId(m.getIdConta());
+            String nomeConta = conta != null ? conta.getNome() : "Conta ID " + m.getIdConta();
+            
+            // Buscar nome da categoria
+            Categoria categoria = categoriaDAO.buscarPorId(m.getIdCategoria());
+            String nomeCategoria = categoria != null ? categoria.getNome() : "Categoria ID " + m.getIdCategoria();
+            
             sb.append(m.getId()).append(Protocol.FIELD_SEPARATOR)
+              .append(nomeUsuario).append(Protocol.FIELD_SEPARATOR)
               .append(m.getValor()).append(Protocol.FIELD_SEPARATOR)
               .append(m.getData()).append(Protocol.FIELD_SEPARATOR)
               .append(m.getDescricao() != null ? m.getDescricao() : "").append(Protocol.FIELD_SEPARATOR)
               .append(m.getTipo()).append(Protocol.FIELD_SEPARATOR)
-              .append(m.getIdConta()).append(Protocol.FIELD_SEPARATOR)
-              .append(m.getIdCategoria());
+              .append(nomeConta).append(Protocol.FIELD_SEPARATOR)
+              .append(nomeCategoria);
             if (i < movimentacoes.size() - 1) {
                 sb.append("\n");
             }

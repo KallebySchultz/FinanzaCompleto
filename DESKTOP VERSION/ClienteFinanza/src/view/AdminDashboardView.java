@@ -490,11 +490,16 @@ public class AdminDashboardView extends JFrame {
                         atualizarFiltrosUsuario();
                         
                         for (Usuario usuario : usuarios) {
+                            String dataCriacaoFormatada = "N/A";
+                            if (usuario.getDataCriacao() != null) {
+                                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                                dataCriacaoFormatada = sdf.format(usuario.getDataCriacao());
+                            }
                             Object[] row = {
                                 usuario.getId(),
                                 usuario.getNome(),
                                 usuario.getEmail(),
-                                "N/A" // Data de criação não disponível no modelo cliente
+                                dataCriacaoFormatada
                             };
                             usuariosTableModel.addRow(row);
                         }
@@ -539,11 +544,16 @@ public class AdminDashboardView extends JFrame {
                 usuario.getNome().toLowerCase().contains(busca) ||
                 usuario.getEmail().toLowerCase().contains(busca) ||
                 String.valueOf(usuario.getId()).contains(busca)) {
+                String dataCriacaoFormatada = "N/A";
+                if (usuario.getDataCriacao() != null) {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy");
+                    dataCriacaoFormatada = sdf.format(usuario.getDataCriacao());
+                }
                 Object[] row = {
                     usuario.getId(),
                     usuario.getNome(),
                     usuario.getEmail(),
-                    "N/A"
+                    dataCriacaoFormatada
                 };
                 usuariosTableModel.addRow(row);
                 count++;

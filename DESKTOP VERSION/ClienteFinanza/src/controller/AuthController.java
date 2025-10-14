@@ -202,6 +202,14 @@ public class AuthController {
                                 campos[1].trim(),
                                 campos[2].trim()
                             );
+                            // Parse dataCriacao if available
+                            if (campos.length >= 4 && !campos[3].trim().isEmpty()) {
+                                try {
+                                    usuario.setDataCriacao(java.sql.Timestamp.valueOf(campos[3].trim()));
+                                } catch (Exception e) {
+                                    System.out.println("listarUsuarios - Erro ao parsear data de criação: " + e.getMessage());
+                                }
+                            }
                             usuarios.add(usuario);
                             System.out.println("listarUsuarios - Usuário adicionado: ID=" + usuario.getId() + ", Nome=" + usuario.getNome());
                         }

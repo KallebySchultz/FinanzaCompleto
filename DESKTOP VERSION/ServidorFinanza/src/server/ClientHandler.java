@@ -140,6 +140,8 @@ public class ClientHandler extends Thread {
                     return processarUpdateUser(partes);
                 case Protocol.CMD_UPDATE_USER_PASSWORD:
                     return processarUpdateUserPassword(partes);
+                case Protocol.CMD_DELETE_USER:
+                    return processarDeleteUser(partes);
                     
                 default:
                     return Protocol.createErrorResponse("Comando não reconhecido: " + cmd);
@@ -1271,6 +1273,38 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Senha atualizada com sucesso");
         } else {
             return Protocol.createErrorResponse("Erro ao atualizar senha");
+        }
+    }
+    
+    /**
+     * Processa comando de excluir usuário (apenas admin)
+     */
+    private String processarDeleteUser(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 2) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int userId = Integer.parseInt(partes[1]);
+        
+        // Não permitir excluir o próprio usuário logado
+        if (userId == usuarioLogado.getId()) {
+            return Protocol.createErrorResponse("Não é possível excluir o próprio usuário logado");
+        }
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Usuário excluído com sucesso (modo teste)");
+        }
+        
+        // Excluir usuário
+        if (usuarioDAO.excluir(userId)) {
+            return Protocol.createSuccessResponse("Usuário excluído com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao excluir usuário");
         }
     }
     

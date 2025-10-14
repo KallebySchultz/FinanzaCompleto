@@ -40,6 +40,7 @@ public class Protocol {
     public static final String CMD_LIST_USERS = "LIST_USERS";
     public static final String CMD_UPDATE_USER = "UPDATE_USER";
     public static final String CMD_UPDATE_USER_PASSWORD = "UPDATE_USER_PASSWORD";
+    public static final String CMD_DELETE_USER = "DELETE_USER";
     
     // Status de resposta
     public static final String STATUS_OK = "OK";

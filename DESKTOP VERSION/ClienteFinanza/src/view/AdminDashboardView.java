@@ -21,8 +21,12 @@ public class AdminDashboardView extends JFrame {
     private DefaultTableModel tableModel;
     private JButton refreshButton;
     private JButton editButton;
+    private JButton deleteButton;
     private JButton editProfileButton;
     private JButton logoutButton;
+    private JTextField searchField;
+    private JLabel totalUsersLabel;
+    private List<Usuario> todosUsuarios;
     
     public AdminDashboardView(AuthController authController, Usuario usuario) {
         this.authController = authController;
@@ -36,8 +40,9 @@ public class AdminDashboardView extends JFrame {
     private void initComponents() {
         setTitle("Finanza Admin - Gerenciamento de Usuários");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(900, 600);
+        setSize(1000, 650);
         setLocationRelativeTo(null);
+        todosUsuarios = new java.util.ArrayList<>();
     }
     
     private void setupUI() {
@@ -46,10 +51,17 @@ public class AdminDashboardView extends JFrame {
         // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        headerPanel.setBackground(new Color(240, 248, 255));
         
+        JPanel headerLeft = new JPanel(new GridLayout(2, 1));
+        headerLeft.setOpaque(false);
         JLabel titleLabel = new JLabel("Painel de Administração");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        headerPanel.add(titleLabel, BorderLayout.WEST);
+        totalUsersLabel = new JLabel("Total de usuários: 0");
+        totalUsersLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        headerLeft.add(titleLabel);
+        headerLeft.add(totalUsersLabel);
+        headerPanel.add(headerLeft, BorderLayout.WEST);
         
         JLabel userLabel = new JLabel("Admin: " + adminUsuario.getNome() + " (" + adminUsuario.getEmail() + ")");
         userLabel.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -60,6 +72,22 @@ public class AdminDashboardView extends JFrame {
         // Painel principal com tabela
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // Painel de busca
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.add(new JLabel("Buscar:"));
+        searchField = new JTextField(30);
+        searchPanel.add(searchField);
+        JButton searchButton = new JButton("Filtrar");
+        searchButton.addActionListener(e -> filtrarUsuarios());
+        searchPanel.add(searchButton);
+        JButton clearButton = new JButton("Limpar");
+        clearButton.addActionListener(e -> {
+            searchField.setText("");
+            filtrarUsuarios();
+        });
+        searchPanel.add(clearButton);
+        mainPanel.add(searchPanel, BorderLayout.NORTH);
         
         // Tabela de usuários
         String[] columnNames = {"ID", "Nome", "Email", "Data de Criação"};
@@ -72,6 +100,7 @@ public class AdminDashboardView extends JFrame {
         usuariosTable = new JTable(tableModel);
         usuariosTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         usuariosTable.getTableHeader().setReorderingAllowed(false);
+        usuariosTable.setRowHeight(25);
         
         JScrollPane scrollPane = new JScrollPane(usuariosTable);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
@@ -79,11 +108,15 @@ public class AdminDashboardView extends JFrame {
         // Painel de botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         refreshButton = new JButton("Atualizar Lista");
-        editButton = new JButton("Editar Usuário Selecionado");
+        editButton = new JButton("Editar");
         editButton.setEnabled(false);
+        deleteButton = new JButton("Excluir");
+        deleteButton.setEnabled(false);
+        deleteButton.setForeground(Color.RED);
         
         buttonPanel.add(refreshButton);
         buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
         
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
         
@@ -109,15 +142,20 @@ public class AdminDashboardView extends JFrame {
         // Editar usuário selecionado
         editButton.addActionListener(e -> editarUsuarioSelecionado());
         
+        // Excluir usuário selecionado
+        deleteButton.addActionListener(e -> excluirUsuarioSelecionado());
+        
         // Editar perfil do admin
         editProfileButton.addActionListener(e -> editarPerfil());
         
         // Logout
         logoutButton.addActionListener(e -> realizarLogout());
         
-        // Habilitar botão de editar quando uma linha for selecionada
+        // Habilitar botões quando uma linha for selecionada
         usuariosTable.getSelectionModel().addListSelectionListener(e -> {
-            editButton.setEnabled(usuariosTable.getSelectedRow() != -1);
+            boolean hasSelection = usuariosTable.getSelectedRow() != -1;
+            editButton.setEnabled(hasSelection);
+            deleteButton.setEnabled(hasSelection);
         });
         
         // Double click para editar
@@ -129,6 +167,9 @@ public class AdminDashboardView extends JFrame {
                 }
             }
         });
+        
+        // Enter no campo de busca
+        searchField.addActionListener(e -> filtrarUsuarios());
     }
     
     private void carregarUsuarios() {
@@ -147,6 +188,8 @@ public class AdminDashboardView extends JFrame {
                 try {
                     List<Usuario> usuarios = get();
                     if (usuarios != null) {
+                        todosUsuarios = usuarios;
+                        totalUsersLabel.setText("Total de usuários: " + usuarios.size());
                         for (Usuario usuario : usuarios) {
                             Object[] row = {
                                 usuario.getId(),
@@ -169,6 +212,34 @@ public class AdminDashboardView extends JFrame {
         worker.execute();
     }
     
+    private void filtrarUsuarios() {
+        String busca = searchField.getText().trim().toLowerCase();
+        tableModel.setRowCount(0);
+        
+        int count = 0;
+        for (Usuario usuario : todosUsuarios) {
+            if (busca.isEmpty() || 
+                usuario.getNome().toLowerCase().contains(busca) ||
+                usuario.getEmail().toLowerCase().contains(busca) ||
+                String.valueOf(usuario.getId()).contains(busca)) {
+                Object[] row = {
+                    usuario.getId(),
+                    usuario.getNome(),
+                    usuario.getEmail(),
+                    "N/A"
+                };
+                tableModel.addRow(row);
+                count++;
+            }
+        }
+        
+        if (!busca.isEmpty()) {
+            totalUsersLabel.setText("Total de usuários: " + todosUsuarios.size() + " (Filtrados: " + count + ")");
+        } else {
+            totalUsersLabel.setText("Total de usuários: " + todosUsuarios.size());
+        }
+    }
+    
     private void editarUsuarioSelecionado() {
         int selectedRow = usuariosTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -189,6 +260,77 @@ public class AdminDashboardView extends JFrame {
         if (dialog.isConfirmado()) {
             carregarUsuarios();
         }
+    }
+    
+    private void excluirUsuarioSelecionado() {
+        int selectedRow = usuariosTable.getSelectedRow();
+        if (selectedRow == -1) {
+            return;
+        }
+        
+        int userId = (int) tableModel.getValueAt(selectedRow, 0);
+        String userName = (String) tableModel.getValueAt(selectedRow, 1);
+        String userEmail = (String) tableModel.getValueAt(selectedRow, 2);
+        
+        // Não permitir excluir o próprio usuário logado
+        if (userId == adminUsuario.getId()) {
+            JOptionPane.showMessageDialog(this,
+                "Não é possível excluir o próprio usuário logado.",
+                "Ação Não Permitida",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Confirmação
+        int option = JOptionPane.showConfirmDialog(
+            this,
+            "Tem certeza que deseja excluir o usuário:\n" +
+            "Nome: " + userName + "\n" +
+            "Email: " + userEmail + "\n\n" +
+            "Esta ação não pode ser desfeita!",
+            "Confirmar Exclusão",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+        
+        if (option != JOptionPane.YES_OPTION) {
+            return;
+        }
+        
+        // Excluir usuário
+        SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                return authController.excluirUsuario(userId);
+            }
+            
+            @Override
+            protected void done() {
+                try {
+                    Boolean sucesso = get();
+                    
+                    if (sucesso) {
+                        JOptionPane.showMessageDialog(AdminDashboardView.this,
+                            "Usuário excluído com sucesso!",
+                            "Sucesso",
+                            JOptionPane.INFORMATION_MESSAGE);
+                        carregarUsuarios();
+                    } else {
+                        JOptionPane.showMessageDialog(AdminDashboardView.this,
+                            "Erro ao excluir usuário",
+                            "Erro",
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(AdminDashboardView.this,
+                        "Erro ao excluir: " + e.getMessage(),
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        
+        worker.execute();
     }
     
     private void editarPerfil() {

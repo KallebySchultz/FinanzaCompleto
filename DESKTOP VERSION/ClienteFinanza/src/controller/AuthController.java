@@ -17,6 +17,7 @@ public class AuthController {
     private static final String CMD_LIST_USERS = "LIST_USERS";
     private static final String CMD_UPDATE_USER = "UPDATE_USER";
     private static final String CMD_UPDATE_USER_PASSWORD = "UPDATE_USER_PASSWORD";
+    private static final String CMD_DELETE_USER = "DELETE_USER";
     private static final String STATUS_OK = "OK";
     private static final String STATUS_ERROR = "ERROR";
     private static final String STATUS_INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
@@ -239,6 +240,22 @@ public class AuthController {
         }
         
         String comando = CMD_UPDATE_USER_PASSWORD + SEPARATOR + userId + SEPARATOR + novaSenha;
+        String resposta = networkClient.sendCommand(comando);
+        
+        String[] partes = resposta.split("\\" + SEPARATOR);
+        
+        return partes.length >= 1 && STATUS_OK.equals(partes[0]);
+    }
+    
+    /**
+     * Exclui um usuário
+     */
+    public boolean excluirUsuario(int userId) {
+        if (!networkClient.isConnected()) {
+            return false;
+        }
+        
+        String comando = CMD_DELETE_USER + SEPARATOR + userId;
         String resposta = networkClient.sendCommand(comando);
         
         String[] partes = resposta.split("\\" + SEPARATOR);

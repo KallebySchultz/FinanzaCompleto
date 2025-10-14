@@ -46,6 +46,9 @@ public class Protocol {
     public static final String CMD_ADMIN_LIST_CONTAS_USER = "ADMIN_LIST_CONTAS_USER";
     public static final String CMD_ADMIN_LIST_CATEGORIAS_USER = "ADMIN_LIST_CATEGORIAS_USER";
     public static final String CMD_ADMIN_LIST_MOVIMENTACOES_USER = "ADMIN_LIST_MOVIMENTACOES_USER";
+    public static final String CMD_ADMIN_LIST_ALL_CONTAS = "ADMIN_LIST_ALL_CONTAS";
+    public static final String CMD_ADMIN_LIST_ALL_CATEGORIAS = "ADMIN_LIST_ALL_CATEGORIAS";
+    public static final String CMD_ADMIN_LIST_ALL_MOVIMENTACOES = "ADMIN_LIST_ALL_MOVIMENTACOES";
     public static final String CMD_ADMIN_DELETE_CONTA = "ADMIN_DELETE_CONTA";
     public static final String CMD_ADMIN_DELETE_CATEGORIA = "ADMIN_DELETE_CATEGORIA";
     public static final String CMD_ADMIN_DELETE_MOVIMENTACAO = "ADMIN_DELETE_MOVIMENTACAO";

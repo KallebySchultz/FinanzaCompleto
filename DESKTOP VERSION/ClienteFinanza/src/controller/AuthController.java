@@ -189,18 +189,18 @@ public class AuthController {
         String[] partes = resposta.split("\\" + SEPARATOR);
         
         if (partes.length >= 1 && STATUS_OK.equals(partes[0])) {
-            if (partes.length >= 2) {
-                String[] usuariosData = partes[1].split("\\n");
-                System.out.println("listarUsuarios - Linhas de dados: " + usuariosData.length);
+            if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
+                String[] usuariosData = partes[1].split(FIELD_SEPARATOR);
+                System.out.println("listarUsuarios - Registros de dados: " + usuariosData.length);
                 for (String userData : usuariosData) {
                     if (!userData.trim().isEmpty()) {
-                        String[] campos = userData.split(FIELD_SEPARATOR);
+                        String[] campos = userData.split(",");
                         System.out.println("listarUsuarios - Processando usuário: " + userData + " (campos: " + campos.length + ")");
                         if (campos.length >= 3) {
                             Usuario usuario = new Usuario(
-                                Integer.parseInt(campos[0]),
-                                campos[1],
-                                campos[2]
+                                Integer.parseInt(campos[0].trim()),
+                                campos[1].trim(),
+                                campos[2].trim()
                             );
                             usuarios.add(usuario);
                             System.out.println("listarUsuarios - Usuário adicionado: ID=" + usuario.getId() + ", Nome=" + usuario.getNome());

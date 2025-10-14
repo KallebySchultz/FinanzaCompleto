@@ -1214,12 +1214,12 @@ public class ClientHandler extends Thread {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < usuarios.size(); i++) {
             Usuario u = usuarios.get(i);
-            sb.append(u.getId()).append(Protocol.FIELD_SEPARATOR)
-              .append(u.getNome()).append(Protocol.FIELD_SEPARATOR)
-              .append(u.getEmail());
-            if (i < usuarios.size() - 1) {
-                sb.append("\n");
+            if (i > 0) {
+                sb.append(Protocol.FIELD_SEPARATOR);
             }
+            sb.append(u.getId()).append(",")
+              .append(u.getNome()).append(",")
+              .append(u.getEmail());
         }
         
         String response = Protocol.createSuccessResponse(sb.toString());
@@ -1374,13 +1374,13 @@ public class ClientHandler extends Thread {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < contas.size(); i++) {
             Conta c = contas.get(i);
-            sb.append(c.getId()).append(Protocol.FIELD_SEPARATOR)
-              .append(c.getNome()).append(Protocol.FIELD_SEPARATOR)
-              .append(c.getSaldoInicial()).append(Protocol.FIELD_SEPARATOR)
-              .append(nomeUsuario);
-            if (i < contas.size() - 1) {
-                sb.append("\n");
+            if (i > 0) {
+                sb.append(Protocol.FIELD_SEPARATOR);
             }
+            sb.append(c.getId()).append(",")
+              .append(c.getNome()).append(",")
+              .append(c.getSaldoInicial()).append(",")
+              .append(nomeUsuario);
         }
         
         return Protocol.createSuccessResponse(sb.toString());
@@ -1419,13 +1419,13 @@ public class ClientHandler extends Thread {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < categorias.size(); i++) {
             Categoria cat = categorias.get(i);
-            sb.append(cat.getId()).append(Protocol.FIELD_SEPARATOR)
-              .append(cat.getNome()).append(Protocol.FIELD_SEPARATOR)
-              .append(cat.getTipo()).append(Protocol.FIELD_SEPARATOR)
-              .append(nomeUsuario);
-            if (i < categorias.size() - 1) {
-                sb.append("\n");
+            if (i > 0) {
+                sb.append(Protocol.FIELD_SEPARATOR);
             }
+            sb.append(cat.getId()).append(",")
+              .append(cat.getNome()).append(",")
+              .append(cat.getTipo()).append(",")
+              .append(nomeUsuario);
         }
         
         return Protocol.createSuccessResponse(sb.toString());
@@ -1473,17 +1473,17 @@ public class ClientHandler extends Thread {
             Categoria categoria = categoriaDAO.buscarPorId(m.getIdCategoria());
             String nomeCategoria = categoria != null ? categoria.getNome() : "Categoria ID " + m.getIdCategoria();
             
-            sb.append(m.getId()).append(Protocol.FIELD_SEPARATOR)
-              .append(nomeUsuario).append(Protocol.FIELD_SEPARATOR)
-              .append(m.getValor()).append(Protocol.FIELD_SEPARATOR)
-              .append(m.getData()).append(Protocol.FIELD_SEPARATOR)
-              .append(m.getDescricao() != null ? m.getDescricao() : "").append(Protocol.FIELD_SEPARATOR)
-              .append(m.getTipo()).append(Protocol.FIELD_SEPARATOR)
-              .append(nomeConta).append(Protocol.FIELD_SEPARATOR)
-              .append(nomeCategoria);
-            if (i < movimentacoes.size() - 1) {
-                sb.append("\n");
+            if (i > 0) {
+                sb.append(Protocol.FIELD_SEPARATOR);
             }
+            sb.append(m.getId()).append(",")
+              .append(nomeUsuario).append(",")
+              .append(m.getValor()).append(",")
+              .append(m.getData()).append(",")
+              .append(m.getDescricao() != null ? m.getDescricao() : "").append(",")
+              .append(m.getTipo()).append(",")
+              .append(nomeConta).append(",")
+              .append(nomeCategoria);
         }
         
         return Protocol.createSuccessResponse(sb.toString());
@@ -1717,13 +1717,13 @@ public class ClientHandler extends Thread {
                 
                 for (Conta c : contas) {
                     if (!first) {
-                        sb.append("\n");
+                        sb.append(Protocol.FIELD_SEPARATOR);
                     }
                     first = false;
                     
-                    sb.append(c.getId()).append(Protocol.FIELD_SEPARATOR)
-                      .append(c.getNome()).append(Protocol.FIELD_SEPARATOR)
-                      .append(c.getSaldoInicial()).append(Protocol.FIELD_SEPARATOR)
+                    sb.append(c.getId()).append(",")
+                      .append(c.getNome()).append(",")
+                      .append(c.getSaldoInicial()).append(",")
                       .append(usuario.getNome());
                 }
             }
@@ -1766,13 +1766,13 @@ public class ClientHandler extends Thread {
                 
                 for (Categoria cat : categorias) {
                     if (!first) {
-                        sb.append("\n");
+                        sb.append(Protocol.FIELD_SEPARATOR);
                     }
                     first = false;
                     
-                    sb.append(cat.getId()).append(Protocol.FIELD_SEPARATOR)
-                      .append(cat.getNome()).append(Protocol.FIELD_SEPARATOR)
-                      .append(cat.getTipo()).append(Protocol.FIELD_SEPARATOR)
+                    sb.append(cat.getId()).append(",")
+                      .append(cat.getNome()).append(",")
+                      .append(cat.getTipo()).append(",")
                       .append(usuario.getNome());
                 }
             }
@@ -1823,17 +1823,17 @@ public class ClientHandler extends Thread {
                     String nomeCategoria = categoria != null ? categoria.getNome() : "Categoria ID " + m.getIdCategoria();
                     
                     if (!first) {
-                        sb.append("\n");
+                        sb.append(Protocol.FIELD_SEPARATOR);
                     }
                     first = false;
                     
-                    sb.append(m.getId()).append(Protocol.FIELD_SEPARATOR)
-                      .append(usuario.getNome()).append(Protocol.FIELD_SEPARATOR)
-                      .append(m.getValor()).append(Protocol.FIELD_SEPARATOR)
-                      .append(m.getData()).append(Protocol.FIELD_SEPARATOR)
-                      .append(m.getDescricao() != null ? m.getDescricao() : "").append(Protocol.FIELD_SEPARATOR)
-                      .append(m.getTipo()).append(Protocol.FIELD_SEPARATOR)
-                      .append(nomeConta).append(Protocol.FIELD_SEPARATOR)
+                    sb.append(m.getId()).append(",")
+                      .append(usuario.getNome()).append(",")
+                      .append(m.getValor()).append(",")
+                      .append(m.getData()).append(",")
+                      .append(m.getDescricao() != null ? m.getDescricao() : "").append(",")
+                      .append(m.getTipo()).append(",")
+                      .append(nomeConta).append(",")
                       .append(nomeCategoria);
                 }
             }

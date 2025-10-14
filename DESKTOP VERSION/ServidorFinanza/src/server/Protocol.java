@@ -42,6 +42,17 @@ public class Protocol {
     public static final String CMD_UPDATE_USER_PASSWORD = "UPDATE_USER_PASSWORD";
     public static final String CMD_DELETE_USER = "DELETE_USER";
     
+    // Comandos Admin - Gerenciar dados de usuários
+    public static final String CMD_ADMIN_LIST_CONTAS_USER = "ADMIN_LIST_CONTAS_USER";
+    public static final String CMD_ADMIN_LIST_CATEGORIAS_USER = "ADMIN_LIST_CATEGORIAS_USER";
+    public static final String CMD_ADMIN_LIST_MOVIMENTACOES_USER = "ADMIN_LIST_MOVIMENTACOES_USER";
+    public static final String CMD_ADMIN_DELETE_CONTA = "ADMIN_DELETE_CONTA";
+    public static final String CMD_ADMIN_DELETE_CATEGORIA = "ADMIN_DELETE_CATEGORIA";
+    public static final String CMD_ADMIN_DELETE_MOVIMENTACAO = "ADMIN_DELETE_MOVIMENTACAO";
+    public static final String CMD_ADMIN_UPDATE_CONTA = "ADMIN_UPDATE_CONTA";
+    public static final String CMD_ADMIN_UPDATE_CATEGORIA = "ADMIN_UPDATE_CATEGORIA";
+    public static final String CMD_ADMIN_UPDATE_MOVIMENTACAO = "ADMIN_UPDATE_MOVIMENTACAO";
+    
     // Status de resposta
     public static final String STATUS_OK = "OK";
     public static final String STATUS_ERROR = "ERROR";

@@ -184,6 +184,28 @@ public class ContaDAO {
     }
     
     /**
+     * Exclui conta do banco de dados (admin - sem verificação de usuário)
+     * @param id ID da conta
+     * @return true se excluída com sucesso
+     */
+    public boolean excluir(int id) {
+        String sql = "DELETE FROM conta WHERE id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao excluir conta: " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
      * Calcula saldo atual da conta (saldo inicial + movimentações)
      * @param idConta ID da conta
      * @return saldo atual

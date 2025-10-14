@@ -142,6 +142,26 @@ public class ClientHandler extends Thread {
                     return processarUpdateUserPassword(partes);
                 case Protocol.CMD_DELETE_USER:
                     return processarDeleteUser(partes);
+                
+                // Admin - Gerenciamento de dados de usuários
+                case Protocol.CMD_ADMIN_LIST_CONTAS_USER:
+                    return processarAdminListContasUser(partes);
+                case Protocol.CMD_ADMIN_LIST_CATEGORIAS_USER:
+                    return processarAdminListCategoriasUser(partes);
+                case Protocol.CMD_ADMIN_LIST_MOVIMENTACOES_USER:
+                    return processarAdminListMovimentacoesUser(partes);
+                case Protocol.CMD_ADMIN_DELETE_CONTA:
+                    return processarAdminDeleteConta(partes);
+                case Protocol.CMD_ADMIN_DELETE_CATEGORIA:
+                    return processarAdminDeleteCategoria(partes);
+                case Protocol.CMD_ADMIN_DELETE_MOVIMENTACAO:
+                    return processarAdminDeleteMovimentacao(partes);
+                case Protocol.CMD_ADMIN_UPDATE_CONTA:
+                    return processarAdminUpdateConta(partes);
+                case Protocol.CMD_ADMIN_UPDATE_CATEGORIA:
+                    return processarAdminUpdateCategoria(partes);
+                case Protocol.CMD_ADMIN_UPDATE_MOVIMENTACAO:
+                    return processarAdminUpdateMovimentacao(partes);
                     
                 default:
                     return Protocol.createErrorResponse("Comando não reconhecido: " + cmd);
@@ -1305,6 +1325,332 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Usuário excluído com sucesso");
         } else {
             return Protocol.createErrorResponse("Erro ao excluir usuário");
+        }
+    }
+    
+    // ========== MÉTODOS ADMIN PARA GERENCIAR DADOS DE USUÁRIOS ==========
+    
+    /**
+     * Lista contas de um usuário específico (comando admin)
+     */
+    private String processarAdminListContasUser(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 2) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int userId = Integer.parseInt(partes[1]);
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("1;Conta Teste;corrente;1000.00");
+        }
+        
+        // Buscar contas do usuário
+        List<Conta> contas = contaDAO.listarPorUsuario(userId);
+        
+        if (contas.isEmpty()) {
+            return Protocol.createSuccessResponse("");
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < contas.size(); i++) {
+            Conta c = contas.get(i);
+            sb.append(c.getId()).append(Protocol.FIELD_SEPARATOR)
+              .append(c.getNome()).append(Protocol.FIELD_SEPARATOR)
+              .append(c.getTipo()).append(Protocol.FIELD_SEPARATOR)
+              .append(c.getSaldoInicial());
+            if (i < contas.size() - 1) {
+                sb.append("\n");
+            }
+        }
+        
+        return Protocol.createSuccessResponse(sb.toString());
+    }
+    
+    /**
+     * Lista categorias de um usuário específico (comando admin)
+     */
+    private String processarAdminListCategoriasUser(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 2) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int userId = Integer.parseInt(partes[1]);
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("1;Alimentação;despesa");
+        }
+        
+        // Buscar categorias do usuário
+        List<Categoria> categorias = categoriaDAO.listarPorUsuario(userId);
+        
+        if (categorias.isEmpty()) {
+            return Protocol.createSuccessResponse("");
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < categorias.size(); i++) {
+            Categoria cat = categorias.get(i);
+            sb.append(cat.getId()).append(Protocol.FIELD_SEPARATOR)
+              .append(cat.getNome()).append(Protocol.FIELD_SEPARATOR)
+              .append(cat.getTipo());
+            if (i < categorias.size() - 1) {
+                sb.append("\n");
+            }
+        }
+        
+        return Protocol.createSuccessResponse(sb.toString());
+    }
+    
+    /**
+     * Lista movimentações de um usuário específico (comando admin)
+     */
+    private String processarAdminListMovimentacoesUser(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 2) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int userId = Integer.parseInt(partes[1]);
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("1;100.00;2024-01-01;Teste;despesa;1;1");
+        }
+        
+        // Buscar movimentações do usuário
+        List<Movimentacao> movimentacoes = movimentacaoDAO.listarPorUsuario(userId);
+        
+        if (movimentacoes.isEmpty()) {
+            return Protocol.createSuccessResponse("");
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < movimentacoes.size(); i++) {
+            Movimentacao m = movimentacoes.get(i);
+            sb.append(m.getId()).append(Protocol.FIELD_SEPARATOR)
+              .append(m.getValor()).append(Protocol.FIELD_SEPARATOR)
+              .append(m.getData()).append(Protocol.FIELD_SEPARATOR)
+              .append(m.getDescricao() != null ? m.getDescricao() : "").append(Protocol.FIELD_SEPARATOR)
+              .append(m.getTipo()).append(Protocol.FIELD_SEPARATOR)
+              .append(m.getIdConta()).append(Protocol.FIELD_SEPARATOR)
+              .append(m.getIdCategoria());
+            if (i < movimentacoes.size() - 1) {
+                sb.append("\n");
+            }
+        }
+        
+        return Protocol.createSuccessResponse(sb.toString());
+    }
+    
+    /**
+     * Atualiza uma conta (comando admin)
+     */
+    private String processarAdminUpdateConta(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 5) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int contaId = Integer.parseInt(partes[1]);
+        String novoNome = partes[2];
+        String novoTipo = partes[3];
+        double novoSaldo = Double.parseDouble(partes[4]);
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Conta atualizada com sucesso (modo teste)");
+        }
+        
+        // Buscar e atualizar conta
+        Conta conta = contaDAO.buscarPorId(contaId);
+        if (conta == null) {
+            return Protocol.createErrorResponse("Conta não encontrada");
+        }
+        
+        conta.setNome(novoNome);
+        conta.setTipo(novoTipo);
+        conta.setSaldoInicial(novoSaldo);
+        
+        if (contaDAO.atualizar(conta)) {
+            return Protocol.createSuccessResponse("Conta atualizada com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao atualizar conta");
+        }
+    }
+    
+    /**
+     * Atualiza uma categoria (comando admin)
+     */
+    private String processarAdminUpdateCategoria(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 4) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int categoriaId = Integer.parseInt(partes[1]);
+        String novoNome = partes[2];
+        String novoTipo = partes[3];
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Categoria atualizada com sucesso (modo teste)");
+        }
+        
+        // Buscar e atualizar categoria
+        Categoria categoria = categoriaDAO.buscarPorId(categoriaId);
+        if (categoria == null) {
+            return Protocol.createErrorResponse("Categoria não encontrada");
+        }
+        
+        categoria.setNome(novoNome);
+        categoria.setTipo(novoTipo);
+        
+        if (categoriaDAO.atualizar(categoria)) {
+            return Protocol.createSuccessResponse("Categoria atualizada com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao atualizar categoria");
+        }
+    }
+    
+    /**
+     * Atualiza uma movimentação (comando admin)
+     */
+    private String processarAdminUpdateMovimentacao(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 8) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int movimentacaoId = Integer.parseInt(partes[1]);
+        double novoValor = Double.parseDouble(partes[2]);
+        Date novaData = Date.valueOf(partes[3]);
+        String novaDescricao = partes[4];
+        String novoTipo = partes[5];
+        int novoIdConta = Integer.parseInt(partes[6]);
+        int novoIdCategoria = Integer.parseInt(partes[7]);
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Movimentação atualizada com sucesso (modo teste)");
+        }
+        
+        // Buscar e atualizar movimentação
+        Movimentacao movimentacao = movimentacaoDAO.buscarPorId(movimentacaoId);
+        if (movimentacao == null) {
+            return Protocol.createErrorResponse("Movimentação não encontrada");
+        }
+        
+        movimentacao.setValor(novoValor);
+        movimentacao.setData(novaData);
+        movimentacao.setDescricao(novaDescricao);
+        movimentacao.setTipo(novoTipo);
+        movimentacao.setIdConta(novoIdConta);
+        movimentacao.setIdCategoria(novoIdCategoria);
+        
+        if (movimentacaoDAO.atualizar(movimentacao)) {
+            return Protocol.createSuccessResponse("Movimentação atualizada com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao atualizar movimentação");
+        }
+    }
+    
+    /**
+     * Exclui uma conta (comando admin)
+     */
+    private String processarAdminDeleteConta(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 2) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int contaId = Integer.parseInt(partes[1]);
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Conta excluída com sucesso (modo teste)");
+        }
+        
+        if (contaDAO.excluir(contaId)) {
+            return Protocol.createSuccessResponse("Conta excluída com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao excluir conta");
+        }
+    }
+    
+    /**
+     * Exclui uma categoria (comando admin)
+     */
+    private String processarAdminDeleteCategoria(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 2) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int categoriaId = Integer.parseInt(partes[1]);
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Categoria excluída com sucesso (modo teste)");
+        }
+        
+        if (categoriaDAO.excluir(categoriaId)) {
+            return Protocol.createSuccessResponse("Categoria excluída com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao excluir categoria");
+        }
+    }
+    
+    /**
+     * Exclui uma movimentação (comando admin)
+     */
+    private String processarAdminDeleteMovimentacao(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 2) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int movimentacaoId = Integer.parseInt(partes[1]);
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Movimentação excluída com sucesso (modo teste)");
+        }
+        
+        if (movimentacaoDAO.excluir(movimentacaoId)) {
+            return Protocol.createSuccessResponse("Movimentação excluída com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao excluir movimentação");
         }
     }
     

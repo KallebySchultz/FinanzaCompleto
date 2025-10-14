@@ -337,6 +337,31 @@ public class MovimentacaoDAO {
     }
     
     /**
+     * Exclui movimentação do banco de dados (admin - sem verificação de usuário)
+     * @param id ID da movimentação
+     * @return true se excluída com sucesso
+     */
+    public boolean excluir(int id) {
+        String sql = "DELETE FROM movimentacao WHERE id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            int rowsDeleted = stmt.executeUpdate();
+            System.out.println("Movimentação excluída (admin): ID " + id + 
+                             ", rows affected: " + rowsDeleted);
+            return rowsDeleted > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erro SQL ao excluir movimentação ID " + id + ": " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
      * Calcula total de receitas de um usuário por período
      * @param idUsuario ID do usuário
      * @param dataInicio data inicial

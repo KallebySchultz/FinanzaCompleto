@@ -2,7 +2,7 @@
 
 ## Descrição
 
-O cliente desktop foi simplificado para ser **exclusivamente para administradores**. Agora o sistema possui apenas funcionalidades de login e gerenciamento de usuários.
+O cliente desktop é o **painel completo de administração** do sistema Finanza. Administradores podem gerenciar não apenas usuários, mas também todas as contas, categorias e movimentações financeiras de todos os usuários do sistema através de uma interface tabular intuitiva com 4 abas principais.
 
 ## Mudanças Realizadas
 
@@ -70,7 +70,9 @@ Use uma das contas de administrador existentes:
 5. Faça login com as credenciais criadas
 
 ### 4. Dashboard de Administração
-Após o login, você verá o painel de administração com:
+Após o login, você verá o painel de administração com **4 abas**:
+
+#### Aba "Usuários"
 - **Cabeçalho** com informações do admin logado e total de usuários
 - **Campo de busca** para filtrar usuários por nome, email ou ID
 - **Tabela de usuários** com ID, Nome, Email e Data de Criação
@@ -78,9 +80,34 @@ Após o login, você verá o painel de administração com:
   - **Atualizar Lista**: Recarrega a lista de usuários do servidor
   - **Editar**: Edita o usuário selecionado
   - **Excluir**: Remove o usuário selecionado (com confirmação)
-- **Botões de perfil**:
-  - **Editar Meu Perfil**: Permite editar seus próprios dados
-  - **Sair**: Faz logout e retorna à tela de login
+
+#### Aba "Contas"
+- **Filtro por usuário**: Dropdown para filtrar contas de um usuário específico ou ver todas
+- **Tabela de contas** com ID, Nome, Tipo, Saldo Inicial e ID do Usuário
+- **Botões de ação**:
+  - **Atualizar Lista**: Recarrega a lista de contas
+  - **Editar**: Edita a conta selecionada (nome, tipo, saldo)
+  - **Excluir**: Remove a conta selecionada
+
+#### Aba "Categorias"
+- **Filtro por usuário**: Dropdown para filtrar categorias de um usuário específico ou ver todas
+- **Tabela de categorias** com ID, Nome, Tipo e ID do Usuário
+- **Botões de ação**:
+  - **Atualizar Lista**: Recarrega a lista de categorias
+  - **Editar**: Edita a categoria selecionada (nome, tipo)
+  - **Excluir**: Remove a categoria selecionada
+
+#### Aba "Movimentações"
+- **Filtro por usuário**: Dropdown para filtrar movimentações de um usuário específico ou ver todas
+- **Tabela de movimentações** com ID, Valor, Data, Descrição, Tipo, ID Conta e ID Categoria
+- **Botões de ação**:
+  - **Atualizar Lista**: Recarrega a lista de movimentações
+  - **Editar**: Edita a movimentação selecionada (todos os campos)
+  - **Excluir**: Remove a movimentação selecionada
+
+#### Botões Globais (rodapé)
+- **Editar Meu Perfil**: Permite editar seus próprios dados
+- **Sair**: Faz logout e retorna à tela de login
 
 ### 5. Buscar e Filtrar Usuários
 1. Digite no campo de busca o nome, email ou ID do usuário
@@ -103,6 +130,31 @@ Após o login, você verá o painel de administração com:
 3. Confirme a ação no diálogo de confirmação
 4. ⚠️ **Atenção**: Não é possível excluir o próprio usuário logado
 5. ⚠️ **Esta ação não pode ser desfeita!**
+
+### 8. Gerenciar Contas de Usuários
+1. Acesse a aba **"Contas"**
+2. Use o filtro para selecionar um usuário específico ou visualizar todas as contas
+3. Clique em **"Filtrar"** para carregar as contas
+4. Para **editar**: Selecione uma conta e clique em **"Editar"**
+   - Altere nome, tipo (corrente, poupança, cartão, investimento, dinheiro) ou saldo inicial
+5. Para **excluir**: Selecione uma conta e clique em **"Excluir"**
+   - ⚠️ Isso removerá todas as movimentações associadas!
+
+### 9. Gerenciar Categorias de Usuários
+1. Acesse a aba **"Categorias"**
+2. Use o filtro para selecionar um usuário específico ou visualizar todas as categorias
+3. Clique em **"Filtrar"** para carregar as categorias
+4. Para **editar**: Selecione uma categoria e clique em **"Editar"**
+   - Altere nome ou tipo (receita/despesa)
+5. Para **excluir**: Selecione uma categoria e clique em **"Excluir"**
+
+### 10. Gerenciar Movimentações de Usuários
+1. Acesse a aba **"Movimentações"**
+2. Use o filtro para selecionar um usuário específico ou visualizar todas as movimentações
+3. Clique em **"Filtrar"** para carregar as movimentações
+4. Para **editar**: Selecione uma movimentação e clique em **"Editar"**
+   - Altere valor, data, descrição, tipo, conta ou categoria
+5. Para **excluir**: Selecione uma movimentação e clique em **"Excluir"**
 
 ## Estrutura de Arquivos
 
@@ -134,12 +186,28 @@ DESKTOP VERSION/
 
 ## Comandos do Protocolo (Servidor)
 
-Comandos adicionados para gerenciamento de usuários:
-
+### Comandos de Gerenciamento de Usuários
 - `LIST_USERS` - Lista todos os usuários
 - `UPDATE_USER|userId|novoNome|novoEmail` - Atualiza dados do usuário
 - `UPDATE_USER_PASSWORD|userId|novaSenha` - Atualiza senha do usuário
 - `DELETE_USER|userId` - Exclui um usuário (não pode ser o usuário logado)
+
+### Comandos Admin para Gerenciamento de Contas (Novo!)
+- `ADMIN_LIST_CONTAS_USER|userId` - Lista todas as contas de um usuário
+- `ADMIN_UPDATE_CONTA|contaId|nome|tipo|saldoInicial` - Atualiza uma conta
+- `ADMIN_DELETE_CONTA|contaId` - Exclui uma conta
+
+### Comandos Admin para Gerenciamento de Categorias (Novo!)
+- `ADMIN_LIST_CATEGORIAS_USER|userId` - Lista todas as categorias de um usuário
+- `ADMIN_UPDATE_CATEGORIA|categoriaId|nome|tipo` - Atualiza uma categoria
+- `ADMIN_DELETE_CATEGORIA|categoriaId` - Exclui uma categoria
+
+### Comandos Admin para Gerenciamento de Movimentações (Novo!)
+- `ADMIN_LIST_MOVIMENTACOES_USER|userId` - Lista todas as movimentações de um usuário
+- `ADMIN_UPDATE_MOVIMENTACAO|movId|valor|data|descricao|tipo|idConta|idCategoria` - Atualiza uma movimentação
+- `ADMIN_DELETE_MOVIMENTACAO|movimentacaoId` - Exclui uma movimentação
+
+**Nota**: Todos os comandos admin são compatíveis com o aplicativo Android. O app mobile continua usando seus próprios comandos (`LIST_CONTAS`, `ADD_CONTA`, etc.) sem modificações.
 
 ## Requisitos
 
@@ -165,7 +233,7 @@ Comandos adicionados para gerenciamento de usuários:
 └─────────────────┘         └──────────────────┘         └─────────────┘
         │
         │
-        └── Gerencia apenas usuários (sem dados financeiros)
+        └── Gerencia TUDO: Usuários, Contas, Categorias e Movimentações
 
 ┌─────────────────┐         ┌──────────────────┐         ┌─────────────┐
 │   Mobile App    │ ◄─────► │  Servidor Java   │ ◄─────► │    MySQL    │
@@ -178,20 +246,52 @@ Comandos adicionados para gerenciamento de usuários:
 
 ## Recursos Implementados ✅
 
+### Gerenciamento de Usuários
 - ✅ Login de administradores
 - ✅ Registro de novos administradores
-- ✅ Listagem de usuários
+- ✅ Listagem de todos os usuários cadastrados
 - ✅ Edição de usuários (nome, email, senha)
 - ✅ Exclusão de usuários
-- ✅ Busca/filtro de usuários
-- ✅ Estatísticas do dashboard
+- ✅ Busca/filtro de usuários por nome, email ou ID
+- ✅ Estatísticas do dashboard (total de usuários)
 - ✅ Edição do próprio perfil
 - ✅ Logout seguro
+
+### Gerenciamento de Contas (Novo!)
+- ✅ Visualização de todas as contas de todos os usuários
+- ✅ Filtro de contas por usuário específico
+- ✅ Edição de contas (nome, tipo, saldo inicial)
+- ✅ Exclusão de contas
+- ✅ Atualização em tempo real
+
+### Gerenciamento de Categorias (Novo!)
+- ✅ Visualização de todas as categorias de todos os usuários
+- ✅ Filtro de categorias por usuário específico
+- ✅ Edição de categorias (nome, tipo)
+- ✅ Exclusão de categorias
+- ✅ Atualização em tempo real
+
+### Gerenciamento de Movimentações (Novo!)
+- ✅ Visualização de todas as movimentações de todos os usuários
+- ✅ Filtro de movimentações por usuário específico
+- ✅ Edição de movimentações (valor, data, descrição, tipo, conta, categoria)
+- ✅ Exclusão de movimentações
+- ✅ Atualização em tempo real
+
+## Interface
+
+O painel administrativo agora possui **4 abas principais**:
+
+1. **Usuários**: Gerenciamento completo de usuários do sistema
+2. **Contas**: Visualização e gerenciamento de todas as contas bancárias
+3. **Categorias**: Visualização e gerenciamento de todas as categorias
+4. **Movimentações**: Visualização e gerenciamento de todas as transações financeiras
 
 ## Futuras Melhorias
 
 - [ ] Adicionar paginação para grandes volumes de dados
 - [ ] Adicionar logs de ações administrativas
-- [ ] Adicionar mais estatísticas de uso do sistema
+- [ ] Adicionar mais estatísticas de uso do sistema (totais, gráficos)
 - [ ] Implementar controle de permissões mais granular
-- [ ] Adicionar exportação de dados de usuários
+- [ ] Adicionar exportação de dados (CSV, Excel)
+- [ ] Adicionar busca avançada com múltiplos critérios

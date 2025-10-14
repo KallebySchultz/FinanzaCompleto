@@ -693,9 +693,9 @@ public class AdminDashboardView extends JFrame {
             return;
         }
         
-        int userId = (int) tableModel.getValueAt(selectedRow, 0);
-        String userName = (String) tableModel.getValueAt(selectedRow, 1);
-        String userEmail = (String) tableModel.getValueAt(selectedRow, 2);
+        int userId = (int) usuariosTableModel.getValueAt(selectedRow, 0);
+        String userName = (String) usuariosTableModel.getValueAt(selectedRow, 1);
+        String userEmail = (String) usuariosTableModel.getValueAt(selectedRow, 2);
         
         Usuario usuario = new Usuario(userId, userName, userEmail);
         

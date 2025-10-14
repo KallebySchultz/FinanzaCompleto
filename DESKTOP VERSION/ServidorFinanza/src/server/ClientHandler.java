@@ -1484,7 +1484,7 @@ public class ClientHandler extends Thread {
         }
         
         conta.setNome(novoNome);
-        conta.setTipo(novoTipo);
+        conta.setTipo(Conta.TipoConta.fromString(novoTipo));
         conta.setSaldoInicial(novoSaldo);
         
         if (contaDAO.atualizar(conta)) {
@@ -1522,7 +1522,7 @@ public class ClientHandler extends Thread {
         }
         
         categoria.setNome(novoNome);
-        categoria.setTipo(novoTipo);
+        categoria.setTipo(Categoria.TipoCategoria.fromString(novoTipo));
         
         if (categoriaDAO.atualizar(categoria)) {
             return Protocol.createSuccessResponse("Categoria atualizada com sucesso");
@@ -1565,7 +1565,7 @@ public class ClientHandler extends Thread {
         movimentacao.setValor(novoValor);
         movimentacao.setData(novaData);
         movimentacao.setDescricao(novaDescricao);
-        movimentacao.setTipo(novoTipo);
+        movimentacao.setTipo(Movimentacao.TipoMovimentacao.fromString(novoTipo));
         movimentacao.setIdConta(novoIdConta);
         movimentacao.setIdCategoria(novoIdCategoria);
         

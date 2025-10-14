@@ -505,15 +505,15 @@ public class AdminDashboardView extends JFrame {
                     if (resposta != null && resposta.startsWith("OK")) {
                         String[] partes = resposta.split("\\|");
                         if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
-                            String[] contas = partes[1].split("\\n");
+                            String[] contas = partes[1].split(";");
                             for (String contaData : contas) {
-                                String[] campos = contaData.split(";");
+                                String[] campos = contaData.split(",");
                                 if (campos.length >= 4) {
                                     Object[] row = {
-                                        campos[0], // ID
-                                        campos[1], // Nome
-                                        campos[2], // Saldo Inicial
-                                        campos[3]  // Usuário
+                                        campos[0].trim(), // ID
+                                        campos[1].trim(), // Nome
+                                        campos[2].trim(), // Saldo Inicial
+                                        campos[3].trim()  // Usuário
                                     };
                                     contasTableModel.addRow(row);
                                 }
@@ -550,15 +550,15 @@ public class AdminDashboardView extends JFrame {
         if (resposta != null && resposta.startsWith("OK")) {
             String[] partes = resposta.split("\\|");
             if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
-                String[] contas = partes[1].split("\\n");
+                String[] contas = partes[1].split(";");
                 for (String contaData : contas) {
-                    String[] campos = contaData.split(";");
+                    String[] campos = contaData.split(",");
                     if (campos.length >= 4) {
                         Object[] row = {
-                            campos[0], // ID
-                            campos[1], // Nome
-                            campos[2], // Saldo Inicial (sem Tipo)
-                            campos[3]  // Usuário
+                            campos[0].trim(), // ID
+                            campos[1].trim(), // Nome
+                            campos[2].trim(), // Saldo Inicial (sem Tipo)
+                            campos[3].trim()  // Usuário
                         };
                         contasTableModel.addRow(row);
                     }
@@ -590,14 +590,14 @@ public class AdminDashboardView extends JFrame {
                     if (resposta != null && resposta.startsWith("OK")) {
                         String[] partes = resposta.split("\\|");
                         if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
-                            String[] categorias = partes[1].split("\\n");
+                            String[] categorias = partes[1].split(";");
                             for (String catData : categorias) {
-                                String[] campos = catData.split(";");
+                                String[] campos = catData.split(",");
                                 if (campos.length >= 4) {
                                     Object[] row = {
-                                        campos[0], // ID
-                                        campos[1], // Nome
-                                        campos[2], // Tipo
+                                        campos[0].trim(), // ID
+                                        campos[1].trim(), // Nome
+                                        campos[2].trim(), // Tipo
                                         campos[3]  // Usuário
                                     };
                                     categoriasTableModel.addRow(row);
@@ -635,15 +635,15 @@ public class AdminDashboardView extends JFrame {
         if (resposta != null && resposta.startsWith("OK")) {
             String[] partes = resposta.split("\\|");
             if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
-                String[] categorias = partes[1].split("\\n");
+                String[] categorias = partes[1].split(";");
                 for (String catData : categorias) {
-                    String[] campos = catData.split(";");
+                    String[] campos = catData.split(",");
                     if (campos.length >= 4) {
                         Object[] row = {
-                            campos[0], // ID
-                            campos[1], // Nome
-                            campos[2], // Tipo
-                            campos[3]  // Usuário
+                            campos[0].trim(), // ID
+                            campos[1].trim(), // Nome
+                            campos[2].trim(), // Tipo
+                            campos[3].trim()  // Usuário
                         };
                         categoriasTableModel.addRow(row);
                     }
@@ -675,19 +675,19 @@ public class AdminDashboardView extends JFrame {
                     if (resposta != null && resposta.startsWith("OK")) {
                         String[] partes = resposta.split("\\|");
                         if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
-                            String[] movimentacoes = partes[1].split("\\n");
+                            String[] movimentacoes = partes[1].split(";");
                             for (String movData : movimentacoes) {
-                                String[] campos = movData.split(";");
+                                String[] campos = movData.split(",");
                                 if (campos.length >= 8) {
                                     Object[] row = {
-                                        campos[0], // ID
-                                        campos[1], // Usuário
-                                        campos[2], // Valor
-                                        campos[3], // Data
-                                        campos[4], // Descrição
-                                        campos[5], // Tipo
-                                        campos[6], // Conta
-                                        campos[7]  // Categoria
+                                        campos[0].trim(), // ID
+                                        campos[1].trim(), // Usuário
+                                        campos[2].trim(), // Valor
+                                        campos[3].trim(), // Data
+                                        campos[4].trim(), // Descrição
+                                        campos[5].trim(), // Tipo
+                                        campos[6].trim(), // Conta
+                                        campos[7].trim()  // Categoria
                                     };
                                     movimentacoesTableModel.addRow(row);
                                 }
@@ -724,19 +724,19 @@ public class AdminDashboardView extends JFrame {
         if (resposta != null && resposta.startsWith("OK")) {
             String[] partes = resposta.split("\\|");
             if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
-                String[] movimentacoes = partes[1].split("\\n");
+                String[] movimentacoes = partes[1].split(";");
                 for (String movData : movimentacoes) {
-                    String[] campos = movData.split(";");
+                    String[] campos = movData.split(",");
                     if (campos.length >= 8) {
                         Object[] row = {
-                            campos[0], // ID
-                            campos[1], // Usuário
-                            campos[2], // Valor
-                            campos[3], // Data
-                            campos[4], // Descrição
-                            campos[5], // Tipo
-                            campos[6], // Conta
-                            campos[7]  // Categoria
+                            campos[0].trim(), // ID
+                            campos[1].trim(), // Usuário
+                            campos[2].trim(), // Valor
+                            campos[3].trim(), // Data
+                            campos[4].trim(), // Descrição
+                            campos[5].trim(), // Tipo
+                            campos[6].trim(), // Conta
+                            campos[7].trim()  // Categoria
                         };
                         movimentacoesTableModel.addRow(row);
                     }

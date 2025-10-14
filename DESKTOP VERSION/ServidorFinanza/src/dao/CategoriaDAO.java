@@ -243,6 +243,28 @@ public class CategoriaDAO {
     }
     
     /**
+     * Exclui categoria do banco de dados (admin - sem verificação de usuário)
+     * @param id ID da categoria
+     * @return true se excluída com sucesso
+     */
+    public boolean excluir(int id) {
+        String sql = "DELETE FROM categoria WHERE id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao excluir categoria: " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
      * Mapeia ResultSet para objeto Categoria
      */
     private Categoria mapResultSetToCategoria(ResultSet rs) throws SQLException {

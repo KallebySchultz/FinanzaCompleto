@@ -45,7 +45,7 @@ public class NetworkClient {
             output.println(command);
             String response = input.readLine();
             System.out.println("Comando enviado: " + command);
-            System.out.println("Resposta recebida: " + response);
+            System.out.println("Resposta recebida (length=" + (response != null ? response.length() : 0) + "): " + response);
             return response;
         } catch (IOException e) {
             System.err.println("Erro na comunicação: " + e.getMessage());

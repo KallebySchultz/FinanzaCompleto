@@ -9,6 +9,8 @@ Este documento descreve as mudanças implementadas para corrigir a exibição da
 ### Problema
 A data de criação das contas estava sendo capturada no banco de dados, mas não estava sendo exibida no painel de administração do cliente desktop.
 
+**Atualização (Correção do Modo de Teste)**: Após a implementação inicial, foi identificado que as respostas do modo de teste não incluíam o campo de data de criação, causando que a coluna aparecesse como "N/A" quando o servidor estava em modo de teste.
+
 ### Solução Implementada
 
 #### Servidor (ServidorFinanza)
@@ -27,6 +29,15 @@ sb.append(c.getId()).append(",")
   .append(c.getSaldoInicial()).append(",")
   .append(usuario.getNome()).append(",")
   .append(c.getDataCriacao() != null ? c.getDataCriacao().toString() : "N/A");
+```
+
+**Correção adicional (Modo de Teste)**:
+As respostas do modo de teste também foram atualizadas para incluir o 5º campo:
+
+```java
+// Em processarAdminListContasUser e processarAdminListAllContas:
+// Antes: return Protocol.createSuccessResponse("1;Conta Teste;1000.00;Usuario Teste");
+// Depois: return Protocol.createSuccessResponse("1,Conta Teste,1000.00,Usuario Teste,2025-01-01 00:00:00");
 ```
 
 #### Cliente (ClienteFinanza)

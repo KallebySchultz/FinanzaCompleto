@@ -173,11 +173,16 @@ public class UsuarioDAO {
              ResultSet rs = stmt.executeQuery()) {
             
             while (rs.next()) {
-                usuarios.add(mapResultSetToUsuario(rs));
+                Usuario usuario = mapResultSetToUsuario(rs);
+                usuarios.add(usuario);
+                System.out.println("Usuario carregado: ID=" + usuario.getId() + ", Nome=" + usuario.getNome() + ", Email=" + usuario.getEmail());
             }
+            
+            System.out.println("Total de usuários carregados: " + usuarios.size());
             
         } catch (SQLException e) {
             System.err.println("Erro ao listar usuários: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return usuarios;

@@ -161,6 +161,29 @@ public class UsuarioDAO {
     }
     
     /**
+     * Lista todos os usuários
+     * @return Lista de todos os usuários
+     */
+    public List<Usuario> listarTodos() {
+        List<Usuario> usuarios = new ArrayList<>();
+        String sql = "SELECT * FROM usuario ORDER BY id";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                usuarios.add(mapResultSetToUsuario(rs));
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar usuários: " + e.getMessage());
+        }
+        
+        return usuarios;
+    }
+    
+    /**
      * Mapeia ResultSet para objeto Usuario
      */
     private Usuario mapResultSetToUsuario(ResultSet rs) throws SQLException {

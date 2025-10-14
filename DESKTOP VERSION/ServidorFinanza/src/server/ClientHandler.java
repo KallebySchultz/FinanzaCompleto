@@ -132,6 +132,14 @@ public class ClientHandler extends Thread {
                     return processarGetPerfil();
                 case Protocol.CMD_UPDATE_PERFIL:
                     return processarUpdatePerfil(partes);
+                
+                // Admin - Gerenciamento de usuários
+                case Protocol.CMD_LIST_USERS:
+                    return processarListUsers();
+                case Protocol.CMD_UPDATE_USER:
+                    return processarUpdateUser(partes);
+                case Protocol.CMD_UPDATE_USER_PASSWORD:
+                    return processarUpdateUserPassword(partes);
                     
                 default:
                     return Protocol.createErrorResponse("Comando não reconhecido: " + cmd);
@@ -1143,6 +1151,127 @@ public class ClientHandler extends Thread {
         
         // TODO: Implementar atualização real no banco de dados
         return Protocol.createSuccessResponse("Perfil atualizado com sucesso");
+    }
+    
+    /**
+     * Lista todos os usuários (comando admin)
+     */
+    private String processarListUsers() {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        // Modo de teste
+        if (testMode) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("1").append(Protocol.FIELD_SEPARATOR)
+              .append("Admin Teste").append(Protocol.FIELD_SEPARATOR)
+              .append("admin@test.com").append("\n");
+            sb.append("2").append(Protocol.FIELD_SEPARATOR)
+              .append("Usuario Teste").append(Protocol.FIELD_SEPARATOR)
+              .append("user@test.com");
+            return Protocol.createSuccessResponse(sb.toString());
+        }
+        
+        // Listar todos os usuários
+        List<Usuario> usuarios = usuarioDAO.listarTodos();
+        
+        if (usuarios.isEmpty()) {
+            return Protocol.createSuccessResponse("");
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < usuarios.size(); i++) {
+            Usuario u = usuarios.get(i);
+            sb.append(u.getId()).append(Protocol.FIELD_SEPARATOR)
+              .append(u.getNome()).append(Protocol.FIELD_SEPARATOR)
+              .append(u.getEmail());
+            if (i < usuarios.size() - 1) {
+                sb.append("\n");
+            }
+        }
+        
+        return Protocol.createSuccessResponse(sb.toString());
+    }
+    
+    /**
+     * Atualiza informações de um usuário (comando admin)
+     */
+    private String processarUpdateUser(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 4) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int userId = Integer.parseInt(partes[1]);
+        String novoNome = partes[2];
+        String novoEmail = partes[3];
+        
+        // Validações
+        if (novoNome.isEmpty() || novoEmail.isEmpty()) {
+            return Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Nome e email são obrigatórios");
+        }
+        
+        if (!SecurityUtil.validarEmail(novoEmail)) {
+            return Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Email inválido");
+        }
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Usuário atualizado com sucesso (modo teste)");
+        }
+        
+        // Buscar usuário
+        Usuario usuario = usuarioDAO.buscarPorId(userId);
+        if (usuario == null) {
+            return Protocol.createErrorResponse("Usuário não encontrado");
+        }
+        
+        // Atualizar
+        usuario.setNome(novoNome);
+        usuario.setEmail(novoEmail);
+        
+        if (usuarioDAO.atualizar(usuario)) {
+            return Protocol.createSuccessResponse("Usuário atualizado com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao atualizar usuário");
+        }
+    }
+    
+    /**
+     * Atualiza senha de um usuário (comando admin)
+     */
+    private String processarUpdateUserPassword(String[] partes) {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        if (partes.length < 3) {
+            return Protocol.createErrorResponse("Parâmetros insuficientes");
+        }
+        
+        int userId = Integer.parseInt(partes[1]);
+        String novaSenha = partes[2];
+        
+        // Validações
+        if (novaSenha.isEmpty() || novaSenha.length() < 6) {
+            return Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Senha deve ter no mínimo 6 caracteres");
+        }
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("Senha atualizada com sucesso (modo teste)");
+        }
+        
+        // Atualizar senha
+        if (usuarioDAO.atualizarSenha(userId, novaSenha)) {
+            return Protocol.createSuccessResponse("Senha atualizada com sucesso");
+        } else {
+            return Protocol.createErrorResponse("Erro ao atualizar senha");
+        }
     }
     
     /**

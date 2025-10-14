@@ -177,20 +177,25 @@ public class AuthController {
         java.util.List<Usuario> usuarios = new java.util.ArrayList<>();
         
         if (!networkClient.isConnected()) {
+            System.out.println("listarUsuarios - Cliente não está conectado");
             return usuarios;
         }
         
         String comando = CMD_LIST_USERS;
         String resposta = networkClient.sendCommand(comando);
         
+        System.out.println("listarUsuarios - Resposta recebida: " + resposta);
+        
         String[] partes = resposta.split("\\" + SEPARATOR);
         
         if (partes.length >= 1 && STATUS_OK.equals(partes[0])) {
             if (partes.length >= 2) {
                 String[] usuariosData = partes[1].split("\\n");
+                System.out.println("listarUsuarios - Linhas de dados: " + usuariosData.length);
                 for (String userData : usuariosData) {
                     if (!userData.trim().isEmpty()) {
                         String[] campos = userData.split(FIELD_SEPARATOR);
+                        System.out.println("listarUsuarios - Processando usuário: " + userData + " (campos: " + campos.length + ")");
                         if (campos.length >= 3) {
                             Usuario usuario = new Usuario(
                                 Integer.parseInt(campos[0]),
@@ -198,12 +203,16 @@ public class AuthController {
                                 campos[2]
                             );
                             usuarios.add(usuario);
+                            System.out.println("listarUsuarios - Usuário adicionado: ID=" + usuario.getId() + ", Nome=" + usuario.getNome());
                         }
                     }
                 }
             }
+        } else {
+            System.out.println("listarUsuarios - Resposta não é OK ou não tem dados: " + resposta);
         }
         
+        System.out.println("listarUsuarios - Total de usuários carregados: " + usuarios.size());
         return usuarios;
     }
     

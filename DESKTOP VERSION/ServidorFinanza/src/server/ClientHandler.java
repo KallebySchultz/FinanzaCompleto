@@ -1198,7 +1198,10 @@ public class ClientHandler extends Thread {
         // Listar todos os usuários
         List<Usuario> usuarios = usuarioDAO.listarTodos();
         
+        System.out.println("processarListUsers - Total de usuários retornados do DAO: " + usuarios.size());
+        
         if (usuarios.isEmpty()) {
+            System.out.println("processarListUsers - Nenhum usuário encontrado, retornando resposta vazia");
             return Protocol.createSuccessResponse("");
         }
         
@@ -1213,7 +1216,9 @@ public class ClientHandler extends Thread {
             }
         }
         
-        return Protocol.createSuccessResponse(sb.toString());
+        String response = Protocol.createSuccessResponse(sb.toString());
+        System.out.println("processarListUsers - Resposta gerada: " + response);
+        return response;
     }
     
     /**

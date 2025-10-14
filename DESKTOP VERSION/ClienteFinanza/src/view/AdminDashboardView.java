@@ -39,6 +39,8 @@ public class AdminDashboardView extends JFrame {
     private JButton editContaButton;
     private JButton deleteContaButton;
     private JComboBox<String> userFilterContas;
+    private JTextField searchContasField;
+    private List<Object[]> todasContas;
     
     // Aba de Categorias
     private JTable categoriasTable;
@@ -47,6 +49,8 @@ public class AdminDashboardView extends JFrame {
     private JButton editCategoriaButton;
     private JButton deleteCategoriaButton;
     private JComboBox<String> userFilterCategorias;
+    private JTextField searchCategoriasField;
+    private List<Object[]> todasCategorias;
     
     // Aba de Movimentações
     private JTable movimentacoesTable;
@@ -55,6 +59,8 @@ public class AdminDashboardView extends JFrame {
     private JButton editMovimentacaoButton;
     private JButton deleteMovimentacaoButton;
     private JComboBox<String> userFilterMovimentacoes;
+    private JTextField searchMovimentacoesField;
+    private List<Object[]> todasMovimentacoes;
     
     public AdminDashboardView(AuthController authController, Usuario usuario) {
         this.authController = authController;
@@ -71,6 +77,9 @@ public class AdminDashboardView extends JFrame {
         setSize(1200, 750);
         setLocationRelativeTo(null);
         todosUsuarios = new java.util.ArrayList<>();
+        todasContas = new java.util.ArrayList<>();
+        todasCategorias = new java.util.ArrayList<>();
+        todasMovimentacoes = new java.util.ArrayList<>();
     }
     
     private void setupUI() {
@@ -177,7 +186,10 @@ public class AdminDashboardView extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Painel de filtro
+        // Painel superior com filtros e busca
+        JPanel topPanel = new JPanel(new BorderLayout());
+        
+        // Painel de filtro por usuário
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filterPanel.add(new JLabel("Filtrar por usuário:"));
         userFilterContas = new JComboBox<>();
@@ -186,10 +198,28 @@ public class AdminDashboardView extends JFrame {
         JButton filterButton = new JButton("Filtrar");
         filterButton.addActionListener(e -> carregarContas());
         filterPanel.add(filterButton);
-        panel.add(filterPanel, BorderLayout.NORTH);
         
-        // Tabela de contas (Tipo removido - não necessário)
-        String[] columnNames = {"ID", "Nome", "Saldo Inicial", "Usuário"};
+        // Painel de busca
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.add(new JLabel("Buscar:"));
+        searchContasField = new JTextField(30);
+        searchPanel.add(searchContasField);
+        JButton searchButton = new JButton("Buscar");
+        searchButton.addActionListener(e -> filtrarContas());
+        searchPanel.add(searchButton);
+        JButton clearButton = new JButton("Limpar");
+        clearButton.addActionListener(e -> {
+            searchContasField.setText("");
+            filtrarContas();
+        });
+        searchPanel.add(clearButton);
+        
+        topPanel.add(filterPanel, BorderLayout.NORTH);
+        topPanel.add(searchPanel, BorderLayout.SOUTH);
+        panel.add(topPanel, BorderLayout.NORTH);
+        
+        // Tabela de contas
+        String[] columnNames = {"ID", "Nome", "Saldo Inicial", "Usuário", "Data de Criação"};
         contasTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -226,7 +256,10 @@ public class AdminDashboardView extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Painel de filtro
+        // Painel superior com filtros e busca
+        JPanel topPanel = new JPanel(new BorderLayout());
+        
+        // Painel de filtro por usuário
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filterPanel.add(new JLabel("Filtrar por usuário:"));
         userFilterCategorias = new JComboBox<>();
@@ -235,7 +268,25 @@ public class AdminDashboardView extends JFrame {
         JButton filterButton = new JButton("Filtrar");
         filterButton.addActionListener(e -> carregarCategorias());
         filterPanel.add(filterButton);
-        panel.add(filterPanel, BorderLayout.NORTH);
+        
+        // Painel de busca
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.add(new JLabel("Buscar:"));
+        searchCategoriasField = new JTextField(30);
+        searchPanel.add(searchCategoriasField);
+        JButton searchButton = new JButton("Buscar");
+        searchButton.addActionListener(e -> filtrarCategorias());
+        searchPanel.add(searchButton);
+        JButton clearButton = new JButton("Limpar");
+        clearButton.addActionListener(e -> {
+            searchCategoriasField.setText("");
+            filtrarCategorias();
+        });
+        searchPanel.add(clearButton);
+        
+        topPanel.add(filterPanel, BorderLayout.NORTH);
+        topPanel.add(searchPanel, BorderLayout.SOUTH);
+        panel.add(topPanel, BorderLayout.NORTH);
         
         // Tabela de categorias
         String[] columnNames = {"ID", "Nome", "Tipo", "Usuário"};
@@ -275,7 +326,10 @@ public class AdminDashboardView extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        // Painel de filtro
+        // Painel superior com filtros e busca
+        JPanel topPanel = new JPanel(new BorderLayout());
+        
+        // Painel de filtro por usuário
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filterPanel.add(new JLabel("Filtrar por usuário:"));
         userFilterMovimentacoes = new JComboBox<>();
@@ -284,7 +338,25 @@ public class AdminDashboardView extends JFrame {
         JButton filterButton = new JButton("Filtrar");
         filterButton.addActionListener(e -> carregarMovimentacoes());
         filterPanel.add(filterButton);
-        panel.add(filterPanel, BorderLayout.NORTH);
+        
+        // Painel de busca
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.add(new JLabel("Buscar:"));
+        searchMovimentacoesField = new JTextField(30);
+        searchPanel.add(searchMovimentacoesField);
+        JButton searchButton = new JButton("Buscar");
+        searchButton.addActionListener(e -> filtrarMovimentacoes());
+        searchPanel.add(searchButton);
+        JButton clearButton = new JButton("Limpar");
+        clearButton.addActionListener(e -> {
+            searchMovimentacoesField.setText("");
+            filtrarMovimentacoes();
+        });
+        searchPanel.add(clearButton);
+        
+        topPanel.add(filterPanel, BorderLayout.NORTH);
+        topPanel.add(searchPanel, BorderLayout.SOUTH);
+        panel.add(topPanel, BorderLayout.NORTH);
         
         // Tabela de movimentações
         String[] columnNames = {"ID", "Usuário", "Valor", "Data", "Descrição", "Tipo", "Conta", "Categoria"};
@@ -346,6 +418,7 @@ public class AdminDashboardView extends JFrame {
         refreshContasButton.addActionListener(e -> carregarContas());
         editContaButton.addActionListener(e -> editarContaSelecionada());
         deleteContaButton.addActionListener(e -> excluirContaSelecionada());
+        searchContasField.addActionListener(e -> filtrarContas());
         
         contasTable.getSelectionModel().addListSelectionListener(e -> {
             boolean hasSelection = contasTable.getSelectedRow() != -1;
@@ -357,6 +430,7 @@ public class AdminDashboardView extends JFrame {
         refreshCategoriasButton.addActionListener(e -> carregarCategorias());
         editCategoriaButton.addActionListener(e -> editarCategoriaSelecionada());
         deleteCategoriaButton.addActionListener(e -> excluirCategoriaSelecionada());
+        searchCategoriasField.addActionListener(e -> filtrarCategorias());
         
         categoriasTable.getSelectionModel().addListSelectionListener(e -> {
             boolean hasSelection = categoriasTable.getSelectedRow() != -1;
@@ -368,6 +442,7 @@ public class AdminDashboardView extends JFrame {
         refreshMovimentacoesButton.addActionListener(e -> carregarMovimentacoes());
         editMovimentacaoButton.addActionListener(e -> editarMovimentacaoSelecionada());
         deleteMovimentacaoButton.addActionListener(e -> excluirMovimentacaoSelecionada());
+        searchMovimentacoesField.addActionListener(e -> filtrarMovimentacoes());
         
         movimentacoesTable.getSelectionModel().addListSelectionListener(e -> {
             boolean hasSelection = movimentacoesTable.getSelectedRow() != -1;
@@ -484,6 +559,7 @@ public class AdminDashboardView extends JFrame {
     
     private void carregarContas() {
         contasTableModel.setRowCount(0);
+        todasContas.clear();
         
         String selectedUser = (String) userFilterContas.getSelectedItem();
         Integer userId = null;
@@ -513,9 +589,10 @@ public class AdminDashboardView extends JFrame {
                                         campos[0].trim(), // ID
                                         campos[1].trim(), // Nome
                                         campos[2].trim(), // Saldo Inicial
-                                        campos[3].trim()  // Usuário
+                                        campos[3].trim(), // Usuário
+                                        campos.length >= 5 ? campos[4].trim() : "N/A"  // Data de Criação
                                     };
-                                    contasTableModel.addRow(row);
+                                    todasContas.add(row);
                                 }
                             }
                         }
@@ -531,6 +608,7 @@ public class AdminDashboardView extends JFrame {
             protected void done() {
                 try {
                     get();
+                    filtrarContas();
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(AdminDashboardView.this,
                         "Erro ao carregar contas: " + e.getMessage(),
@@ -557,18 +635,34 @@ public class AdminDashboardView extends JFrame {
                         Object[] row = {
                             campos[0].trim(), // ID
                             campos[1].trim(), // Nome
-                            campos[2].trim(), // Saldo Inicial (sem Tipo)
-                            campos[3].trim()  // Usuário
+                            campos[2].trim(), // Saldo Inicial
+                            campos[3].trim(), // Usuário
+                            campos.length >= 5 ? campos[4].trim() : "N/A"  // Data de Criação
                         };
-                        contasTableModel.addRow(row);
+                        todasContas.add(row);
                     }
                 }
             }
         }
     }
     
+    private void filtrarContas() {
+        String busca = searchContasField.getText().trim().toLowerCase();
+        contasTableModel.setRowCount(0);
+        
+        for (Object[] conta : todasContas) {
+            if (busca.isEmpty() || 
+                conta[0].toString().toLowerCase().contains(busca) ||  // ID
+                conta[1].toString().toLowerCase().contains(busca) ||  // Nome
+                conta[3].toString().toLowerCase().contains(busca)) {  // Usuário
+                contasTableModel.addRow(conta);
+            }
+        }
+    }
+    
     private void carregarCategorias() {
         categoriasTableModel.setRowCount(0);
+        todasCategorias.clear();
         
         String selectedUser = (String) userFilterCategorias.getSelectedItem();
         Integer userId = null;
@@ -600,7 +694,7 @@ public class AdminDashboardView extends JFrame {
                                         campos[2].trim(), // Tipo
                                         campos[3]  // Usuário
                                     };
-                                    categoriasTableModel.addRow(row);
+                                    todasCategorias.add(row);
                                 }
                             }
                         }
@@ -616,6 +710,7 @@ public class AdminDashboardView extends JFrame {
             protected void done() {
                 try {
                     get();
+                    filtrarCategorias();
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(AdminDashboardView.this,
                         "Erro ao carregar categorias: " + e.getMessage(),
@@ -645,15 +740,31 @@ public class AdminDashboardView extends JFrame {
                             campos[2].trim(), // Tipo
                             campos[3].trim()  // Usuário
                         };
-                        categoriasTableModel.addRow(row);
+                        todasCategorias.add(row);
                     }
                 }
             }
         }
     }
     
+    private void filtrarCategorias() {
+        String busca = searchCategoriasField.getText().trim().toLowerCase();
+        categoriasTableModel.setRowCount(0);
+        
+        for (Object[] categoria : todasCategorias) {
+            if (busca.isEmpty() || 
+                categoria[0].toString().toLowerCase().contains(busca) ||  // ID
+                categoria[1].toString().toLowerCase().contains(busca) ||  // Nome
+                categoria[2].toString().toLowerCase().contains(busca) ||  // Tipo
+                categoria[3].toString().toLowerCase().contains(busca)) {  // Usuário
+                categoriasTableModel.addRow(categoria);
+            }
+        }
+    }
+    
     private void carregarMovimentacoes() {
         movimentacoesTableModel.setRowCount(0);
+        todasMovimentacoes.clear();
         
         String selectedUser = (String) userFilterMovimentacoes.getSelectedItem();
         Integer userId = null;
@@ -689,7 +800,7 @@ public class AdminDashboardView extends JFrame {
                                         campos[6].trim(), // Conta
                                         campos[7].trim()  // Categoria
                                     };
-                                    movimentacoesTableModel.addRow(row);
+                                    todasMovimentacoes.add(row);
                                 }
                             }
                         }
@@ -705,6 +816,7 @@ public class AdminDashboardView extends JFrame {
             protected void done() {
                 try {
                     get();
+                    filtrarMovimentacoes();
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(AdminDashboardView.this,
                         "Erro ao carregar movimentações: " + e.getMessage(),
@@ -738,9 +850,28 @@ public class AdminDashboardView extends JFrame {
                             campos[6].trim(), // Conta
                             campos[7].trim()  // Categoria
                         };
-                        movimentacoesTableModel.addRow(row);
+                        todasMovimentacoes.add(row);
                     }
                 }
+            }
+        }
+    }
+    
+    private void filtrarMovimentacoes() {
+        String busca = searchMovimentacoesField.getText().trim().toLowerCase();
+        movimentacoesTableModel.setRowCount(0);
+        
+        for (Object[] movimentacao : todasMovimentacoes) {
+            if (busca.isEmpty() || 
+                movimentacao[0].toString().toLowerCase().contains(busca) ||  // ID
+                movimentacao[1].toString().toLowerCase().contains(busca) ||  // Usuário
+                movimentacao[2].toString().toLowerCase().contains(busca) ||  // Valor
+                movimentacao[3].toString().toLowerCase().contains(busca) ||  // Data
+                movimentacao[4].toString().toLowerCase().contains(busca) ||  // Descrição
+                movimentacao[5].toString().toLowerCase().contains(busca) ||  // Tipo
+                movimentacao[6].toString().toLowerCase().contains(busca) ||  // Conta
+                movimentacao[7].toString().toLowerCase().contains(busca)) {  // Categoria
+                movimentacoesTableModel.addRow(movimentacao);
             }
         }
     }

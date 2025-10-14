@@ -14,6 +14,9 @@ public class AuthController {
     private static final String CMD_LOGIN = "LOGIN";
     private static final String CMD_REGISTER = "REGISTER";
     private static final String CMD_LOGOUT = "LOGOUT";
+    private static final String CMD_LIST_USERS = "LIST_USERS";
+    private static final String CMD_UPDATE_USER = "UPDATE_USER";
+    private static final String CMD_UPDATE_USER_PASSWORD = "UPDATE_USER_PASSWORD";
     private static final String STATUS_OK = "OK";
     private static final String STATUS_ERROR = "ERROR";
     private static final String STATUS_INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
@@ -164,6 +167,83 @@ public class AuthController {
      */
     public NetworkClient getNetworkClient() {
         return networkClient;
+    }
+    
+    /**
+     * Lista todos os usuários (apenas para admin)
+     */
+    public java.util.List<Usuario> listarUsuarios() {
+        java.util.List<Usuario> usuarios = new java.util.ArrayList<>();
+        
+        if (!networkClient.isConnected()) {
+            return usuarios;
+        }
+        
+        String comando = CMD_LIST_USERS;
+        String resposta = networkClient.sendCommand(comando);
+        
+        String[] partes = resposta.split("\\" + SEPARATOR);
+        
+        if (partes.length >= 1 && STATUS_OK.equals(partes[0])) {
+            if (partes.length >= 2) {
+                String[] usuariosData = partes[1].split("\\n");
+                for (String userData : usuariosData) {
+                    if (!userData.trim().isEmpty()) {
+                        String[] campos = userData.split(FIELD_SEPARATOR);
+                        if (campos.length >= 3) {
+                            Usuario usuario = new Usuario(
+                                Integer.parseInt(campos[0]),
+                                campos[1],
+                                campos[2]
+                            );
+                            usuarios.add(usuario);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return usuarios;
+    }
+    
+    /**
+     * Atualiza informações de um usuário
+     */
+    public boolean atualizarUsuario(int userId, String novoNome, String novoEmail) {
+        if (!networkClient.isConnected()) {
+            return false;
+        }
+        
+        String comando = CMD_UPDATE_USER + SEPARATOR + userId + SEPARATOR + novoNome + SEPARATOR + novoEmail;
+        String resposta = networkClient.sendCommand(comando);
+        
+        String[] partes = resposta.split("\\" + SEPARATOR);
+        
+        if (partes.length >= 1 && STATUS_OK.equals(partes[0])) {
+            // Se o usuário editado é o próprio usuário logado, atualizar os dados locais
+            if (usuarioLogado != null && usuarioLogado.getId() == userId) {
+                usuarioLogado = new Usuario(userId, novoNome, novoEmail);
+            }
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Atualiza senha de um usuário
+     */
+    public boolean atualizarSenhaUsuario(int userId, String novaSenha) {
+        if (!networkClient.isConnected()) {
+            return false;
+        }
+        
+        String comando = CMD_UPDATE_USER_PASSWORD + SEPARATOR + userId + SEPARATOR + novaSenha;
+        String resposta = networkClient.sendCommand(comando);
+        
+        String[] partes = resposta.split("\\" + SEPARATOR);
+        
+        return partes.length >= 1 && STATUS_OK.equals(partes[0]);
     }
     
     /**

@@ -7,7 +7,6 @@ import util.SecurityUtil;
 import java.io.*;
 import java.net.Socket;
 import java.sql.Date;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,8 +15,6 @@ import java.util.List;
  * Processa comandos recebidos dos clientes e envia respostas
  */
 public class ClientHandler extends Thread {
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
-    
     private Socket clientSocket;
     private BufferedReader input;
     private PrintWriter output;
@@ -919,12 +916,11 @@ public class ClientHandler extends Thread {
                 String descricao = mov.getDescricao() != null ? mov.getDescricao() : "";
                 int idConta = mov.getIdConta();
                 int idCategoria = mov.getIdCategoria();
-                String dataFormatada = mov.getData() != null ? DATE_FORMAT.format(mov.getData()) : "";
 
                 movimentacoesData.append(mov.getId()).append(",")
                                  .append(valorInteiro).append(",")
                                  .append(valorDecimal).append(",")
-                                 .append(dataFormatada).append(",")
+                                 .append(mov.getData().toString()).append(",")
                                  .append(descricao).append(",")
                                  .append(mov.getTipo().getValor()).append(",")
                                  .append(idConta).append(",")
@@ -1218,11 +1214,10 @@ public class ClientHandler extends Thread {
             if (i > 0) {
                 sb.append(Protocol.FIELD_SEPARATOR);
             }
-            String dataCriacaoFormatada = u.getDataCriacao() != null ? DATE_FORMAT.format(u.getDataCriacao()) : "";
             sb.append(u.getId()).append(",")
               .append(u.getNome()).append(",")
               .append(u.getEmail()).append(",")
-              .append(dataCriacaoFormatada);
+              .append(u.getDataCriacao() != null ? u.getDataCriacao().toString() : "");
         }
         
         String response = Protocol.createSuccessResponse(sb.toString());
@@ -1380,12 +1375,11 @@ public class ClientHandler extends Thread {
             if (i > 0) {
                 sb.append(Protocol.FIELD_SEPARATOR);
             }
-            String dataCriacaoFormatada = c.getDataCriacao() != null ? DATE_FORMAT.format(c.getDataCriacao()) : "N/A";
             sb.append(c.getId()).append(",")
               .append(c.getNome()).append(",")
               .append(c.getSaldoInicial()).append(",")
               .append(nomeUsuario).append(",")
-              .append(dataCriacaoFormatada);
+              .append(c.getDataCriacao() != null ? c.getDataCriacao().toString() : "N/A");
         }
         
         return Protocol.createSuccessResponse(sb.toString());
@@ -1726,12 +1720,11 @@ public class ClientHandler extends Thread {
                     }
                     first = false;
                     
-                    String dataCriacaoFormatada = c.getDataCriacao() != null ? DATE_FORMAT.format(c.getDataCriacao()) : "N/A";
                     sb.append(c.getId()).append(",")
                       .append(c.getNome()).append(",")
                       .append(c.getSaldoInicial()).append(",")
                       .append(usuario.getNome()).append(",")
-                      .append(dataCriacaoFormatada);
+                      .append(c.getDataCriacao() != null ? c.getDataCriacao().toString() : "N/A");
                 }
             }
             

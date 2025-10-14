@@ -8,6 +8,8 @@ Este documento descreve as mudanças implementadas para padronizar todas as data
 
 Configurar todas as datas que aparecem no sistema para usar o formato brasileiro (dd/MM/yyyy), seguindo o padrão já utilizado na exibição de data de criação de usuários no ProfileActivity.
 
+**✅ Status:** Todas as datas de criação (Usuario, Conta, Categoria, Movimentacao) agora utilizam o formato dd/MM/yyyy no servidor desktop.
+
 ## Alterações Realizadas
 
 ### 🖥️ Desktop - ServidorFinanza
@@ -40,6 +42,26 @@ Configurar todas as datas que aparecem no sistema para usar o formato brasileiro
    - **Antes:** `c.getDataCriacao().toString()`
    - **Depois:** `DATE_FORMAT.format(c.getDataCriacao())`
    - **Contexto:** Ao listar todas as contas no painel administrativo
+
+6. **Formatação de data de criação de categoria - Primeira ocorrência (linha ~1427)**
+   - **Antes:** Não incluía dataCriacao
+   - **Depois:** Adicionado `.append(cat.getDataCriacao() != null ? DATE_FORMAT.format(cat.getDataCriacao()) : "N/A")`
+   - **Contexto:** Ao listar categorias de um usuário específico no painel administrativo
+
+7. **Formatação de data de criação de categoria - Segunda ocorrência (linha ~1778)**
+   - **Antes:** Não incluía dataCriacao
+   - **Depois:** Adicionado `.append(cat.getDataCriacao() != null ? DATE_FORMAT.format(cat.getDataCriacao()) : "N/A")`
+   - **Contexto:** Ao listar todas as categorias no painel administrativo
+
+8. **Formatação de data de criação de movimentação - Primeira ocorrência (linha ~1486)**
+   - **Antes:** Não incluía dataCriacao
+   - **Depois:** Adicionado `.append(m.getDataCriacao() != null ? DATE_FORMAT.format(m.getDataCriacao()) : "N/A")`
+   - **Contexto:** Ao listar movimentações de um usuário específico no painel administrativo
+
+9. **Formatação de data de criação de movimentação - Segunda ocorrência (linha ~1840)**
+   - **Antes:** Não incluía dataCriacao
+   - **Depois:** Adicionado `.append(m.getDataCriacao() != null ? DATE_FORMAT.format(m.getDataCriacao()) : "N/A")`
+   - **Contexto:** Ao listar todas as movimentações no painel administrativo
 
 ### ✅ Áreas Já Conformes
 
@@ -109,7 +131,9 @@ Os seguintes formatos foram mantidos intencionalmente por serem apropriados para
 - [x] Compilação do servidor bem-sucedida
 - [x] Verificação de sintaxe Java
 - [x] Revisão de todas as ocorrências de formatação de data
-- [x] Confirmação de que não há mais chamadas `.toString()` em objetos Date
+- [x] Confirmação de que não há mais chamadas `.toString()` em objetos Date para dataCriacao
+- [x] Adição de formatação para dataCriacao de Conta, Categoria e Movimentacao
+- [x] Verificação de que todos os métodos admin que listam entidades incluem dataCriacao formatada
 
 ## Próximos Passos
 

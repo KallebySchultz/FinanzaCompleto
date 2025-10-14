@@ -26,20 +26,24 @@ public class LoginView extends JFrame {
     private void initComponents() {
         setTitle("Finanza Desktop - Login Admin");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 300);
+        setSize(300, 300);
         setLocationRelativeTo(null);
         setResizable(false);
 
         // Componentes
-        emailField = new JTextField(20);
-        senhaField = new JPasswordField(20);
+        emailField = new JTextField();
+        senhaField = new JPasswordField();
         loginButton = new JButton("Entrar");
+
+        // Opcional: defina o tamanho preferido para consistência visual
+        emailField.setPreferredSize(new Dimension(200, 30));
+        senhaField.setPreferredSize(new Dimension(200, 30));
+        loginButton.setPreferredSize(new Dimension(120, 35));
     }
 
     private void setupUI() {
         setLayout(new BorderLayout());
 
-        // Painel principal
         JPanel mainPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -50,32 +54,48 @@ public class LoginView extends JFrame {
         titleLabel.setForeground(new Color(0, 102, 204));
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
         gbc.insets = new Insets(0, 0, 30, 0);
+        gbc.anchor = GridBagConstraints.CENTER;
         mainPanel.add(titleLabel, gbc);
 
-        // Email
-        JPanel emailPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        emailPanel.add(new JLabel("Email:"));
-        emailPanel.add(emailField);
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
-        gbc.insets = new Insets(5, 0, 5, 0);
-        mainPanel.add(emailPanel, gbc);
+        // Email Label
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
+        gbc.insets = new Insets(5, 0, 5, 10);
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        mainPanel.add(new JLabel("Email:"), gbc);
 
-        // Senha
-        JPanel senhaPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        senhaPanel.add(new JLabel("Senha:"));
-        senhaPanel.add(senhaField);
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
+        // Email Field
+        gbc.gridx = 1; gbc.gridy = 1;
         gbc.insets = new Insets(5, 0, 5, 0);
-        mainPanel.add(senhaPanel, gbc);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        mainPanel.add(emailField, gbc);
+
+        // Senha Label
+        gbc.gridx = 0; gbc.gridy = 2;
+        gbc.insets = new Insets(5, 0, 5, 10);
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        mainPanel.add(new JLabel("Senha:"), gbc);
+
+        // Senha Field
+        gbc.gridx = 1; gbc.gridy = 2;
+        gbc.insets = new Insets(5, 0, 5, 0);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        mainPanel.add(senhaField, gbc);
 
         // Botão de login
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        loginButton.setPreferredSize(new Dimension(120, 35));
-        buttonPanel.add(loginButton);
-
         gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2;
         gbc.insets = new Insets(20, 0, 10, 0);
-        mainPanel.add(buttonPanel, gbc);
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        mainPanel.add(loginButton, gbc);
 
         add(mainPanel, BorderLayout.CENTER);
 

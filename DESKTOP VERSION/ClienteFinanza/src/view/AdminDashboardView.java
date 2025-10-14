@@ -189,7 +189,7 @@ public class AdminDashboardView extends JFrame {
         panel.add(filterPanel, BorderLayout.NORTH);
         
         // Tabela de contas
-        String[] columnNames = {"ID", "Nome", "Tipo", "Saldo Inicial", "ID Usuário"};
+        String[] columnNames = {"ID", "Nome", "Tipo", "Saldo Inicial", "Usuário"};
         contasTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -238,7 +238,7 @@ public class AdminDashboardView extends JFrame {
         panel.add(filterPanel, BorderLayout.NORTH);
         
         // Tabela de categorias
-        String[] columnNames = {"ID", "Nome", "Tipo", "ID Usuário"};
+        String[] columnNames = {"ID", "Nome", "Tipo", "Usuário"};
         categoriasTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -287,7 +287,7 @@ public class AdminDashboardView extends JFrame {
         panel.add(filterPanel, BorderLayout.NORTH);
         
         // Tabela de movimentações
-        String[] columnNames = {"ID", "Valor", "Data", "Descrição", "Tipo", "ID Conta", "ID Categoria"};
+        String[] columnNames = {"ID", "Usuário", "Valor", "Data", "Descrição", "Tipo", "Conta", "Categoria"};
         movimentacoesTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -535,13 +535,13 @@ public class AdminDashboardView extends JFrame {
                 String[] contas = partes[1].split("\\n");
                 for (String contaData : contas) {
                     String[] campos = contaData.split(";");
-                    if (campos.length >= 4) {
+                    if (campos.length >= 5) {
                         Object[] row = {
                             campos[0], // ID
                             campos[1], // Nome
                             campos[2], // Tipo
                             campos[3], // Saldo Inicial
-                            userId     // ID Usuário
+                            campos[4]  // Usuário
                         };
                         contasTableModel.addRow(row);
                     }
@@ -603,12 +603,12 @@ public class AdminDashboardView extends JFrame {
                 String[] categorias = partes[1].split("\\n");
                 for (String catData : categorias) {
                     String[] campos = catData.split(";");
-                    if (campos.length >= 3) {
+                    if (campos.length >= 4) {
                         Object[] row = {
                             campos[0], // ID
                             campos[1], // Nome
                             campos[2], // Tipo
-                            userId     // ID Usuário
+                            campos[3]  // Usuário
                         };
                         categoriasTableModel.addRow(row);
                     }
@@ -670,15 +670,16 @@ public class AdminDashboardView extends JFrame {
                 String[] movimentacoes = partes[1].split("\\n");
                 for (String movData : movimentacoes) {
                     String[] campos = movData.split(";");
-                    if (campos.length >= 7) {
+                    if (campos.length >= 8) {
                         Object[] row = {
                             campos[0], // ID
-                            campos[1], // Valor
-                            campos[2], // Data
-                            campos[3], // Descrição
-                            campos[4], // Tipo
-                            campos[5], // ID Conta
-                            campos[6]  // ID Categoria
+                            campos[1], // Usuário
+                            campos[2], // Valor
+                            campos[3], // Data
+                            campos[4], // Descrição
+                            campos[5], // Tipo
+                            campos[6], // Conta
+                            campos[7]  // Categoria
                         };
                         movimentacoesTableModel.addRow(row);
                     }

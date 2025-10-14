@@ -1,5 +1,7 @@
 package model;
 
+import java.sql.Timestamp;
+
 /**
  * Classe modelo para representar um usuário no cliente
  */
@@ -7,6 +9,7 @@ public class Usuario {
     private int id;
     private String nome;
     private String email;
+    private Timestamp dataCriacao;
     
     // Constructors
     public Usuario() {}
@@ -15,6 +18,13 @@ public class Usuario {
         this.id = id;
         this.nome = nome;
         this.email = email;
+    }
+    
+    public Usuario(int id, String nome, String email, Timestamp dataCriacao) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.dataCriacao = dataCriacao;
     }
     
     public Usuario(String nome, String email) {
@@ -32,12 +42,16 @@ public class Usuario {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     
+    public Timestamp getDataCriacao() { return dataCriacao; }
+    public void setDataCriacao(Timestamp dataCriacao) { this.dataCriacao = dataCriacao; }
+    
     @Override
     public String toString() {
         return "Usuario{" +
                 "id=" + id +
                 ", nome='" + nome + '\'' +
                 ", email='" + email + '\'' +
+                ", dataCriacao=" + dataCriacao +
                 '}';
     }
 }

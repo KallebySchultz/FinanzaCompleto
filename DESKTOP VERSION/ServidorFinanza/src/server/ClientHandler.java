@@ -1192,9 +1192,9 @@ public class ClientHandler extends Thread {
         // Modo de teste
         if (testMode) {
             StringBuilder sb = new StringBuilder();
-            sb.append("1,Admin Teste,admin@test.com")
+            sb.append("1,Admin Teste,admin@test.com,2025-01-01 00:00:00")
               .append(Protocol.FIELD_SEPARATOR)
-              .append("2,Usuario Teste,user@test.com");
+              .append("2,Usuario Teste,user@test.com,2025-01-01 00:00:00");
             return Protocol.createSuccessResponse(sb.toString());
         }
         
@@ -1216,7 +1216,8 @@ public class ClientHandler extends Thread {
             }
             sb.append(u.getId()).append(",")
               .append(u.getNome()).append(",")
-              .append(u.getEmail());
+              .append(u.getEmail()).append(",")
+              .append(u.getDataCriacao() != null ? u.getDataCriacao().toString() : "");
         }
         
         String response = Protocol.createSuccessResponse(sb.toString());

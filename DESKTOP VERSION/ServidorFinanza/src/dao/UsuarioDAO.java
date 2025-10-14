@@ -184,6 +184,28 @@ public class UsuarioDAO {
     }
     
     /**
+     * Exclui um usuário do banco de dados
+     * @param idUsuario ID do usuário a ser excluído
+     * @return true se excluído com sucesso
+     */
+    public boolean excluir(int idUsuario) {
+        String sql = "DELETE FROM usuario WHERE id = ?";
+        
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idUsuario);
+            
+            return stmt.executeUpdate() > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Erro ao excluir usuário: " + e.getMessage());
+        }
+        
+        return false;
+    }
+    
+    /**
      * Mapeia ResultSet para objeto Usuario
      */
     private Usuario mapResultSetToUsuario(ResultSet rs) throws SQLException {

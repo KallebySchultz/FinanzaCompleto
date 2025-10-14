@@ -7,6 +7,7 @@ import util.SecurityUtil;
 import java.io.*;
 import java.net.Socket;
 import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -15,6 +16,8 @@ import java.util.List;
  * Processa comandos recebidos dos clientes e envia respostas
  */
 public class ClientHandler extends Thread {
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
+    
     private Socket clientSocket;
     private BufferedReader input;
     private PrintWriter output;
@@ -1379,7 +1382,7 @@ public class ClientHandler extends Thread {
               .append(c.getNome()).append(",")
               .append(c.getSaldoInicial()).append(",")
               .append(nomeUsuario).append(",")
-              .append(c.getDataCriacao() != null ? c.getDataCriacao().toString() : "N/A");
+              .append(c.getDataCriacao() != null ? DATE_FORMAT.format(c.getDataCriacao()) : "N/A");
         }
         
         return Protocol.createSuccessResponse(sb.toString());
@@ -1424,7 +1427,8 @@ public class ClientHandler extends Thread {
             sb.append(cat.getId()).append(",")
               .append(cat.getNome()).append(",")
               .append(cat.getTipo()).append(",")
-              .append(nomeUsuario);
+              .append(nomeUsuario).append(",")
+              .append(cat.getDataCriacao() != null ? DATE_FORMAT.format(cat.getDataCriacao()) : "N/A");
         }
         
         return Protocol.createSuccessResponse(sb.toString());
@@ -1482,7 +1486,8 @@ public class ClientHandler extends Thread {
               .append(m.getDescricao() != null ? m.getDescricao() : "").append(",")
               .append(m.getTipo()).append(",")
               .append(nomeConta).append(",")
-              .append(nomeCategoria);
+              .append(nomeCategoria).append(",")
+              .append(m.getDataCriacao() != null ? DATE_FORMAT.format(m.getDataCriacao()) : "N/A");
         }
         
         return Protocol.createSuccessResponse(sb.toString());
@@ -1724,7 +1729,7 @@ public class ClientHandler extends Thread {
                       .append(c.getNome()).append(",")
                       .append(c.getSaldoInicial()).append(",")
                       .append(usuario.getNome()).append(",")
-                      .append(c.getDataCriacao() != null ? c.getDataCriacao().toString() : "N/A");
+                      .append(c.getDataCriacao() != null ? DATE_FORMAT.format(c.getDataCriacao()) : "N/A");
                 }
             }
             
@@ -1773,7 +1778,8 @@ public class ClientHandler extends Thread {
                     sb.append(cat.getId()).append(",")
                       .append(cat.getNome()).append(",")
                       .append(cat.getTipo()).append(",")
-                      .append(usuario.getNome());
+                      .append(usuario.getNome()).append(",")
+                      .append(cat.getDataCriacao() != null ? DATE_FORMAT.format(cat.getDataCriacao()) : "N/A");
                 }
             }
             
@@ -1834,7 +1840,8 @@ public class ClientHandler extends Thread {
                       .append(m.getDescricao() != null ? m.getDescricao() : "").append(",")
                       .append(m.getTipo()).append(",")
                       .append(nomeConta).append(",")
-                      .append(nomeCategoria);
+                      .append(nomeCategoria).append(",")
+                      .append(m.getDataCriacao() != null ? DATE_FORMAT.format(m.getDataCriacao()) : "N/A");
                 }
             }
             

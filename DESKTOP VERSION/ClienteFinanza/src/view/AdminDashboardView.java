@@ -152,7 +152,7 @@ public class AdminDashboardView extends JFrame {
                                 usuario.getId(),
                                 usuario.getNome(),
                                 usuario.getEmail(),
-                                usuario.getDataCriacao() != null ? usuario.getDataCriacao().toString() : "N/A"
+                                "N/A" // Data de criação não disponível no modelo cliente
                             };
                             tableModel.addRow(row);
                         }

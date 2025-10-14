@@ -1192,12 +1192,9 @@ public class ClientHandler extends Thread {
         // Modo de teste
         if (testMode) {
             StringBuilder sb = new StringBuilder();
-            sb.append("1").append(Protocol.FIELD_SEPARATOR)
-              .append("Admin Teste").append(Protocol.FIELD_SEPARATOR)
-              .append("admin@test.com").append("\n");
-            sb.append("2").append(Protocol.FIELD_SEPARATOR)
-              .append("Usuario Teste").append(Protocol.FIELD_SEPARATOR)
-              .append("user@test.com");
+            sb.append("1,Admin Teste,admin@test.com")
+              .append(Protocol.FIELD_SEPARATOR)
+              .append("2,Usuario Teste,user@test.com");
             return Protocol.createSuccessResponse(sb.toString());
         }
         

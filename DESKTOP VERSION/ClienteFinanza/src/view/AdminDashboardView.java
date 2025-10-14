@@ -188,8 +188,8 @@ public class AdminDashboardView extends JFrame {
         filterPanel.add(filterButton);
         panel.add(filterPanel, BorderLayout.NORTH);
         
-        // Tabela de contas
-        String[] columnNames = {"ID", "Nome", "Tipo", "Saldo Inicial", "Usuário"};
+        // Tabela de contas (Tipo removido - não necessário)
+        String[] columnNames = {"ID", "Nome", "Saldo Inicial", "Usuário"};
         contasTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -498,9 +498,27 @@ public class AdminDashboardView extends JFrame {
             @Override
             protected Void doInBackground() throws Exception {
                 if (finalUserId == null) {
-                    // Carregar contas de todos os usuários
-                    for (Usuario u : todosUsuarios) {
-                        carregarContasDoUsuario(u.getId());
+                    // Carregar contas de todos os usuários com comando otimizado
+                    String comando = "ADMIN_LIST_ALL_CONTAS";
+                    String resposta = authController.getNetworkClient().sendCommand(comando);
+                    
+                    if (resposta != null && resposta.startsWith("OK")) {
+                        String[] partes = resposta.split("\\|");
+                        if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
+                            String[] contas = partes[1].split("\\n");
+                            for (String contaData : contas) {
+                                String[] campos = contaData.split(";");
+                                if (campos.length >= 4) {
+                                    Object[] row = {
+                                        campos[0], // ID
+                                        campos[1], // Nome
+                                        campos[2], // Saldo Inicial
+                                        campos[3]  // Usuário
+                                    };
+                                    contasTableModel.addRow(row);
+                                }
+                            }
+                        }
                     }
                 } else {
                     // Carregar contas de um usuário específico
@@ -535,13 +553,12 @@ public class AdminDashboardView extends JFrame {
                 String[] contas = partes[1].split("\\n");
                 for (String contaData : contas) {
                     String[] campos = contaData.split(";");
-                    if (campos.length >= 5) {
+                    if (campos.length >= 4) {
                         Object[] row = {
                             campos[0], // ID
                             campos[1], // Nome
-                            campos[2], // Tipo
-                            campos[3], // Saldo Inicial
-                            campos[4]  // Usuário
+                            campos[2], // Saldo Inicial (sem Tipo)
+                            campos[3]  // Usuário
                         };
                         contasTableModel.addRow(row);
                     }
@@ -566,9 +583,27 @@ public class AdminDashboardView extends JFrame {
             @Override
             protected Void doInBackground() throws Exception {
                 if (finalUserId == null) {
-                    // Carregar categorias de todos os usuários
-                    for (Usuario u : todosUsuarios) {
-                        carregarCategoriasDoUsuario(u.getId());
+                    // Carregar categorias de todos os usuários com comando otimizado
+                    String comando = "ADMIN_LIST_ALL_CATEGORIAS";
+                    String resposta = authController.getNetworkClient().sendCommand(comando);
+                    
+                    if (resposta != null && resposta.startsWith("OK")) {
+                        String[] partes = resposta.split("\\|");
+                        if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
+                            String[] categorias = partes[1].split("\\n");
+                            for (String catData : categorias) {
+                                String[] campos = catData.split(";");
+                                if (campos.length >= 4) {
+                                    Object[] row = {
+                                        campos[0], // ID
+                                        campos[1], // Nome
+                                        campos[2], // Tipo
+                                        campos[3]  // Usuário
+                                    };
+                                    categoriasTableModel.addRow(row);
+                                }
+                            }
+                        }
                     }
                 } else {
                     // Carregar categorias de um usuário específico
@@ -633,9 +668,31 @@ public class AdminDashboardView extends JFrame {
             @Override
             protected Void doInBackground() throws Exception {
                 if (finalUserId == null) {
-                    // Carregar movimentações de todos os usuários
-                    for (Usuario u : todosUsuarios) {
-                        carregarMovimentacoesDoUsuario(u.getId());
+                    // Carregar movimentações de todos os usuários com comando otimizado
+                    String comando = "ADMIN_LIST_ALL_MOVIMENTACOES";
+                    String resposta = authController.getNetworkClient().sendCommand(comando);
+                    
+                    if (resposta != null && resposta.startsWith("OK")) {
+                        String[] partes = resposta.split("\\|");
+                        if (partes.length >= 2 && !partes[1].trim().isEmpty()) {
+                            String[] movimentacoes = partes[1].split("\\n");
+                            for (String movData : movimentacoes) {
+                                String[] campos = movData.split(";");
+                                if (campos.length >= 8) {
+                                    Object[] row = {
+                                        campos[0], // ID
+                                        campos[1], // Usuário
+                                        campos[2], // Valor
+                                        campos[3], // Data
+                                        campos[4], // Descrição
+                                        campos[5], // Tipo
+                                        campos[6], // Conta
+                                        campos[7]  // Categoria
+                                    };
+                                    movimentacoesTableModel.addRow(row);
+                                }
+                            }
+                        }
                     }
                 } else {
                     // Carregar movimentações de um usuário específico
@@ -809,20 +866,15 @@ public class AdminDashboardView extends JFrame {
         
         int contaId = Integer.parseInt(contasTableModel.getValueAt(selectedRow, 0).toString());
         String nome = contasTableModel.getValueAt(selectedRow, 1).toString();
-        String tipo = contasTableModel.getValueAt(selectedRow, 2).toString();
-        String saldoStr = contasTableModel.getValueAt(selectedRow, 3).toString();
+        String saldoStr = contasTableModel.getValueAt(selectedRow, 2).toString();
         
-        // Criar diálogo de edição
+        // Criar diálogo de edição (sem tipo, apenas nome e saldo)
         JTextField nomeField = new JTextField(nome);
-        JComboBox<String> tipoCombo = new JComboBox<>(new String[]{"corrente", "poupanca", "cartao", "investimento", "dinheiro"});
-        tipoCombo.setSelectedItem(tipo);
         JTextField saldoField = new JTextField(saldoStr);
         
-        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+        JPanel panel = new JPanel(new GridLayout(2, 2, 5, 5));
         panel.add(new JLabel("Nome:"));
         panel.add(nomeField);
-        panel.add(new JLabel("Tipo:"));
-        panel.add(tipoCombo);
         panel.add(new JLabel("Saldo Inicial:"));
         panel.add(saldoField);
         
@@ -830,10 +882,10 @@ public class AdminDashboardView extends JFrame {
         
         if (result == JOptionPane.OK_OPTION) {
             String novoNome = nomeField.getText().trim();
-            String novoTipo = tipoCombo.getSelectedItem().toString();
             double novoSaldo = Double.parseDouble(saldoField.getText().trim());
             
-            String comando = "ADMIN_UPDATE_CONTA|" + contaId + "|" + novoNome + "|" + novoTipo + "|" + novoSaldo;
+            // Usar tipo padrão "corrente" já que não é mais exibido/editável
+            String comando = "ADMIN_UPDATE_CONTA|" + contaId + "|" + novoNome + "|corrente|" + novoSaldo;
             String resposta = authController.getNetworkClient().sendCommand(comando);
             
             if (resposta != null && resposta.startsWith("OK")) {

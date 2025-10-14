@@ -150,6 +150,12 @@ public class ClientHandler extends Thread {
                     return processarAdminListCategoriasUser(partes);
                 case Protocol.CMD_ADMIN_LIST_MOVIMENTACOES_USER:
                     return processarAdminListMovimentacoesUser(partes);
+                case Protocol.CMD_ADMIN_LIST_ALL_CONTAS:
+                    return processarAdminListAllContas();
+                case Protocol.CMD_ADMIN_LIST_ALL_CATEGORIAS:
+                    return processarAdminListAllCategorias();
+                case Protocol.CMD_ADMIN_LIST_ALL_MOVIMENTACOES:
+                    return processarAdminListAllMovimentacoes();
                 case Protocol.CMD_ADMIN_DELETE_CONTA:
                     return processarAdminDeleteConta(partes);
                 case Protocol.CMD_ADMIN_DELETE_CATEGORIA:
@@ -1351,7 +1357,7 @@ public class ClientHandler extends Thread {
         
         // Modo de teste
         if (testMode) {
-            return Protocol.createSuccessResponse("1;Conta Teste;corrente;1000.00;Usuario Teste");
+            return Protocol.createSuccessResponse("1;Conta Teste;1000.00;Usuario Teste");
         }
         
         // Buscar contas do usuário
@@ -1370,7 +1376,6 @@ public class ClientHandler extends Thread {
             Conta c = contas.get(i);
             sb.append(c.getId()).append(Protocol.FIELD_SEPARATOR)
               .append(c.getNome()).append(Protocol.FIELD_SEPARATOR)
-              .append(c.getTipo()).append(Protocol.FIELD_SEPARATOR)
               .append(c.getSaldoInicial()).append(Protocol.FIELD_SEPARATOR)
               .append(nomeUsuario);
             if (i < contas.size() - 1) {
@@ -1680,6 +1685,165 @@ public class ClientHandler extends Thread {
             return Protocol.createSuccessResponse("Movimentação excluída com sucesso");
         } else {
             return Protocol.createErrorResponse("Erro ao excluir movimentação");
+        }
+    }
+    
+    /**
+     * Lista todas as contas de todos os usuários (comando admin) - OTIMIZADO
+     */
+    private String processarAdminListAllContas() {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("1;Conta Teste;1000.00;Usuario Teste");
+        }
+        
+        try {
+            // Buscar todos os usuários e suas contas de forma otimizada
+            List<Usuario> usuarios = usuarioDAO.listarTodos();
+            
+            if (usuarios.isEmpty()) {
+                return Protocol.createSuccessResponse("");
+            }
+            
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            
+            for (Usuario usuario : usuarios) {
+                List<Conta> contas = contaDAO.listarPorUsuario(usuario.getId());
+                
+                for (Conta c : contas) {
+                    if (!first) {
+                        sb.append("\n");
+                    }
+                    first = false;
+                    
+                    sb.append(c.getId()).append(Protocol.FIELD_SEPARATOR)
+                      .append(c.getNome()).append(Protocol.FIELD_SEPARATOR)
+                      .append(c.getSaldoInicial()).append(Protocol.FIELD_SEPARATOR)
+                      .append(usuario.getNome());
+                }
+            }
+            
+            return Protocol.createSuccessResponse(sb.toString());
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao listar todas as contas: " + e.getMessage());
+            e.printStackTrace();
+            return Protocol.createErrorResponse("Erro ao listar contas");
+        }
+    }
+    
+    /**
+     * Lista todas as categorias de todos os usuários (comando admin) - OTIMIZADO
+     */
+    private String processarAdminListAllCategorias() {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("1;Alimentação;despesa;Usuario Teste");
+        }
+        
+        try {
+            // Buscar todos os usuários e suas categorias de forma otimizada
+            List<Usuario> usuarios = usuarioDAO.listarTodos();
+            
+            if (usuarios.isEmpty()) {
+                return Protocol.createSuccessResponse("");
+            }
+            
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            
+            for (Usuario usuario : usuarios) {
+                List<Categoria> categorias = categoriaDAO.listarPorUsuario(usuario.getId());
+                
+                for (Categoria cat : categorias) {
+                    if (!first) {
+                        sb.append("\n");
+                    }
+                    first = false;
+                    
+                    sb.append(cat.getId()).append(Protocol.FIELD_SEPARATOR)
+                      .append(cat.getNome()).append(Protocol.FIELD_SEPARATOR)
+                      .append(cat.getTipo()).append(Protocol.FIELD_SEPARATOR)
+                      .append(usuario.getNome());
+                }
+            }
+            
+            return Protocol.createSuccessResponse(sb.toString());
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao listar todas as categorias: " + e.getMessage());
+            e.printStackTrace();
+            return Protocol.createErrorResponse("Erro ao listar categorias");
+        }
+    }
+    
+    /**
+     * Lista todas as movimentações de todos os usuários (comando admin) - OTIMIZADO
+     */
+    private String processarAdminListAllMovimentacoes() {
+        if (usuarioLogado == null) {
+            return Protocol.createErrorResponse("Usuário não autenticado");
+        }
+        
+        // Modo de teste
+        if (testMode) {
+            return Protocol.createSuccessResponse("1;Usuario Teste;100.00;2024-01-01;Teste;despesa;Conta Teste;Categoria Teste");
+        }
+        
+        try {
+            // Buscar todos os usuários e suas movimentações de forma otimizada
+            List<Usuario> usuarios = usuarioDAO.listarTodos();
+            
+            if (usuarios.isEmpty()) {
+                return Protocol.createSuccessResponse("");
+            }
+            
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            
+            for (Usuario usuario : usuarios) {
+                List<Movimentacao> movimentacoes = movimentacaoDAO.listarPorUsuario(usuario.getId());
+                
+                for (Movimentacao m : movimentacoes) {
+                    // Buscar nome da conta
+                    Conta conta = contaDAO.buscarPorId(m.getIdConta());
+                    String nomeConta = conta != null ? conta.getNome() : "Conta ID " + m.getIdConta();
+                    
+                    // Buscar nome da categoria
+                    Categoria categoria = categoriaDAO.buscarPorId(m.getIdCategoria());
+                    String nomeCategoria = categoria != null ? categoria.getNome() : "Categoria ID " + m.getIdCategoria();
+                    
+                    if (!first) {
+                        sb.append("\n");
+                    }
+                    first = false;
+                    
+                    sb.append(m.getId()).append(Protocol.FIELD_SEPARATOR)
+                      .append(usuario.getNome()).append(Protocol.FIELD_SEPARATOR)
+                      .append(m.getValor()).append(Protocol.FIELD_SEPARATOR)
+                      .append(m.getData()).append(Protocol.FIELD_SEPARATOR)
+                      .append(m.getDescricao() != null ? m.getDescricao() : "").append(Protocol.FIELD_SEPARATOR)
+                      .append(m.getTipo()).append(Protocol.FIELD_SEPARATOR)
+                      .append(nomeConta).append(Protocol.FIELD_SEPARATOR)
+                      .append(nomeCategoria);
+                }
+            }
+            
+            return Protocol.createSuccessResponse(sb.toString());
+            
+        } catch (Exception e) {
+            System.err.println("Erro ao listar todas as movimentações: " + e.getMessage());
+            e.printStackTrace();
+            return Protocol.createErrorResponse("Erro ao listar movimentações");
         }
     }
     

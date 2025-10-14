@@ -1377,7 +1377,8 @@ public class ClientHandler extends Thread {
             sb.append(c.getId()).append(",")
               .append(c.getNome()).append(",")
               .append(c.getSaldoInicial()).append(",")
-              .append(nomeUsuario);
+              .append(nomeUsuario).append(",")
+              .append(c.getDataCriacao() != null ? c.getDataCriacao().toString() : "N/A");
         }
         
         return Protocol.createSuccessResponse(sb.toString());
@@ -1721,7 +1722,8 @@ public class ClientHandler extends Thread {
                     sb.append(c.getId()).append(",")
                       .append(c.getNome()).append(",")
                       .append(c.getSaldoInicial()).append(",")
-                      .append(usuario.getNome());
+                      .append(usuario.getNome()).append(",")
+                      .append(c.getDataCriacao() != null ? c.getDataCriacao().toString() : "N/A");
                 }
             }
             

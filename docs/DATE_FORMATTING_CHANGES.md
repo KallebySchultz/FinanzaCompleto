@@ -91,11 +91,7 @@ As seguintes áreas já estavam utilizando o formato correto (dd/MM/yyyy):
 
 #### 🖥️ Desktop - ClienteFinanza
 
-1. **ExportUtil.java (linha 19)**
-   - Constante de formatação: `"dd/MM/yyyy"`
-   - Usada em todas as exportações
-
-2. **AdminDashboardView.java (linhas 495, 549)**
+1. **AdminDashboardView.java (linhas 495, 549)**
    - Exibição de datas de criação: `"dd/MM/yyyy"`
    - Formatação ao carregar e buscar usuários
 

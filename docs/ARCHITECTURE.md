@@ -131,7 +131,6 @@ app/src/main/java/com/example/finanza/
 │   ├── AccountsActivity.java   → Gerenciar contas
 │   ├── CategoriaActivity.java  → Gerenciar categorias
 │   ├── ProfileActivity.java    → Perfil do usuário
-│   ├── ReportsActivity.java    → Relatórios
 │   └── SettingsActivity.java   → Configurações
 ├── network/             # 🌐 Comunicação de Rede
 │   ├── ServerClient.java       → Cliente TCP

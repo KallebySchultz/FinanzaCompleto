@@ -923,7 +923,7 @@ public class ClientHandler extends Thread {
                 movimentacoesData.append(mov.getId()).append(",")
                                  .append(valorInteiro).append(",")
                                  .append(valorDecimal).append(",")
-                                 .append(mov.getData().toString()).append(",")
+                                 .append(DATE_FORMAT.format(mov.getData())).append(",")
                                  .append(descricao).append(",")
                                  .append(mov.getTipo().getValor()).append(",")
                                  .append(idConta).append(",")
@@ -1220,7 +1220,7 @@ public class ClientHandler extends Thread {
             sb.append(u.getId()).append(",")
               .append(u.getNome()).append(",")
               .append(u.getEmail()).append(",")
-              .append(u.getDataCriacao() != null ? u.getDataCriacao().toString() : "");
+              .append(u.getDataCriacao() != null ? DATE_FORMAT.format(u.getDataCriacao()) : "");
         }
         
         String response = Protocol.createSuccessResponse(sb.toString());
@@ -1482,7 +1482,7 @@ public class ClientHandler extends Thread {
             sb.append(m.getId()).append(",")
               .append(nomeUsuario).append(",")
               .append(m.getValor()).append(",")
-              .append(m.getData()).append(",")
+              .append(DATE_FORMAT.format(m.getData())).append(",")
               .append(m.getDescricao() != null ? m.getDescricao() : "").append(",")
               .append(m.getTipo()).append(",")
               .append(nomeConta).append(",")
@@ -1836,7 +1836,7 @@ public class ClientHandler extends Thread {
                     sb.append(m.getId()).append(",")
                       .append(usuario.getNome()).append(",")
                       .append(m.getValor()).append(",")
-                      .append(m.getData()).append(",")
+                      .append(DATE_FORMAT.format(m.getData())).append(",")
                       .append(m.getDescricao() != null ? m.getDescricao() : "").append(",")
                       .append(m.getTipo()).append(",")
                       .append(nomeConta).append(",")

@@ -8,9 +8,8 @@
 4. [Interface do Desktop](#-interface-do-desktop)
 5. [Funcionalidades Principais](#-funcionalidades-principais)
 6. [Sincronização](#-sincronização)
-7. [Relatórios e Análises](#-relatórios-e-análises)
-8. [Dicas e Truques](#-dicas-e-truques)
-9. [Perguntas Frequentes](#-perguntas-frequentes)
+7. [Dicas e Truques](#-dicas-e-truques)
+8. [Perguntas Frequentes](#-perguntas-frequentes)
 
 ## 🌟 Visão Geral
 
@@ -19,10 +18,9 @@
 O **Finanza** é um sistema completo de controle financeiro pessoal que oferece:
 
 - 📱 **App Mobile (Android)**: Acesso portátil às suas finanças
-- 🖥️ **Sistema Desktop**: Gestão avançada com relatórios completos
+- 🖥️ **Sistema Desktop**: Gestão avançada e sincronização
 - 🔄 **Sincronização Automática**: Dados sempre atualizados entre dispositivos
 - 💾 **Modo Offline**: Funciona mesmo sem internet
-- 📊 **Relatórios Detalhados**: Análises completas dos seus gastos
 
 ### Por que usar o Finanza?
 
@@ -214,7 +212,6 @@ O app verifica automaticamente:
 
 #### **Opções Disponíveis**
 - 🏷️ **Categorias**: Gerenciar categorias
-- 📈 **Relatórios**: Ver análises (se implementado)
 - 👤 **Perfil**: Dados do usuário
 - ⚙️ **Configurações**: Preferências do app
 - 🔄 **Sincronização**: Status e configurações de sync
@@ -228,17 +225,7 @@ O app verifica automaticamente:
 
 #### **Funcionalidades Avançadas**
 
-1. **Gráficos e Relatórios**
-   - Gráficos de pizza para categorias
-   - Gráficos de linha para evolução temporal
-   - Comparativos mensais e anuais
-
-2. **Exportação de Dados**
-   - Relatórios em PDF
-   - Planilhas Excel/CSV
-   - Dados formatados para impressão
-
-3. **Gerenciamento Avançado**
+1. **Gerenciamento Avançado**
    - Backup e restore de dados
    - Importação de dados bancários
    - Configurações avançadas de servidor
@@ -402,53 +389,7 @@ O mobile funciona completamente offline:
 - ✅ Adicionar transações
 - ✅ Editar transações existentes
 - ✅ Gerenciar contas e categorias
-- ✅ Ver relatórios básicos
 - 🔄 Sincroniza automaticamente quando reconectar
-
-## 📊 Relatórios e Análises
-
-### 📈 Relatórios Básicos (Mobile)
-
-#### **Dashboard Inteligente**
-- **Saldo Total**: Soma de todas as contas
-- **Este Mês**: Receitas vs Despesas do mês atual
-- **Principais Gastos**: Top 5 categorias de despesa
-- **Últimas Transações**: Histórico recente
-
-### 📊 Relatórios Avançados (Desktop)
-
-#### **Relatório Mensal**
-- Comparação receitas vs despesas
-- Evolução do patrimônio
-- Gastos por categoria (gráfico pizza)
-- Tendências de crescimento
-
-#### **Relatório Anual**
-- Visão consolidada do ano
-- Meses com maior e menor gasto
-- Categorias que mais cresceram
-- Análise de padrões
-
-#### **Relatórios Personalizados**
-- Filtros por período específico
-- Seleção de contas ou categorias
-- Exportação em múltiplos formatos
-- Agendamento de relatórios
-
-### 📤 Exportação de Dados
-
-#### **Formatos Disponíveis**
-- **PDF**: Relatórios formatados para impressão
-- **Excel**: Planilhas com dados brutos
-- **CSV**: Dados para importação em outros sistemas
-- **HTML**: Relatórios para web
-
-#### **Como Exportar (Desktop)**
-1. Vá em **Relatórios → Exportar**
-2. Selecione o período desejado
-3. Escolha o formato
-4. Clique em **"Gerar Relatório"**
-5. Salve o arquivo gerado
 
 ## 💡 Dicas e Truques
 
@@ -500,7 +441,6 @@ O mobile funciona completamente offline:
 
 #### **3. Backup Regular**
 - Configure backup automático no desktop
-- Exporte dados periodicamente
 - Mantenha cópia de segurança dos dados
 
 ## ❓ Perguntas Frequentes
@@ -519,7 +459,7 @@ R: Os dados são sincronizados com o servidor desktop. Mantenha backups regulare
 ### 🖥️ **Sobre o Desktop**
 
 **P: É necessário usar o desktop?**
-R: Não! O mobile funciona independentemente. O desktop oferece recursos avançados como relatórios e sincronização entre dispositivos.
+R: Não! O mobile funciona independentemente. O desktop oferece recursos avançados de sincronização entre dispositivos.
 
 **P: Posso acessar de qualquer computador?**
 R: O servidor deve estar rodando em um computador da rede. O cliente desktop pode ser usado de qualquer PC que consiga conectar ao servidor.
@@ -569,7 +509,6 @@ O Finanza é uma ferramenta poderosa para controle financeiro pessoal. Com este 
 - ✅ Gerenciar suas finanças de forma organizada
 - ✅ Acompanhar receitas e despesas em tempo real
 - ✅ Usar sincronização entre mobile e desktop
-- ✅ Gerar relatórios para análise financeira
 - ✅ Manter controle mesmo offline
 
 ### 📞 Suporte

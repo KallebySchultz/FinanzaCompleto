@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS usuario (
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
-    role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -55,13 +54,9 @@ CREATE TABLE IF NOT EXISTS movimentacao (
 
 -- Inserção de dados iniciais para teste
 
--- Usuário de teste (regular user)
-INSERT IGNORE INTO usuario (nome, email, senha_hash, role) VALUES 
-('Usuário Teste', 'teste1@gmail.com', 'jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=', 'user');
-
--- Admin user (default password: admin)
-INSERT IGNORE INTO usuario (nome, email, senha_hash, role) VALUES 
-('Administrador', 'admin@finanza.com', 'jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=', 'admin');
+-- Usuário de teste
+INSERT IGNORE INTO usuario (nome, email, senha_hash) VALUES 
+('Usuário Teste', 'teste1@gmail.com', 'jZae727K08KaOmKSgOaGzww/XVqGr/PKEgIMkjrcbJI=');
 
 -- Conta padrão para usuário de teste
 INSERT IGNORE INTO conta (nome, tipo, saldo_inicial, id_usuario) VALUES 

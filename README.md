@@ -57,11 +57,11 @@ Planejar e desenvolver um **sistema de informação completo e interdisciplinar*
 * **Autenticação de usuários** (login, registro, troca de senha criptografada).
 * **Dashboard financeiro** com visão geral das contas.
 * **Gestão de contas**: corrente, poupança, cartões, investimentos.
-* **Gestão de categorias**: personalizadas e com relatórios vinculados.
+* **Gestão de categorias**: personalizadas para organização de transações.
 * **Lançamento de transações** (receitas e despesas).
 * **Sincronização em tempo real** entre dispositivos via **sockets TCP/IP**.
 * **Histórico de movimentações** com filtros avançados.
-* **Relatórios financeiros** exportáveis.
+* **Exportação de dados** em formato CSV.
 * **Aplicativo Mobile (Android)** com suporte a uso offline e posterior sincronização.
 
 ### 💻 Desktop Admin (Java + Swing)
@@ -140,7 +140,7 @@ Fluxo: **Cliente (Android/Desktop) → Socket → Servidor Java/MySQL → Respos
 3. **Cadastrar contas e categorias**.
 4. **Lançar transações** (receitas/despesas).
 5. **Sincronizar** entre desktop e mobile via servidor.
-6. **Gerar relatórios** e acompanhar pelo dashboard.
+6. **Exportar dados** e acompanhar pelo dashboard.
 
 ---
 

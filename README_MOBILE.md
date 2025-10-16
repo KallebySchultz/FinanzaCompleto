@@ -56,10 +56,10 @@
 - [x] **Saldos**: Cálculo automático de saldos por conta
 - [x] **Histórico**: Visualização completa de movimentações
 
-#### 📊 **Dashboard e Relatórios**
+#### 📊 **Dashboard**
 - [x] **Resumo Financeiro**: Receitas, despesas e saldo atual
 - [x] **Transações Recentes**: Últimas movimentações
-- [x] **Gráficos**: Visualização de dados financeiros
+- [x] **Visualização**: Dados financeiros organizados
 - [x] **Filtros**: Busca por período, categoria ou conta
 
 #### 👤 **Gestão de Usuário**
@@ -291,9 +291,9 @@ cd Finanza-Mobile
 - ✅ Modo offline completo
 
 #### **Próximas Versões**
-- 🔜 **v1.1.0**: Relatórios avançados e gráficos
-- 🔜 **v1.2.0**: Exportação de dados
-- 🔜 **v1.3.0**: Notificações e lembretes
+- 🔜 **v1.1.0**: Melhorias de interface e gráficos avançados
+- 🔜 **v1.2.0**: Notificações e lembretes
+- 🔜 **v1.3.0**: Suporte a múltiplos idiomas
 
 ### 🔄 **Como Atualizar**
 - **Play Store**: Atualizações automáticas (quando disponível)

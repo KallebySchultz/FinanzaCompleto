@@ -1,6 +1,8 @@
+-- ================================================
 -- Finanza Database Schema
 -- Sistema de Gestão Financeira Pessoal
--- SQLite Database
+-- Android SQLite Database
+-- ================================================
 
 -- ================================================
 -- Tabela de Usuários
@@ -31,7 +33,8 @@ CREATE TABLE IF NOT EXISTS categorias (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT NOT NULL,
     cor_hex TEXT,
-    tipo TEXT NOT NULL CHECK (tipo IN ('receita', 'despesa'))
+    tipo TEXT NOT NULL CHECK (tipo IN ('receita', 'despesa')),
+    usuario_id INTEGER
 );
 
 -- ================================================

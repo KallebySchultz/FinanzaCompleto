@@ -72,6 +72,16 @@ public class SyncService {
                     return;
                 }
 
+                // CRITICAL FIX: Ensure user is authenticated before syncing
+                // The server requires authentication for all data operations
+                if (!reautenticarSeNecessario(usuarioId)) {
+                    Log.e(TAG, "Falha ao autenticar antes da sincronização");
+                    if (callback != null) {
+                        callback.onSyncCompleted(false, "Erro de autenticação - faça login novamente");
+                    }
+                    return;
+                }
+
                 boolean success = true;
                 StringBuilder message = new StringBuilder();
 
@@ -113,6 +123,63 @@ public class SyncService {
                 }
             }
         });
+    }
+
+    /**
+     * Re-authenticates the user with the server to ensure session is valid
+     * This is critical because the server maintains authentication state per connection
+     * 
+     * @param usuarioId The user ID to authenticate
+     * @return true if authentication succeeded, false otherwise
+     */
+    private boolean reautenticarSeNecessario(int usuarioId) {
+        try {
+            // Get user credentials from database
+            Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
+            if (usuario == null) {
+                Log.e(TAG, "Usuário não encontrado no banco local: " + usuarioId);
+                return false;
+            }
+
+            // Try to login with the server to establish authenticated session
+            final boolean[] loginSuccess = {false};
+            final Object lock = new Object();
+            
+            Log.d(TAG, "Reautenticando usuário: " + usuario.email);
+            serverClient.login(usuario.email, usuario.senha, new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.d(TAG, "Reautenticação bem-sucedida");
+                    loginSuccess[0] = true;
+                    synchronized (lock) {
+                        lock.notifyAll();
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Falha na reautenticação: " + error);
+                    synchronized (lock) {
+                        lock.notifyAll();
+                    }
+                }
+            });
+
+            // Wait for login to complete (with timeout)
+            synchronized (lock) {
+                try {
+                    lock.wait(5000); // 5 second timeout
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+
+            return loginSuccess[0];
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao reautenticar: " + e.getMessage(), e);
+            return false;
+        }
     }
 
     /**

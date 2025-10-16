@@ -61,7 +61,9 @@ public class SettingsActivity extends AppCompatActivity {
         
         // Initialize sync button if it exists
         if (btnSync != null) {
-            btnSync.setEnabled(syncService.isOnline());
+            // Sync button is enabled as long as user is logged in
+            // It will work offline and sync when coming back online
+            btnSync.setEnabled(true);
         }
     }
 
@@ -96,15 +98,14 @@ public class SettingsActivity extends AppCompatActivity {
         if (syncService.isOnline()) {
             statusText.setText("🟢 Conectado ao servidor");
             statusText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            if (btnSync != null) {
-                btnSync.setEnabled(true);
-            }
         } else {
             statusText.setText("🔴 Modo offline");
             statusText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-            if (btnSync != null) {
-                btnSync.setEnabled(false);
-            }
+        }
+        
+        // Sync button is always enabled when logged in - it handles offline mode gracefully
+        if (btnSync != null && authManager.isLoggedIn()) {
+            btnSync.setEnabled(true);
         }
     }
 
@@ -118,11 +119,8 @@ public class SettingsActivity extends AppCompatActivity {
             return;
         }
 
-        if (!syncService.isOnline()) {
-            Toast.makeText(this, "Conecte-se ao servidor primeiro", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
+        // Allow sync even if offline - it will save locally
+        // No need to check if online - the sync service handles this gracefully
         statusText.setText("🔄 Sincronizando dados...");
         statusText.setTextColor(getResources().getColor(android.R.color.black));
         

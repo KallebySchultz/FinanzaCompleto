@@ -58,11 +58,18 @@ public class AuthController {
                     if (partes.length >= 2) {
                         String[] dadosUsuario = partes[1].split(FIELD_SEPARATOR);
                         if (dadosUsuario.length >= 3) {
-                            usuarioLogado = new Usuario(
-                                Integer.parseInt(dadosUsuario[0]),
-                                dadosUsuario[1],
-                                dadosUsuario[2]
-                            );
+                            int userId = Integer.parseInt(dadosUsuario[0]);
+                            String nome = dadosUsuario[1];
+                            String emailUsuario = dadosUsuario[2];
+                            String role = dadosUsuario.length >= 4 ? dadosUsuario[3] : "user";
+                            
+                            usuarioLogado = new Usuario(userId, nome, emailUsuario, "", role);
+                            
+                            // Validate that only admins can access desktop panel
+                            if (!"admin".equals(role)) {
+                                return new LoginResult(false, "Acesso negado. Apenas administradores podem acessar o painel desktop.", null);
+                            }
+                            
                             return new LoginResult(true, "Login realizado com sucesso", usuarioLogado);
                         }
                     }

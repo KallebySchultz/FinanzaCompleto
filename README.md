@@ -1,8 +1,4 @@
-Show! Entendi. Você quer um **README.md completo** para o **Finanza (versão TCC desktop + mobile)**, no mesmo estilo do que fizemos para o **SWGF Web**, mas trazendo todo o peso acadêmico e interdisciplinar descrito no documento que você me passou.
 
-Aqui está o modelo, bem estruturado para GitHub:
-
----
 
 # 💰 Finanza – Sistema Completo de Controle Financeiro
 

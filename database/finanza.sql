@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     senha TEXT NOT NULL,
-    data_criacao INTEGER NOT NULL
+    data_criacao INTEGER NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin'))
 );
 
 -- ================================================
@@ -90,11 +91,11 @@ INSERT OR IGNORE INTO categorias (nome, cor_hex, tipo) VALUES
 ('Outros', '#34495E', 'receita');
 
 -- ================================================
--- Usuário padrão para testes (senha: "admin")
+-- Usuário administrador padrão (senha: "admin")
 -- NOTA: A senha será atualizada automaticamente para hash bcrypt
 -- ================================================
-INSERT OR IGNORE INTO usuarios (nome, email, senha, data_criacao) VALUES
-('Administrador', 'admin@finanza.com', 'admin', strftime('%s', 'now') * 1000);
+INSERT OR IGNORE INTO usuarios (nome, email, senha, data_criacao, role) VALUES
+('Administrador', 'admin@finanza.com', 'admin', strftime('%s', 'now') * 1000, 'admin');
 
 -- ================================================
 -- Conta padrão para o usuário de teste

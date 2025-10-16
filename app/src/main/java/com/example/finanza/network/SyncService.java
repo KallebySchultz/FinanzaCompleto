@@ -75,6 +75,13 @@ public class SyncService {
                 boolean success = true;
                 StringBuilder message = new StringBuilder();
 
+                // CRITICAL FIX: First upload local pending data, then download from server
+                // This ensures offline data is synced to server
+                if (callback != null) callback.onSyncProgress("Enviando dados locais pendentes...");
+                if (!sincronizarDadosPendentes(usuarioId)) {
+                    message.append("Aviso: falha ao enviar dados locais. ");
+                }
+
                 if (callback != null) callback.onSyncProgress("Baixando categorias do servidor...");
                 if (!buscarCategoriasDoServidor(usuarioId)) {
                     message.append("Aviso: falha ao baixar categorias. ");
@@ -88,24 +95,6 @@ public class SyncService {
                 if (callback != null) callback.onSyncProgress("Baixando movimentações do servidor...");
                 if (!buscarMovimentacoesDoServidor(usuarioId)) {
                     message.append("Aviso: falha ao baixar movimentações. ");
-                }
-
-                if (callback != null) callback.onSyncProgress("Sincronizando categorias...");
-                if (!sincronizarCategorias(usuarioId)) {
-                    success = false;
-                    message.append("Erro ao sincronizar categorias. ");
-                }
-
-                if (callback != null) callback.onSyncProgress("Sincronizando contas...");
-                if (!sincronizarContas(usuarioId)) {
-                    success = false;
-                    message.append("Erro ao sincronizar contas. ");
-                }
-
-                if (callback != null) callback.onSyncProgress("Sincronizando movimentações...");
-                if (!sincronizarLancamentos(usuarioId)) {
-                    success = false;
-                    message.append("Erro ao sincronizar movimentações. ");
                 }
 
                 if (success && message.length() == 0) {
@@ -126,39 +115,87 @@ public class SyncService {
         });
     }
 
+    /**
+     * Sincroniza todos os dados locais que estão pendentes (syncStatus = 2)
+     * Este método é crítico para resolver o problema de dados offline não sincronizados
+     */
+    private boolean sincronizarDadosPendentes(int usuarioId) {
+        try {
+            Log.d(TAG, "Iniciando sincronização de dados pendentes...");
+            boolean success = true;
+            
+            // Sincroniza categorias pendentes
+            if (!sincronizarCategorias(usuarioId)) {
+                success = false;
+                Log.w(TAG, "Falha ao sincronizar categorias pendentes");
+            }
+            
+            // Sincroniza contas pendentes
+            if (!sincronizarContas(usuarioId)) {
+                success = false;
+                Log.w(TAG, "Falha ao sincronizar contas pendentes");
+            }
+            
+            // Sincroniza lançamentos pendentes
+            if (!sincronizarLancamentos(usuarioId)) {
+                success = false;
+                Log.w(TAG, "Falha ao sincronizar lançamentos pendentes");
+            }
+            
+            Log.d(TAG, "Sincronização de dados pendentes concluída: " + (success ? "sucesso" : "com erros"));
+            return success;
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao sincronizar dados pendentes: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
     private boolean sincronizarCategorias(int usuarioId) {
         try {
+            // FIX: Only sync categories that need syncing (syncStatus = 2)
             List<Categoria> categorias = database.categoriaDao().listarTodas();
+            int categoriasProcessadas = 0;
+            
             for (Categoria categoria : categorias) {
+                // Skip if already synced
+                if (categoria.syncStatus == 1) {
+                    continue;
+                }
+                
                 String comando = Protocol.buildCommand(
                         Protocol.CMD_ADD_CATEGORIA,
                         categoria.nome,
                         categoria.tipo,
                         categoria.corHex
                 );
-                Log.d(TAG, "Sincronizando categoria: " + categoria.nome);
+                Log.d(TAG, "Sincronizando categoria pendente: " + categoria.nome);
                 if (serverClient.isConnected()) {
+                    final Categoria categoriaFinal = categoria;
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
-                            Log.d(TAG, "Categoria sincronizada: " + categoria.nome + " - " + result);
+                            Log.d(TAG, "Categoria sincronizada: " + categoriaFinal.nome + " - " + result);
                             try {
                                 String[] partes = Protocol.parseCommand(result);
                                 if (partes.length >= 2 && Protocol.STATUS_OK.equals(partes[0])) {
                                     int serverId = Integer.parseInt(partes[1]);
-                                    if (categoria.id != serverId) {
-                                        Log.d(TAG, "Atualizando categoria local ID " + categoria.id + " para server ID " + serverId);
-                                        database.lancamentoDao().atualizarCategoriaId(categoria.id, serverId);
+                                    if (categoriaFinal.id != serverId) {
+                                        Log.d(TAG, "Atualizando categoria local ID " + categoriaFinal.id + " para server ID " + serverId);
+                                        database.lancamentoDao().atualizarCategoriaId(categoriaFinal.id, serverId);
                                         Categoria serverCategoria = new Categoria();
                                         serverCategoria.id = serverId;
-                                        serverCategoria.nome = categoria.nome;
-                                        serverCategoria.tipo = categoria.tipo;
-                                        serverCategoria.corHex = categoria.corHex;
-                                        serverCategoria.uuid = categoria.uuid;
+                                        serverCategoria.nome = categoriaFinal.nome;
+                                        serverCategoria.tipo = categoriaFinal.tipo;
+                                        serverCategoria.corHex = categoriaFinal.corHex;
+                                        serverCategoria.uuid = categoriaFinal.uuid;
                                         serverCategoria.syncStatus = 1;
                                         serverCategoria.lastSyncTime = System.currentTimeMillis();
-                                        database.categoriaDao().deletar(categoria);
+                                        database.categoriaDao().deletar(categoriaFinal);
                                         database.categoriaDao().inserir(serverCategoria);
+                                    } else {
+                                        // Mark as synced if IDs match
+                                        categoriaFinal.markAsSynced();
+                                        database.categoriaDao().atualizar(categoriaFinal);
                                     }
                                 }
                             } catch (Exception e) {
@@ -168,14 +205,19 @@ public class SyncService {
                         @Override
                         public void onError(String error) {
                             if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Categoria já existe no servidor: " + categoria.nome);
+                                Log.d(TAG, "Categoria já existe no servidor: " + categoriaFinal.nome);
+                                // Mark as synced even if duplicate
+                                categoriaFinal.markAsSynced();
+                                database.categoriaDao().atualizar(categoriaFinal);
                             } else {
-                                Log.e(TAG, "Erro ao sincronizar categoria " + categoria.nome + ": " + error);
+                                Log.e(TAG, "Erro ao sincronizar categoria " + categoriaFinal.nome + ": " + error);
                             }
                         }
                     });
+                    categoriasProcessadas++;
                 }
             }
+            Log.d(TAG, "Total de categorias pendentes sincronizadas: " + categoriasProcessadas);
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao sincronizar categorias: " + e.getMessage(), e);
@@ -185,39 +227,52 @@ public class SyncService {
 
     private boolean sincronizarContas(int usuarioId) {
         try {
+            // FIX: Only sync accounts that need syncing (syncStatus = 2)
             List<Conta> contas = database.contaDao().listarPorUsuario(usuarioId);
+            int contasProcessadas = 0;
+            
             for (Conta conta : contas) {
+                // Skip if already synced
+                if (conta.syncStatus == 1) {
+                    continue;
+                }
+                
                 String comando = Protocol.buildCommand(
                         Protocol.CMD_ADD_CONTA,
                         conta.nome,
                         conta.tipo != null ? conta.tipo : "corrente",
                         String.valueOf(conta.saldoInicial)
                 );
-                Log.d(TAG, "Sincronizando conta: " + conta.nome);
+                Log.d(TAG, "Sincronizando conta pendente: " + conta.nome);
                 if (serverClient.isConnected()) {
+                    final Conta contaFinal = conta;
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
-                            Log.d(TAG, "Conta sincronizada: " + conta.nome + " - " + result);
+                            Log.d(TAG, "Conta sincronizada: " + contaFinal.nome + " - " + result);
                             try {
                                 String[] partes = Protocol.parseCommand(result);
                                 if (partes.length >= 2 && Protocol.STATUS_OK.equals(partes[0])) {
                                     int serverId = Integer.parseInt(partes[1]);
-                                    if (conta.id != serverId) {
-                                        Log.d(TAG, "Atualizando conta local ID " + conta.id + " para server ID " + serverId);
-                                        database.lancamentoDao().atualizarContaId(conta.id, serverId);
+                                    if (contaFinal.id != serverId) {
+                                        Log.d(TAG, "Atualizando conta local ID " + contaFinal.id + " para server ID " + serverId);
+                                        database.lancamentoDao().atualizarContaId(contaFinal.id, serverId);
                                         Conta serverConta = new Conta();
                                         serverConta.id = serverId;
-                                        serverConta.nome = conta.nome;
-                                        serverConta.tipo = conta.tipo;
-                                        serverConta.saldoInicial = conta.saldoInicial;
-                                        serverConta.saldoAtual = conta.saldoAtual;
-                                        serverConta.usuarioId = conta.usuarioId;
-                                        serverConta.uuid = conta.uuid;
+                                        serverConta.nome = contaFinal.nome;
+                                        serverConta.tipo = contaFinal.tipo;
+                                        serverConta.saldoInicial = contaFinal.saldoInicial;
+                                        serverConta.saldoAtual = contaFinal.saldoAtual;
+                                        serverConta.usuarioId = contaFinal.usuarioId;
+                                        serverConta.uuid = contaFinal.uuid;
                                         serverConta.syncStatus = 1;
                                         serverConta.lastSyncTime = System.currentTimeMillis();
-                                        database.contaDao().deletar(conta);
+                                        database.contaDao().deletar(contaFinal);
                                         database.contaDao().inserir(serverConta);
+                                    } else {
+                                        // Mark as synced if IDs match
+                                        contaFinal.markAsSynced();
+                                        database.contaDao().atualizar(contaFinal);
                                     }
                                 }
                             } catch (Exception e) {
@@ -227,14 +282,19 @@ public class SyncService {
                         @Override
                         public void onError(String error) {
                             if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Conta já existe no servidor: " + conta.nome);
+                                Log.d(TAG, "Conta já existe no servidor: " + contaFinal.nome);
+                                // Mark as synced even if duplicate
+                                contaFinal.markAsSynced();
+                                database.contaDao().atualizar(contaFinal);
                             } else {
-                                Log.e(TAG, "Erro ao sincronizar conta " + conta.nome + ": " + error);
+                                Log.e(TAG, "Erro ao sincronizar conta " + contaFinal.nome + ": " + error);
                             }
                         }
                     });
+                    contasProcessadas++;
                 }
             }
+            Log.d(TAG, "Total de contas pendentes sincronizadas: " + contasProcessadas);
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao sincronizar contas: " + e.getMessage(), e);
@@ -244,8 +304,16 @@ public class SyncService {
 
     private boolean sincronizarLancamentos(int usuarioId) {
         try {
+            // FIX: Only sync transactions that need syncing (syncStatus = 2)
             List<Lancamento> lancamentos = database.lancamentoDao().listarPorUsuario(usuarioId);
+            int lancamentosProcessados = 0;
+            
             for (Lancamento lancamento : lancamentos) {
+                // Skip if already synced
+                if (lancamento.syncStatus == 1) {
+                    continue;
+                }
+                
                 String comando = Protocol.buildCommand(
                         Protocol.CMD_ADD_MOVIMENTACAO,
                         String.valueOf(lancamento.valor),
@@ -255,20 +323,21 @@ public class SyncService {
                         String.valueOf(lancamento.contaId),
                         String.valueOf(lancamento.categoriaId)
                 );
-                Log.d(TAG, "Sincronizando lançamento: " + lancamento.descricao);
+                Log.d(TAG, "Sincronizando lançamento pendente: " + lancamento.descricao);
                 if (serverClient.isConnected()) {
+                    final Lancamento lancamentoFinal = lancamento;
                     serverClient.enviarComando(comando, new ServerClient.ServerCallback<String>() {
                         @Override
                         public void onSuccess(String result) {
-                            Log.d(TAG, "Lançamento sincronizado: " + lancamento.descricao);
+                            Log.d(TAG, "Lançamento sincronizado: " + lancamentoFinal.descricao);
                             try {
                                 String[] partes = Protocol.parseCommand(result);
                                 if (partes.length >= 2 && Protocol.STATUS_OK.equals(partes[0])) {
                                     int serverId = Integer.parseInt(partes[1]);
-                                    lancamento.serverId = serverId;
-                                    lancamento.markAsSynced();
-                                    database.lancamentoDao().atualizar(lancamento);
-                                    Log.d(TAG, "Server ID " + serverId + " salvo para lançamento: " + lancamento.descricao);
+                                    lancamentoFinal.serverId = serverId;
+                                    lancamentoFinal.markAsSynced();
+                                    database.lancamentoDao().atualizar(lancamentoFinal);
+                                    Log.d(TAG, "Server ID " + serverId + " salvo para lançamento: " + lancamentoFinal.descricao);
                                 }
                             } catch (Exception e) {
                                 Log.w(TAG, "Erro ao processar resposta do servidor: " + e.getMessage());
@@ -277,14 +346,19 @@ public class SyncService {
                         @Override
                         public void onError(String error) {
                             if (error.toLowerCase().contains("já existe") || error.toLowerCase().contains("duplicate")) {
-                                Log.d(TAG, "Lançamento já existe no servidor: " + lancamento.descricao);
+                                Log.d(TAG, "Lançamento já existe no servidor: " + lancamentoFinal.descricao);
+                                // Mark as synced even if duplicate
+                                lancamentoFinal.markAsSynced();
+                                database.lancamentoDao().atualizar(lancamentoFinal);
                             } else {
-                                Log.e(TAG, "Erro ao sincronizar lançamento " + lancamento.descricao + ": " + error);
+                                Log.e(TAG, "Erro ao sincronizar lançamento " + lancamentoFinal.descricao + ": " + error);
                             }
                         }
                     });
+                    lancamentosProcessados++;
                 }
             }
+            Log.d(TAG, "Total de lançamentos pendentes sincronizados: " + lancamentosProcessados);
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Erro ao sincronizar lançamentos: " + e.getMessage(), e);

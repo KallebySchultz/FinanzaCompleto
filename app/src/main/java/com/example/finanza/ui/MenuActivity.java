@@ -163,17 +163,6 @@ public class MenuActivity extends AppCompatActivity {
             btnExportar.setOnClickListener(v -> exportarDados());
         }
 
-        // Reports functionality
-        TextView btnGraficos = findViewById(R.id.btnGraficos);
-        if (btnGraficos != null) {
-            btnGraficos.setOnClickListener(v -> {
-                Intent intent = new Intent(MenuActivity.this, ReportsActivity.class);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
-                finish();
-            });
-        }
-
         // Sincronização manual (sempre visível e habilitado)
         TextView btnSyncServer = findViewById(R.id.btnSyncServer);
         if (btnSyncServer != null) {
@@ -199,9 +188,7 @@ public class MenuActivity extends AppCompatActivity {
     }
 
     private static final int CREATE_CSV_FILE = 1;
-    private static final int CREATE_REPORT_FILE = 2;
     private StringBuilder pendingCsvData;
-    private StringBuilder pendingReportData;
 
     private void exportarDados() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -241,53 +228,6 @@ public class MenuActivity extends AppCompatActivity {
             }
         });
 
-        builder.setNeutralButton("Exportar Relatório", (dialog, which) -> {
-            try {
-                StringBuilder reportData = new StringBuilder();
-                reportData.append("=== RELATÓRIO FINANCEIRO FINANZA ===\n");
-                reportData.append("Gerado em: ").append(new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date())).append("\n\n");
-
-                List<Lancamento> lancamentos = db.lancamentoDao().listarPorUsuario(usuarioIdAtual);
-                double totalReceitas = 0, totalDespesas = 0;
-                java.text.NumberFormat formatter = java.text.NumberFormat.getCurrencyInstance(new java.util.Locale("pt", "BR"));
-
-                for (Lancamento lanc : lancamentos) {
-                    if ("receita".equals(lanc.tipo)) {
-                        totalReceitas += lanc.valor;
-                    } else {
-                        totalDespesas += lanc.valor;
-                    }
-                }
-
-                reportData.append("RESUMO GERAL:\n");
-                reportData.append("Total de Receitas: ").append(formatter.format(totalReceitas)).append("\n");
-                reportData.append("Total de Despesas: ").append(formatter.format(totalDespesas)).append("\n");
-                reportData.append("Saldo Total: ").append(formatter.format(totalReceitas - totalDespesas)).append("\n");
-                reportData.append("Total de Transações: ").append(lancamentos.size()).append("\n\n");
-
-                List<Conta> contas = db.contaDao().listarTodos();
-                reportData.append("CONTAS:\n");
-                for (Conta conta : contas) {
-                    double saldoConta = conta.saldoInicial;
-                    List<Lancamento> lancamentosConta = db.lancamentoDao().buscarPorConta(conta.id);
-                    for (Lancamento lanc : lancamentosConta) {
-                        saldoConta += "receita".equals(lanc.tipo) ? lanc.valor : -lanc.valor;
-                    }
-                    reportData.append("- ").append(conta.nome).append(": ").append(formatter.format(saldoConta)).append("\n");
-                }
-
-                pendingReportData = reportData;
-                createReportFile();
-
-            } catch (Exception e) {
-                AlertDialog.Builder errorBuilder = new AlertDialog.Builder(this);
-                errorBuilder.setTitle("Erro na Geração do Relatório");
-                errorBuilder.setMessage("Ocorreu um erro ao gerar o relatório:\n" + e.getMessage());
-                errorBuilder.setPositiveButton("OK", null);
-                errorBuilder.show();
-            }
-        });
-
         builder.setNegativeButton("Cancelar", null);
         builder.show();
     }
@@ -317,14 +257,7 @@ public class MenuActivity extends AppCompatActivity {
         startActivityForResult(intent, CREATE_CSV_FILE);
     }
 
-    private void createReportFile() {
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("text/plain");
-        String fileName = "finanza_relatorio_" + new java.text.SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(new java.util.Date()) + ".txt";
-        intent.putExtra(Intent.EXTRA_TITLE, fileName);
-        startActivityForResult(intent, CREATE_REPORT_FILE);
-    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -361,27 +294,6 @@ public class MenuActivity extends AppCompatActivity {
                         successBuilder.show();
 
                         pendingCsvData = null;
-
-                    } else if (requestCode == CREATE_REPORT_FILE && pendingReportData != null) {
-                        writeToFile(uri, pendingReportData.toString());
-
-                        AlertDialog.Builder successBuilder = new AlertDialog.Builder(this);
-                        successBuilder.setTitle("Relatório Gerado");
-                        successBuilder.setMessage("Relatório criado com sucesso!\n\n" +
-                                "Arquivo salvo no local selecionado.");
-
-                        successBuilder.setPositiveButton("Visualizar", (d, w) -> {
-                            AlertDialog.Builder previewBuilder = new AlertDialog.Builder(this);
-                            previewBuilder.setTitle("Relatório Financeiro");
-                            previewBuilder.setMessage(pendingReportData.toString());
-                            previewBuilder.setPositiveButton("OK", null);
-                            previewBuilder.show();
-                        });
-
-                        successBuilder.setNegativeButton("OK", null);
-                        successBuilder.show();
-
-                        pendingReportData = null;
                     }
 
                 } catch (Exception e) {
@@ -405,8 +317,10 @@ public class MenuActivity extends AppCompatActivity {
     private void realizarSincronizacao() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Sincronização com Servidor");
-        builder.setMessage("Deseja sincronizar seus dados com o servidor?");
+        builder.setMessage("Deseja sincronizar seus dados com o servidor?\n\nNota: A sincronização funcionará apenas se você estiver conectado ao servidor. Caso contrário, seus dados permanecerão salvos localmente.");
         builder.setPositiveButton("Sincronizar", (dialog, which) -> {
+            // Android é offline-first - sempre permite operações locais
+            // Tentará sincronizar com servidor se disponível, mas não é obrigatório
             syncService.sincronizarTudo(usuarioIdAtual, new SyncService.SyncCallback() {
                 @Override
                 public void onSyncStarted() {
@@ -418,7 +332,7 @@ public class MenuActivity extends AppCompatActivity {
                     // CORRIGIDO: Sempre mostrar UI pela thread principal
                     runOnUiThread(() -> {
                         AlertDialog.Builder resultDialog = new AlertDialog.Builder(MenuActivity.this);
-                        resultDialog.setTitle(success ? "Sincronização Concluída" : "Erro na Sincronização");
+                        resultDialog.setTitle(success ? "Sincronização Concluída" : "Informação");
                         resultDialog.setMessage(message);
                         resultDialog.setPositiveButton("OK", null);
                         resultDialog.show();

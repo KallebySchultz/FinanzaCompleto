@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primaryDarkBlue"
+    android:fitsSystemWindows="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/primaryDarkBlue"
+        android:orientation="vertical"
+        android:paddingBottom="120dp">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/primaryDarkBlue"
+            android:orientation="horizontal"
+            android:paddingLeft="20dp"
+            android:paddingTop="40dp"
+            android:paddingRight="20dp"
+            android:paddingBottom="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📊 RELATÓRIOS"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Content ScrollView -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="20dp">
+
+            <LinearLayout
+                android:id="@+id/reports_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- Bottom Navigation fixo com padrão das outras activities -->
+    <LinearLayout
+        android:id="@+id/bottom_nav"
+        android:layout_width="match_parent"
+        android:layout_height="111dp"
+        android:layout_gravity="bottom"
+        android:background="@color/primaryDarkBlue"
+        android:elevation="8dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="32dp">
+
+        <ImageView
+            android:id="@+id/nav_home"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Home"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_home"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_movements"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Movimentações"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrows"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_accounts"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Contas"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_bank"
+            android:tint="@color/white" />
+
+        <ImageView
+            android:id="@+id/nav_menu"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:contentDescription="Menu"
+            android:focusable="true"
+            android:padding="4dp"
+            android:src="@drawable/ic_menu"
+            android:tint="@color/white" />
+    </LinearLayout>
+
+    <!-- Botão central de adicionar -->
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

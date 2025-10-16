@@ -56,6 +56,7 @@ MySQL → UPDATE usuario SET senha_hash = ?
 | **Movimentações** | MovimentacoesView.java | MovementsActivity.java | processarAdicionarMovimentacao() | MovimentacaoDAO.inserir() |
 | **Contas** | ContasView.java | AccountsActivity.java | processarAdicionarConta() | ContaDAO.inserir() |
 | **Categorias** | CategoriasView.java | CategoriaActivity.java | processarAdicionarCategoria() | CategoriaDAO.inserir() |
+| **Relatórios** | RelatoriosView.java | ReportsActivity.java | processarRelatorio() | MovimentacaoDAO.listarPorPeriodo() |
 
 ### 🗂️ **Mapa de Arquivos Importantes**
 
@@ -72,7 +73,8 @@ DESKTOP VERSION/ClienteFinanza/src/
 │   ├── PerfilView.java          # 👤 Perfil e alteração de senha
 │   ├── MovimentacoesView.java   # 💸 Lista e CRUD de movimentações
 │   ├── ContasView.java          # 🏦 Gerenciar contas bancárias
-│   └── CategoriasView.java      # 📂 Gerenciar categorias
+│   ├── CategoriasView.java      # 📂 Gerenciar categorias
+│   └── RelatoriosView.java      # 📊 Relatórios e gráficos
 └── util/
     └── NetworkClient.java       # 📡 Cliente TCP para servidor
 ```
@@ -230,6 +232,11 @@ ADD_CATEGORY|nome|tipo|cor
 UPDATE_CATEGORY|id|nome|tipo|cor
 DELETE_CATEGORY|id
 LIST_CATEGORIES
+
+// Relatórios
+REPORT_MONTHLY|mes|ano
+REPORT_CATEGORY|id_categoria|mes|ano
+EXPORT_DATA|formato|periodo
 ```
 
 #### **Respostas do Servidor:**
@@ -723,7 +730,59 @@ String comando = CMD_ADD_MOVEMENT + SEPARATOR + /* outros campos */ + SEPARATOR 
 private JTextArea campoObservacoes = new JTextArea(3, 20);
 ```
 
-### 📋 **2. "Como adicionar uma nova validação?"**
+### 📋 **2. "Quero criar um novo tipo de relatório"**
+
+#### **Implementação:**
+```java
+// 1. Criar método no DAO
+// MovimentacaoDAO.java
+public List<Movimentacao> relatorioGastosPorSemana(int idUsuario, Date inicio, Date fim) {
+    String sql = "SELECT *, WEEK(data) as semana FROM movimentacao WHERE id_usuario = ? AND data BETWEEN ? AND ? AND tipo = 'DESPESA' ORDER BY semana, data";
+    // Implementação...
+}
+
+// 2. Adicionar comando no protocolo  
+// Protocol.java
+public static final String CMD_REPORT_WEEKLY = "REPORT_WEEKLY";
+
+// 3. Implementar no servidor
+// ClientHandler.java
+case Protocol.CMD_REPORT_WEEKLY:
+    return processarRelatorioSemanal(partes);
+
+private String processarRelatorioSemanal(String[] partes) {
+    Date inicio = Date.valueOf(partes[1]); // formato: YYYY-MM-DD
+    Date fim = Date.valueOf(partes[2]);
+    
+    List<Movimentacao> dados = movimentacaoDAO.relatorioGastosPorSemana(usuarioLogado.getId(), inicio, fim);
+    return Protocol.createSuccessResponse(serializarMovimentacoes(dados));
+}
+
+// 4. Implementar no controller
+// FinanceController.java
+public OperationResult<List<Movimentacao>> relatorioSemanal(Date inicio, Date fim) {
+    String comando = Protocol.CMD_REPORT_WEEKLY + Protocol.SEPARATOR + inicio + Protocol.SEPARATOR + fim;
+    String resposta = networkClient.sendCommand(comando);
+    return processarRespostaLista(resposta, Movimentacao.class);
+}
+
+// 5. Criar interface
+// RelatoriosView.java - adicionar novo botão e método
+private void gerarRelatorioSemanal() {
+    // Coleta período
+    Date inicio = datePickerInicio.getDate();
+    Date fim = datePickerFim.getDate();
+    
+    // Busca dados
+    OperationResult<List<Movimentacao>> result = financeController.relatorioSemanal(inicio, fim);
+    
+    if (result.isSucesso()) {
+        exibirRelatorioSemanal(result.getDados());
+    }
+}
+```
+
+### 📋 **3. "Como adicionar uma nova validação?"**
 
 #### **Implementação de validação robusta:**
 ```java

@@ -27,6 +27,12 @@
 - **Backup Automático**: Rotinas de backup configuráveis
 - **Performance**: Queries otimizadas e indexação
 
+### 📊 **Relatórios Avançados**
+- **Exportação Múltipla**: CSV, HTML, PDF
+- **Gráficos Dinâmicos**: Visualizações interativas
+- **Filtros Avançados**: Busca por múltiplos critérios
+- **Impressão**: Relatórios formatados para impressão
+
 ## 📸 Interface da Aplicação
 
 ### Servidor Iniciando
@@ -40,6 +46,10 @@
 ### Monitor de Sincronização
 ![Sincronização Desktop](../screenshots/desktop/04-sync-monitor.png)
 *Painel de monitoramento em tempo real das conexões mobile*
+
+### Relatórios Financeiros
+![Relatórios Desktop](../screenshots/desktop/05-reports.png)
+*Sistema de relatórios com gráficos e exportação profissional*
 
 ## Estrutura do Projeto
 
@@ -94,12 +104,49 @@ Finanza/
 - [x] **Backup e Restore**: Funcionalidades de backup automático
 - [x] **Performance**: Queries otimizadas e indexação adequada
 
+#### 📊 **Relatórios Avançados**
+- [x] **Exportação Múltipla**: CSV aprimorado, HTML profissional, CSV simples
+- [x] **Gráficos**: Visualizações financeiras interativas
+- [x] **Filtros Avançados**: Busca por período, categoria, conta
+- [x] **Formatação**: Tabelas com bordas e totais automáticos
+
 ### 🔄 **Em Desenvolvimento**
 - 🚧 **Interface Web**: Painel administrativo web
 - 🚧 **APIs REST**: Endpoints para integração externa
 - 🚧 **Notificações**: Sistema de alertas em tempo real
 - 🚧 **Auditoria**: Logs de auditoria para compliance
 - 🚧 **Multi-tenant**: Suporte a múltiplas empresas
+
+### 🎯 **Destaque: Exportação Aprimorada**
+
+O sistema oferece **3 formatos de exportação** profissionais:
+
+#### 📄 **CSV Aprimorado**
+```
+┌─────────────────────────────────────────────────────┐
+│                  RELATÓRIO FINANCEIRO               │
+├─────────────────┬─────────────┬─────────────────────┤
+│ Data           │ Valor       │ Descrição           │
+├─────────────────┼─────────────┼─────────────────────┤
+│ 2024-01-15     │ R$ 1.500,00 │ Salário             │
+│ 2024-01-16     │ R$ -350,00  │ Supermercado        │
+├─────────────────┼─────────────┼─────────────────────┤
+│ TOTAL          │ R$ 1.150,00 │                     │
+└─────────────────┴─────────────┴─────────────────────┘
+```
+
+#### 🌐 **HTML Profissional**
+- Relatórios web responsivos para impressão
+- Gráficos integrados e formatação avançada
+- Logotipo e cabeçalho personalizáveis
+- Compatível com todos os navegadores
+
+#### 📋 **CSV Simples**
+- Formato padrão para importação em outros sistemas
+- Compatibilidade com Excel e Google Sheets
+- Campos separados por vírgula ou ponto-e-vírgula
+
+Para detalhes completos, consulte [documentação de exportação](docs/EXPORTACAO_APRIMORADA.md).
 
 ## 📋 Requisitos Técnicos
 
@@ -541,6 +588,7 @@ mvn test
 1. Login/logout de usuários
 2. CRUD de contas/categorias
 3. Sincronização com mobile
+4. Exportação de relatórios
 ```
 
 ## 📄 Licença

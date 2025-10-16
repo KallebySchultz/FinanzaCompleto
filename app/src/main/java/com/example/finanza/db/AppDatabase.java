@@ -7,10 +7,7 @@ import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import android.content.Context;
 
-import com.example.finanza.model.Usuario;
-import com.example.finanza.model.Conta;
-import com.example.finanza.model.Categoria;
-import com.example.finanza.model.Lancamento;
+import com.example.finanza.model.*;
 
 @Database(
         entities = {Usuario.class, Conta.class, Categoria.class, Lancamento.class},

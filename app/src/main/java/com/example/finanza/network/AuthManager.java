@@ -104,7 +104,6 @@ public class AuthManager {
      * 2. Tenta autenticar no servidor (se disponível)
      * 3. Sincroniza dados após login bem-sucedido
      * 4. Fallback para modo offline se servidor indisponível
-     * 5. Valida que apenas usuários regulares podem acessar o app mobile
      * 
      * @param email Email do usuário
      * @param senha Senha do usuário
@@ -113,12 +112,6 @@ public class AuthManager {
     public void login(String email, String senha, AuthCallback callback) {
         // Verifica primeiro localmente
         Usuario usuarioLocal = buscarUsuarioLocal(email, senha);
-        
-        // IMPORTANT: Block admin users from logging into mobile app
-        if (usuarioLocal != null && usuarioLocal.isAdmin()) {
-            callback.onError("Acesso negado. Administradores devem usar o painel desktop.");
-            return;
-        }
 
         // Primeiro tenta conectar ao servidor
         serverClient.conectar(new ServerClient.ServerCallback<String>() {
@@ -137,18 +130,11 @@ public class AuthManager {
                         Usuario usuario = usuarioLocal;
 
                         if (partes.length > 1) {
-                            // Resposta: OK|userId;nome;email;role (role is optional for backward compatibility)
+                            // Resposta: OK|userId;nome;email
                             String[] userData = partes[1].split(";");
                             if (userData.length >= 3) {
                                 String nome = userData[1];
                                 String emailServidor = userData[2];
-                                String role = userData.length >= 4 ? userData[3] : "user"; // Default to 'user' if not provided
-
-                                // Block admin users from logging into mobile app
-                                if ("admin".equals(role)) {
-                                    callback.onError("Acesso negado. Administradores devem usar o painel desktop.");
-                                    return;
-                                }
 
                                 // Atualiza ou cria usuário local com dados do servidor
                                 if (usuario == null) {
@@ -156,7 +142,6 @@ public class AuthManager {
                                 } else {
                                     usuario.nome = nome;
                                     usuario.email = emailServidor;
-                                    usuario.role = role;
                                     database.usuarioDao().atualizar(usuario);
                                 }
                             }

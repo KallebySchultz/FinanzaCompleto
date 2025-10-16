@@ -19,7 +19,7 @@ public class UsuarioDAO {
      * @return true se inserido com sucesso
      */
     public boolean inserir(Usuario usuario) {
-        String sql = "INSERT INTO usuario (nome, email, senha_hash, role) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO usuario (nome, email, senha_hash) VALUES (?, ?, ?)";
         
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -27,7 +27,6 @@ public class UsuarioDAO {
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getEmail());
             stmt.setString(3, usuario.getSenhaHash());
-            stmt.setString(4, usuario.getRole() != null ? usuario.getRole() : "user");
             
             int rowsAffected = stmt.executeUpdate();
             
@@ -222,16 +221,6 @@ public class UsuarioDAO {
         usuario.setSenhaHash(rs.getString("senha_hash"));
         usuario.setDataCriacao(rs.getTimestamp("data_criacao"));
         usuario.setDataAtualizacao(rs.getTimestamp("data_atualizacao"));
-        
-        // Get role field with default value 'user' if not present
-        try {
-            String role = rs.getString("role");
-            usuario.setRole(role != null ? role : "user");
-        } catch (SQLException e) {
-            // Column doesn't exist in older database versions, default to 'user'
-            usuario.setRole("user");
-        }
-        
         return usuario;
     }
 }

@@ -56,10 +56,6 @@ public class Usuario {
     /** Timestamp de criação da conta */
     public long dataCriacao;
     
-    /** Role do usuário: 'user' (padrão) ou 'admin' */
-    @ColumnInfo(defaultValue = "'user'")
-    public String role;
-    
     // ================== METADADOS DE SINCRONIZAÇÃO ==================
     
     /** UUID universal para sincronização cross-platform */
@@ -95,14 +91,12 @@ public class Usuario {
      * - Timestamp de modificação atual
      * - Estado como "necessita sincronização"
      * - Tempo de sincronização zerado
-     * - Role padrão como 'user'
      */
     public Usuario() {
         this.uuid = java.util.UUID.randomUUID().toString();
         this.lastModified = System.currentTimeMillis();
         this.syncStatus = SYNC_STATUS_NEEDS_SYNC;
         this.lastSyncTime = 0;
-        this.role = "user"; // Default role
     }
     
     /**
@@ -147,30 +141,16 @@ public class Usuario {
     }
     
     /**
-     * Verifica se o usuário é um administrador
+     * Representação em string do usuário
      * 
-     * @return true se o usuário tem role de admin
+     * @return String com informações básicas do usuário
      */
-    public boolean isAdmin() {
-        return "admin".equals(role);
-    }
-    
-    /**
-     * Verifica se o usuário é um usuário regular
-     * 
-     * @return true se o usuário tem role de user
-     */
-    public boolean isUser() {
-        return "user".equals(role);
-    }
-    
     @Override
     public String toString() {
         return "Usuario{" +
                 "id=" + id +
                 ", nome='" + nome + '\'' +
                 ", email='" + email + '\'' +
-                ", role='" + role + '\'' +
                 ", uuid='" + uuid + '\'' +
                 ", syncStatus=" + syncStatus +
                 '}';

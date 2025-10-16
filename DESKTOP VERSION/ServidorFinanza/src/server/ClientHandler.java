@@ -204,11 +204,10 @@ public class ClientHandler extends Thread {
         
         // Modo de teste - sempre retorna sucesso
         if (testMode) {
-            usuarioLogado = new Usuario(1, "Usuário Teste", email, "", "user");
+            usuarioLogado = new Usuario(1, "Usuário Teste", email, "");
             String userData = usuarioLogado.getId() + Protocol.FIELD_SEPARATOR + 
                              usuarioLogado.getNome() + Protocol.FIELD_SEPARATOR + 
-                             usuarioLogado.getEmail() + Protocol.FIELD_SEPARATOR +
-                             "user";
+                             usuarioLogado.getEmail();
             return Protocol.createSuccessResponse(userData);
         }
         
@@ -216,11 +215,9 @@ public class ClientHandler extends Thread {
         Usuario usuario = usuarioDAO.autenticar(email, senha);
         if (usuario != null) {
             usuarioLogado = usuario;
-            String role = usuario.getRole() != null ? usuario.getRole() : "user";
             String userData = usuario.getId() + Protocol.FIELD_SEPARATOR + 
                              usuario.getNome() + Protocol.FIELD_SEPARATOR + 
-                             usuario.getEmail() + Protocol.FIELD_SEPARATOR +
-                             role;
+                             usuario.getEmail();
             return Protocol.createSuccessResponse(userData);
         } else {
             return Protocol.createResponse(Protocol.STATUS_INVALID_CREDENTIALS, "Email ou senha inválidos");

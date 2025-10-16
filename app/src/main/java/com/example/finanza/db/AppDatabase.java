@@ -14,7 +14,7 @@ import com.example.finanza.model.Lancamento;
 
 @Database(
         entities = {Usuario.class, Conta.class, Categoria.class, Lancamento.class},
-        version = 7, // <-- ALTERADO: aumente a versão ao modificar entidades!
+        version = 6, // <-- ALTERADO: aumente a versão ao modificar entidades!
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {
@@ -127,17 +127,6 @@ public abstract class AppDatabase extends RoomDatabase {
     };
 
     /**
-     * Migration from version 6 to 7 - Add role field to Usuario
-     */
-    static final Migration MIGRATION_6_7 = new Migration(6, 7) {
-        @Override
-        public void migrate(SupportSQLiteDatabase database) {
-            // Add role column to Usuario table
-            database.execSQL("ALTER TABLE Usuario ADD COLUMN role TEXT NOT NULL DEFAULT 'user'");
-        }
-    };
-
-    /**
      * Migration from version 4 to 5 - Add saldoAtual field to Conta
      */
     static final Migration MIGRATION_4_5 = new Migration(4, 5) {
@@ -219,7 +208,7 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "finanza-database")
-                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                            .addMigrations(MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
                             .fallbackToDestructiveMigration() // Allow destructive migration for development
                             .allowMainThreadQueries() // Somente para testes/dev!
                             .build();

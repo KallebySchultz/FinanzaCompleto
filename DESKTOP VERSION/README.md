@@ -179,6 +179,8 @@ Para detalhes completos, consulte [documentação de exportação](docs/EXPORTAC
 
 ## 🗄️ Configuração do Banco de Dados
 
+> **✨ NOVO:** O servidor agora **inicializa automaticamente** o banco de dados! Você só precisa criar o database, e o servidor criará todas as tabelas na primeira execução.
+
 ### 📦 **Instalação do MySQL**
 
 #### **Windows**
@@ -203,33 +205,59 @@ brew services start mysql
 mysql_secure_installation
 ```
 
-### ⚙️ **Configuração do Banco**
+### ⚙️ **Configuração Rápida (Recomendado)**
 
 #### 1. **Criar Database**
 ```sql
 -- Conecte como root
 mysql -u root -p
 
--- Crie o banco e usuário
+-- Crie apenas o banco de dados (as tabelas serão criadas automaticamente)
 CREATE DATABASE finanza_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+**Opcionalmente**, crie um usuário específico:
+```sql
 CREATE USER 'finanza'@'localhost' IDENTIFIED BY 'senha_segura';
 GRANT ALL PRIVILEGES ON finanza_db.* TO 'finanza'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-#### 2. **Executar Scripts**
-```bash
-# Execute o script de criação das tabelas
-mysql -u finanza -p finanza_db < banco/script_inicial.sql
-```
-
-#### 3. **Configurar Aplicação**
-Edite `ServidorFinanza/util/DatabaseUtil.java`:
+#### 2. **Configurar Aplicação** (se necessário)
+Edite `ServidorFinanza/src/util/DatabaseUtil.java` apenas se usar credenciais diferentes:
 ```java
 private static final String DB_URL = "jdbc:mysql://localhost:3306/finanza_db";
-private static final String DB_USER = "finanza";
-private static final String DB_PASSWORD = "sua_senha_aqui";
+private static final String DB_USER = "root";  // ou "finanza"
+private static final String DB_PASSWORD = "";  // ou sua senha
 ```
+
+#### 3. **Iniciar o Servidor**
+Execute o servidor normalmente:
+```bash
+cd "DESKTOP VERSION"
+./run_server.sh
+```
+
+**O servidor criará automaticamente todas as tabelas necessárias!** ✓
+
+Você verá:
+```
+✓ Tabela 'usuario' verificada/criada
+✓ Tabela 'conta' verificada/criada
+✓ Tabela 'categoria' verificada/criada
+✓ Tabela 'movimentacao' verificada/criada
+✓ Banco de dados inicializado com sucesso
+```
+
+### 🔧 **Configuração Manual (Opcional)**
+
+Se preferir criar as tabelas manualmente ou encontrar problemas:
+```bash
+# Execute o script de criação das tabelas
+mysql -u root -p finanza_db < banco/script_inicial.sql
+```
+
+Para mais detalhes sobre configuração e solução de problemas, consulte [SETUP_DATABASE.md](SETUP_DATABASE.md).
 
 ### 🔧 **Configurações Avançadas**
 

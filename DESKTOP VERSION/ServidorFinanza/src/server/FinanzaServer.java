@@ -33,6 +33,13 @@ public class FinanzaServer {
                     return;
                 }
                 System.out.println("Conexão com banco de dados OK");
+                
+                // Inicializa o banco de dados (cria tabelas se não existirem)
+                if (!DatabaseUtil.initializeDatabase()) {
+                    System.err.println("Erro: Não foi possível inicializar o banco de dados");
+                    System.err.println("Verifique as permissões do usuário do MySQL");
+                    return;
+                }
             } else {
                 System.out.println("Servidor iniciado em MODO DE TESTE (sem banco de dados)");
             }

@@ -72,6 +72,16 @@ public class SyncService {
                     return;
                 }
 
+                // Ensure user is authenticated on the server before syncing
+                if (callback != null) callback.onSyncProgress("Autenticando no servidor...");
+                if (!ensureServerAuthentication(usuarioId)) {
+                    Log.e(TAG, "Falha na autenticação com servidor - continuando em modo offline");
+                    if (callback != null) {
+                        callback.onSyncCompleted(true, "Modo offline - falha na autenticação do servidor");
+                    }
+                    return;
+                }
+
                 boolean success = true;
                 StringBuilder message = new StringBuilder();
 
@@ -112,6 +122,66 @@ public class SyncService {
                 }
             }
         });
+    }
+
+    /**
+     * Ensures user is authenticated on the server before attempting sync operations.
+     * This is necessary because a user may be logged in locally but not on the server.
+     * 
+     * @param usuarioId ID do usuário local
+     * @return true se autenticação foi bem-sucedida, false caso contrário
+     */
+    private boolean ensureServerAuthentication(int usuarioId) {
+        try {
+            // Get user credentials from local database
+            Usuario usuario = database.usuarioDao().buscarPorId(usuarioId);
+            if (usuario == null || usuario.email == null || usuario.senha == null) {
+                Log.e(TAG, "Usuário não encontrado ou sem credenciais: " + usuarioId);
+                return false;
+            }
+
+            Log.d(TAG, "Autenticando usuário no servidor: " + usuario.email);
+
+            // Use a synchronization object to wait for the async callback
+            final Object lock = new Object();
+            final boolean[] authSuccess = {false};
+
+            // Attempt login on the server
+            serverClient.login(usuario.email, usuario.senha, new ServerClient.ServerCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Log.d(TAG, "Autenticação no servidor bem-sucedida");
+                    synchronized (lock) {
+                        authSuccess[0] = true;
+                        lock.notify();
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    Log.e(TAG, "Falha na autenticação no servidor: " + error);
+                    synchronized (lock) {
+                        authSuccess[0] = false;
+                        lock.notify();
+                    }
+                }
+            });
+
+            // Wait for the callback to complete (with timeout)
+            synchronized (lock) {
+                try {
+                    lock.wait(10000); // 10 second timeout
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "Timeout esperando autenticação do servidor");
+                    return false;
+                }
+            }
+
+            return authSuccess[0];
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao autenticar no servidor: " + e.getMessage(), e);
+            return false;
+        }
     }
 
     /**

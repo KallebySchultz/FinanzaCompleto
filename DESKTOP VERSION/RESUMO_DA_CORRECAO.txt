@@ -1,0 +1,100 @@
+═══════════════════════════════════════════════════════════════════════════
+                    FINANZA DESKTOP - RESUMO DA CORREÇÃO
+═══════════════════════════════════════════════════════════════════════════
+
+PROBLEMA CORRIGIDO
+───────────────────────────────────────────────────────────────────────────
+Erro: "Table 'finanza_db.usuario' doesn't exist"
+
+Este erro ocorria porque o servidor conectava ao MySQL mas as tabelas não
+existiam. Era necessário executar manualmente o script SQL antes de usar.
+
+SOLUÇÃO IMPLEMENTADA
+───────────────────────────────────────────────────────────────────────────
+✅ Inicialização automática das tabelas do banco de dados
+
+O servidor agora cria automaticamente todas as tabelas necessárias na
+primeira execução. Não é mais necessário executar scripts SQL manualmente!
+
+MUDANÇAS NO CÓDIGO
+───────────────────────────────────────────────────────────────────────────
+
+1. DatabaseUtil.java (+89 linhas)
+   - Novo método: initializeDatabase()
+   - Cria tabelas: usuario, conta, categoria, movimentacao
+   - Cria índices para performance
+   - Usa CREATE TABLE IF NOT EXISTS (seguro e idempotente)
+
+2. FinanzaServer.java (+3 linhas)
+   - Chama DatabaseUtil.initializeDatabase() ao iniciar
+   - Garante que as tabelas existam antes de aceitar conexões
+
+3. Documentação (3 novos arquivos)
+   - README.md: Guia completo de instalação
+   - CORRECAO_ERRO_TABELAS.md: Explicação detalhada
+   - ANTES_E_DEPOIS.md: Comparação visual
+
+COMO USAR
+───────────────────────────────────────────────────────────────────────────
+
+1. Instale e inicie o MySQL Server
+
+2. Crie o banco de dados:
+   mysql -u root -p
+   CREATE DATABASE finanza_db;
+   exit;
+
+3. Configure credenciais (se necessário):
+   Edite: ServidorFinanza/src/util/DatabaseUtil.java
+   Altere DB_USER e DB_PASSWORD
+
+4. Compile e execute o servidor:
+   cd ServidorFinanza
+   ant compile
+   ant run
+
+5. As tabelas serão criadas automaticamente! 🎉
+
+RESULTADO ESPERADO
+───────────────────────────────────────────────────────────────────────────
+
+No console do servidor você verá:
+
+  === Finanza Desktop - Servidor ===
+  Inicializando servidor...
+  Conexão com banco de dados OK
+  Tabelas do banco de dados verificadas/criadas com sucesso ✓
+  Servidor Finanza iniciado na porta 8080
+  Aguardando conexões de clientes...
+
+E agora LOGIN e REGISTER funcionarão corretamente!
+
+VERIFICAÇÃO
+───────────────────────────────────────────────────────────────────────────
+✅ Servidor compila sem erros
+✅ Cliente compila sem erros  
+✅ Sem breaking changes
+✅ Funciona com instalações novas e existentes
+✅ Documentação completa em português
+
+ARQUIVOS MODIFICADOS
+───────────────────────────────────────────────────────────────────────────
+ServidorFinanza/src/util/DatabaseUtil.java        (+89 linhas)
+ServidorFinanza/src/server/FinanzaServer.java     (+3 linhas)
+README.md                                          (novo, 129 linhas)
+CORRECAO_ERRO_TABELAS.md                           (novo, 119 linhas)
+ANTES_E_DEPOIS.md                                  (novo, 233 linhas)
+───────────────────────────────────────────────────────────────────────────
+Total: 5 arquivos, 573 linhas adicionadas
+
+BENEFÍCIOS
+───────────────────────────────────────────────────────────────────────────
+✨ Zero configuração manual de banco de dados
+✨ Instalação mais rápida e simples
+✨ Menos possibilidade de erros do usuário
+✨ Funciona em desenvolvimento e produção
+✨ Mantém compatibilidade com instalações existentes
+
+═══════════════════════════════════════════════════════════════════════════
+                         CORREÇÃO COMPLETA! ✅
+═══════════════════════════════════════════════════════════════════════════

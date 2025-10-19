@@ -15,6 +15,44 @@ import com.example.finanza.model.Usuario;
 import com.example.finanza.network.AuthManager;
 import com.google.android.material.textfield.TextInputEditText;
 
+/**
+ * RegisterActivity - Tela de Cadastro de Novo Usuário
+ *
+ * Esta atividade permite que novos usuários criem uma conta no
+ * aplicativo Finanza.
+ *
+ * Funcionalidades principais:
+ * - Cadastro de novo usuário com validação completa
+ * - Campos: Nome completo, Email, Senha e Confirmação de senha
+ * - Validação de formato de email
+ * - Validação de força de senha
+ * - Confirmação de senha igual
+ * - Comunicação com servidor para registro
+ * - Suporte a modo offline (registro local)
+ * - Link para retornar à tela de login
+ *
+ * Validações implementadas:
+ * - Nome não pode estar vazio
+ * - Email deve estar em formato válido
+ * - Senha deve ter mínimo de caracteres
+ * - Confirmação de senha deve ser idêntica
+ * - Email não pode estar duplicado no sistema
+ *
+ * Comportamento:
+ * - Feedback visual de erros em cada campo
+ * - Mensagens claras de erro/sucesso
+ * - Redirecionamento automático após cadastro bem-sucedido
+ * - Opção de voltar para login sem cadastrar
+ *
+ * Segurança:
+ * - Senha é criptografada antes de enviar ao servidor
+ * - Validação de força de senha
+ * - Proteção contra duplicação de email
+ *
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
+ */
 public class RegisterActivity extends AppCompatActivity {
 
     private AuthManager authManager;

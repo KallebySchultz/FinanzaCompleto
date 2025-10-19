@@ -36,6 +36,53 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * MovementsActivity - Tela de Gerenciamento de Lançamentos
+ *
+ * Esta atividade é o coração do aplicativo Finanza, permitindo ao usuário
+ * gerenciar todas as suas transações financeiras (receitas e despesas).
+ *
+ * Funcionalidades principais:
+ * - Visualização de todos os lançamentos do usuário
+ * - Criação de novos lançamentos (receita ou despesa)
+ * - Edição de lançamentos existentes
+ * - Exclusão de lançamentos com confirmação
+ * - Busca e filtro de transações
+ * - Ordenação por data (mais recentes primeiro)
+ * - Associação de lançamento a conta e categoria
+ * - Seleção de data com DatePicker
+ * - Sincronização automática com servidor desktop
+ * - Cálculo automático de saldos
+ * - Navegação integrada com outras telas do app
+ *
+ * Tipos de lançamento:
+ * - Receita: Entrada de dinheiro (salário, vendas, investimentos, etc)
+ * - Despesa: Saída de dinheiro (compras, contas, serviços, etc)
+ *
+ * Campos de lançamento:
+ * - Descrição: Texto descritivo da transação
+ * - Valor: Quantia em dinheiro (sempre positiva)
+ * - Data: Quando a transação ocorreu
+ * - Conta: De qual conta saiu/entrou o dinheiro
+ * - Categoria: Classificação da transação
+ * - Tipo: Receita ou Despesa
+ *
+ * Comportamento:
+ * - Validação de campos obrigatórios
+ * - Atualização automática de saldos ao criar/editar/excluir
+ * - Interface intuitiva com cores para diferenciar receitas (verde) e despesas (vermelho)
+ * - Suporte a edição inline sem sair da tela
+ *
+ * Layout:
+ * - Lista cronológica de lançamentos
+ * - Botão flutuante para adicionar novo lançamento
+ * - Ícones visuais diferenciando receitas e despesas
+ * - Navegação inferior para outras seções do app
+ *
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
+ */
 public class MovementsActivity extends AppCompatActivity {
 
     private AppDatabase db;

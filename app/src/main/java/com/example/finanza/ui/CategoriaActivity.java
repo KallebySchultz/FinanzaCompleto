@@ -26,7 +26,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Activity para gerenciamento de categorias
+ * CategoriaActivity - Tela de Gerenciamento de Categorias
+ *
+ * Esta atividade permite ao usuário gerenciar categorias de transações
+ * financeiras no aplicativo Finanza. As categorias ajudam a organizar
+ * e classificar receitas e despesas para melhor controle financeiro.
+ *
+ * Funcionalidades principais:
+ * - Visualização de categorias de receita e despesa
+ * - Criação de novas categorias personalizadas
+ * - Edição de categorias existentes (nome, tipo e cor)
+ * - Exclusão de categorias com validação de uso
+ * - Filtro por tipo (receita/despesa/todas)
+ * - Seleção de cor personalizada para cada categoria
+ * - Sincronização automática com servidor desktop
+ * - Navegação integrada com outras telas do app
+ *
+ * Tipos de categoria:
+ * - Receita: Para classificar entradas de dinheiro
+ * - Despesa: Para classificar saídas de dinheiro
+ *
+ * Comportamento:
+ * - Não permite excluir categoria se houver lançamentos vinculados
+ * - Cores ajudam na identificação visual rápida
+ * - Categorias padrão são criadas automaticamente no primeiro acesso
+ *
+ * Layout:
+ * - Lista dinâmica de categorias com nome, tipo e cor
+ * - Botões de filtro por tipo
+ * - Botão para adicionar nova categoria
+ * - Navegação inferior para outras seções do app
+ *
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
  */
 public class CategoriaActivity extends AppCompatActivity {
 

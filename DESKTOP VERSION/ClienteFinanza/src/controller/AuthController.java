@@ -23,6 +23,7 @@ public class AuthController {
     private static final String STATUS_INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
     private static final String STATUS_USER_EXISTS = "USER_EXISTS";
     private static final String STATUS_INVALID_DATA = "INVALID_DATA";
+    private static final String STATUS_ACCESS_DENIED = "ACCESS_DENIED";
     private static final String SEPARATOR = "|";
     private static final String FIELD_SEPARATOR = ";";
     
@@ -45,7 +46,8 @@ public class AuthController {
             return new LoginResult(false, "Não conectado ao servidor", null);
         }
         
-        String comando = CMD_LOGIN + SEPARATOR + email + SEPARATOR + senha;
+        // Envia comando LOGIN com tipo de cliente "admin"
+        String comando = CMD_LOGIN + SEPARATOR + email + SEPARATOR + senha + SEPARATOR + "admin";
         String resposta = networkClient.sendCommand(comando);
         
         String[] partes = resposta.split("\\" + SEPARATOR);
@@ -57,11 +59,21 @@ public class AuthController {
                 case STATUS_OK:
                     if (partes.length >= 2) {
                         String[] dadosUsuario = partes[1].split(FIELD_SEPARATOR);
-                        if (dadosUsuario.length >= 3) {
+                        if (dadosUsuario.length >= 4) {
                             usuarioLogado = new Usuario(
                                 Integer.parseInt(dadosUsuario[0]),
                                 dadosUsuario[1],
-                                dadosUsuario[2]
+                                dadosUsuario[2],
+                                dadosUsuario[3]
+                            );
+                            return new LoginResult(true, "Login realizado com sucesso", usuarioLogado);
+                        } else if (dadosUsuario.length >= 3) {
+                            // Compatibilidade com versões antigas que não retornam tipo
+                            usuarioLogado = new Usuario(
+                                Integer.parseInt(dadosUsuario[0]),
+                                dadosUsuario[1],
+                                dadosUsuario[2],
+                                Usuario.TIPO_ADMIN
                             );
                             return new LoginResult(true, "Login realizado com sucesso", usuarioLogado);
                         }
@@ -70,6 +82,10 @@ public class AuthController {
                     
                 case STATUS_INVALID_CREDENTIALS:
                     return new LoginResult(false, "Email ou senha inválidos", null);
+                    
+                case STATUS_ACCESS_DENIED:
+                    String mensagemAcesso = partes.length >= 2 ? partes[1] : "Acesso negado";
+                    return new LoginResult(false, mensagemAcesso, null);
                     
                 case STATUS_INVALID_DATA:
                     String mensagem = partes.length >= 2 ? partes[1] : "Dados inválidos";

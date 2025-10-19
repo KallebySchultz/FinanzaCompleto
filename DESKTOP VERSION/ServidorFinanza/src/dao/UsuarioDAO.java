@@ -19,7 +19,7 @@ public class UsuarioDAO {
      * @return true se inserido com sucesso
      */
     public boolean inserir(Usuario usuario) {
-        String sql = "INSERT INTO usuario (nome, email, senha_hash) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO usuario (nome, email, senha_hash, tipo_usuario) VALUES (?, ?, ?, ?)";
         
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -27,6 +27,7 @@ public class UsuarioDAO {
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getEmail());
             stmt.setString(3, usuario.getSenhaHash());
+            stmt.setString(4, usuario.getTipoUsuario() != null ? usuario.getTipoUsuario() : Usuario.TIPO_USUARIO);
             
             int rowsAffected = stmt.executeUpdate();
             
@@ -219,6 +220,7 @@ public class UsuarioDAO {
         usuario.setNome(rs.getString("nome"));
         usuario.setEmail(rs.getString("email"));
         usuario.setSenhaHash(rs.getString("senha_hash"));
+        usuario.setTipoUsuario(rs.getString("tipo_usuario"));
         usuario.setDataCriacao(rs.getTimestamp("data_criacao"));
         usuario.setDataAtualizacao(rs.getTimestamp("data_atualizacao"));
         return usuario;

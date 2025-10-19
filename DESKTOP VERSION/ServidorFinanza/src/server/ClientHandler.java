@@ -192,6 +192,8 @@ public class ClientHandler extends Thread {
         
         String email = partes[1];
         String senha = partes[2];
+        // Parâmetro opcional: tipo de cliente ('admin' ou 'mobile')
+        String tipoCliente = partes.length > 3 ? partes[3] : "mobile";
         
         // Validação básica
         if (email.isEmpty() || senha.isEmpty()) {
@@ -204,20 +206,33 @@ public class ClientHandler extends Thread {
         
         // Modo de teste - sempre retorna sucesso
         if (testMode) {
-            usuarioLogado = new Usuario(1, "Usuário Teste", email, "");
+            usuarioLogado = new Usuario(1, "Usuário Teste", email, "", Usuario.TIPO_USUARIO);
             String userData = usuarioLogado.getId() + Protocol.FIELD_SEPARATOR + 
                              usuarioLogado.getNome() + Protocol.FIELD_SEPARATOR + 
-                             usuarioLogado.getEmail();
+                             usuarioLogado.getEmail() + Protocol.FIELD_SEPARATOR + 
+                             usuarioLogado.getTipoUsuario();
             return Protocol.createSuccessResponse(userData);
         }
         
         // Autenticação real
         Usuario usuario = usuarioDAO.autenticar(email, senha);
         if (usuario != null) {
+            // Verifica se o tipo de usuário é compatível com o tipo de cliente
+            if ("admin".equals(tipoCliente) && !usuario.isAdmin()) {
+                return Protocol.createResponse(Protocol.STATUS_ACCESS_DENIED, 
+                    "Acesso negado. Apenas administradores podem acessar o painel desktop.");
+            }
+            
+            if ("mobile".equals(tipoCliente) && usuario.isAdmin()) {
+                return Protocol.createResponse(Protocol.STATUS_ACCESS_DENIED, 
+                    "Acesso negado. Administradores não podem acessar o aplicativo mobile.");
+            }
+            
             usuarioLogado = usuario;
             String userData = usuario.getId() + Protocol.FIELD_SEPARATOR + 
                              usuario.getNome() + Protocol.FIELD_SEPARATOR + 
-                             usuario.getEmail();
+                             usuario.getEmail() + Protocol.FIELD_SEPARATOR + 
+                             usuario.getTipoUsuario();
             return Protocol.createSuccessResponse(userData);
         } else {
             return Protocol.createResponse(Protocol.STATUS_INVALID_CREDENTIALS, "Email ou senha inválidos");
@@ -249,12 +264,16 @@ public class ClientHandler extends Thread {
             return Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Senha deve ter pelo menos 6 caracteres");
         }
         
+        // Parâmetro opcional: tipo de usuário (admin ou usuario) - padrão é usuario
+        String tipoUsuario = partes.length > 4 ? partes[4] : Usuario.TIPO_USUARIO;
+        
         // Modo de teste
         if (testMode) {
-            usuarioLogado = new Usuario(1, nome, email, "");
+            usuarioLogado = new Usuario(1, nome, email, "", tipoUsuario);
             String userData = usuarioLogado.getId() + Protocol.FIELD_SEPARATOR + 
                              usuarioLogado.getNome() + Protocol.FIELD_SEPARATOR + 
-                             usuarioLogado.getEmail();
+                             usuarioLogado.getEmail() + Protocol.FIELD_SEPARATOR + 
+                             usuarioLogado.getTipoUsuario();
             return Protocol.createSuccessResponse(userData);
         }
         
@@ -263,13 +282,16 @@ public class ClientHandler extends Thread {
             return Protocol.createResponse(Protocol.STATUS_USER_EXISTS, "Email já cadastrado");
         }
         
-        // Cria novo usuário
+        // Cria novo usuário (sempre como usuario comum - admin só pode ser criado pelo banco)
         Usuario novoUsuario = new Usuario(nome, email, SecurityUtil.hashSenha(senha));
+        novoUsuario.setTipoUsuario(Usuario.TIPO_USUARIO); // Força tipo usuario para registros via app
+        
         if (usuarioDAO.inserir(novoUsuario)) {
             usuarioLogado = novoUsuario;
             String userData = novoUsuario.getId() + Protocol.FIELD_SEPARATOR + 
                              novoUsuario.getNome() + Protocol.FIELD_SEPARATOR + 
-                             novoUsuario.getEmail();
+                             novoUsuario.getEmail() + Protocol.FIELD_SEPARATOR + 
+                             novoUsuario.getTipoUsuario();
             return Protocol.createSuccessResponse(userData);
         } else {
             return Protocol.createErrorResponse("Erro ao criar usuário");

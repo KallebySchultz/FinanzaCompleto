@@ -198,7 +198,8 @@ public class ServerClient {
      * Faz login no servidor
      */
     public void login(String email, String senha, ServerCallback<String> callback) {
-        String comando = Protocol.buildCommand(Protocol.CMD_LOGIN, email, senha);
+        // Adiciona "mobile" como tipo de cliente para diferenciar de login admin
+        String comando = Protocol.buildCommand(Protocol.CMD_LOGIN, email, senha, "mobile");
         enviarComando(comando, new ServerCallback<String>() {
             @Override
             public void onSuccess(String result) {

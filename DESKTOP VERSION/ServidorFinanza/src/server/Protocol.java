@@ -62,6 +62,7 @@ public class Protocol {
     public static final String STATUS_INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
     public static final String STATUS_USER_EXISTS = "USER_EXISTS";
     public static final String STATUS_INVALID_DATA = "INVALID_DATA";
+    public static final String STATUS_ACCESS_DENIED = "ACCESS_DENIED";
     
     // Separadores
     public static final String SEPARATOR = "|";

@@ -83,6 +83,21 @@ Se você é **novo no projeto**, recomendamos ler nesta ordem:
   - Estatísticas completas
   - Próximos passos
 
+### Autenticação e Administração
+- **[GUIA_RAPIDO_ADMIN_USER.md](GUIA_RAPIDO_ADMIN_USER.md)** - Guia rápido de admin/usuário
+  - Sistema de tipos de usuário
+  - Credenciais padrão
+  - Operações comuns
+  - Troubleshooting
+- **[ALTERACOES_USER_ADMIN.md](ALTERACOES_USER_ADMIN.md)** - Implementação de tipos de usuário
+  - Diferenciação admin/usuário
+  - Fluxos de autenticação
+  - Migração de banco de dados
+- **[DESKTOP VERSION/ALTERACOES_REGISTRO_ADMIN.md](DESKTOP VERSION/ALTERACOES_REGISTRO_ADMIN.md)** - Registro via desktop
+  - Usuários criados via desktop são administradores
+  - Protocolo atualizado de registro
+  - Testes e validação
+
 ---
 
 ## 💻 Código Fonte

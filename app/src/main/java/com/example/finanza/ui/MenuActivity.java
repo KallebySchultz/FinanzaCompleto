@@ -19,6 +19,45 @@ import com.example.finanza.R;
 import com.example.finanza.db.AppDatabase;
 import com.example.finanza.model.Categoria;
 
+/**
+ * MenuActivity - Tela de Menu e Configurações Rápidas
+ *
+ * Esta atividade serve como hub central de navegação e configurações
+ * rápidas do aplicativo Finanza. Oferece acesso rápido a funcionalidades
+ * importantes e atalhos para outras telas.
+ *
+ * Funcionalidades principais:
+ * - Dashboard com visão geral das finanças
+ * - Acesso rápido a todas as seções do app
+ * - Painel para adicionar categoria rapidamente
+ * - Navegação para telas de contas, categorias, movimentos
+ * - Acesso ao perfil do usuário
+ * - Configurações do aplicativo
+ * - Sincronização manual de dados
+ *
+ * Navegação disponível:
+ * - Home/Dashboard: Visão geral financeira
+ * - Contas: Gerenciamento de contas bancárias
+ * - Categorias: Gerenciamento de categorias
+ * - Movimentos: Lançamentos financeiros
+ * - Perfil: Dados do usuário
+ * - Configurações: Preferências do app
+ *
+ * Painel de categoria rápida:
+ * - Permite criar categoria sem sair do menu
+ * - Seleção de tipo (receita/despesa)
+ * - Validação de nome único
+ *
+ * Layout:
+ * - Navegação inferior persistente
+ * - Botão flutuante para ações rápidas
+ * - Cards organizados por seção
+ * - Interface intuitiva e responsiva
+ *
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
+ */
 public class MenuActivity extends AppCompatActivity {
     private FrameLayout categoriasPanel;
     private EditText inputNomeCategoria;

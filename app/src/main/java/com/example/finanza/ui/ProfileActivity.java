@@ -19,6 +19,36 @@ import com.example.finanza.model.Usuario;
 import com.example.finanza.network.AuthManager;
 import com.google.android.material.textfield.TextInputEditText;
 
+/**
+ * ProfileActivity - Tela de Perfil do Usuário
+ *
+ * Esta atividade permite ao usuário visualizar e gerenciar suas
+ * informações pessoais no aplicativo Finanza.
+ *
+ * Funcionalidades principais:
+ * - Visualização de dados do perfil (nome, email, data de cadastro)
+ * - Edição de nome e email
+ * - Alteração de senha com validação
+ * - Exclusão de conta com confirmação
+ * - Logout do sistema
+ * - Sincronização automática de alterações
+ *
+ * Comportamento:
+ * - Validação de email no formato correto
+ * - Confirmação de senha ao alterar
+ * - Diálogo de confirmação antes de excluir conta
+ * - Limpeza de sessão ao fazer logout ou excluir conta
+ * - Retorno para tela de login após logout/exclusão
+ *
+ * Segurança:
+ * - Senha atual necessária para alterações sensíveis
+ * - Confirmação de senha nova
+ * - Avisos claros sobre ações irreversíveis
+ *
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
+ */
 public class ProfileActivity extends AppCompatActivity {
 
     private AppDatabase db;

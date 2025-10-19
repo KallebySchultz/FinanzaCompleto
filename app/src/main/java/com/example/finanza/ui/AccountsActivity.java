@@ -33,7 +33,36 @@ import com.example.finanza.network.SyncService;
 import java.util.List;
 
 /**
- * Activity para gerenciamento de contas
+ * AccountsActivity - Tela de Gerenciamento de Contas
+ *
+ * Esta atividade permite ao usuário gerenciar suas contas financeiras
+ * no aplicativo Finanza. Oferece funcionalidades completas de CRUD para
+ * diferentes tipos de contas bancárias e financeiras.
+ *
+ * Funcionalidades principais:
+ * - Visualização de todas as contas do usuário
+ * - Criação de novas contas (corrente, poupança, cartão, investimento, dinheiro)
+ * - Edição de contas existentes (nome e saldo inicial)
+ * - Exclusão de contas com validação
+ * - Cálculo automático de saldo atual baseado em lançamentos
+ * - Sincronização automática com servidor desktop
+ * - Navegação integrada com outras telas do app
+ *
+ * Tipos de conta suportados:
+ * - Conta Corrente: Conta bancária para movimentações diárias
+ * - Poupança: Conta de investimento de baixo risco
+ * - Cartão: Controle de gastos com cartão de crédito
+ * - Investimento: Aplicações e investimentos diversos
+ * - Dinheiro: Controle de dinheiro em espécie
+ *
+ * Layout:
+ * - Lista dinâmica de contas com saldo e tipo
+ * - Botão flutuante para adicionar nova conta
+ * - Navegação inferior para outras seções do app
+ *
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
  */
 public class AccountsActivity extends AppCompatActivity {
 

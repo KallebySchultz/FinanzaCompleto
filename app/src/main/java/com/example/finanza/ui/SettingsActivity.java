@@ -12,6 +12,48 @@ import com.example.finanza.R;
 import com.example.finanza.network.ServerClient;
 import com.example.finanza.network.SyncService;
 import android.util.Log;
+
+/**
+ * SettingsActivity - Tela de Configurações do Aplicativo
+ *
+ * Esta atividade permite ao usuário configurar preferências e
+ * parâmetros do aplicativo Finanza, especialmente relacionados
+ * à sincronização com o servidor desktop.
+ *
+ * Funcionalidades principais:
+ * - Configuração de servidor (host e porta)
+ * - Teste de conectividade com servidor
+ * - Visualização de status da conexão
+ * - Sincronização manual de dados
+ * - Salvamento automático de configurações
+ *
+ * Configurações disponíveis:
+ * - Host do servidor: Endereço IP ou hostname
+ * - Porta do servidor: Porta TCP/IP (padrão: 8080)
+ * - Preferências de sincronização automática
+ * - Intervalo de sincronização
+ *
+ * Validações:
+ * - Formato de IP/hostname válido
+ * - Porta numérica válida (1-65535)
+ * - Teste de conexão antes de salvar
+ *
+ * Comportamento:
+ * - Carrega configurações salvas ao abrir
+ * - Testa conexão ao clicar em "Testar"
+ * - Salva configurações em SharedPreferences
+ * - Feedback visual de sucesso/erro
+ * - Indicador de status da conexão
+ *
+ * Uso:
+ * - Essencial para configurar sincronização servidor-cliente
+ * - Permite uso offline se servidor não disponível
+ * - Facilita troubleshooting de problemas de conexão
+ *
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
+ */
 public class SettingsActivity extends AppCompatActivity {
     private EditText editServerHost;
     private EditText editServerPort;

@@ -33,6 +33,9 @@ public class FinanzaServer {
                     return;
                 }
                 System.out.println("Conexão com banco de dados OK");
+                
+                // Inicializa as tabelas do banco de dados
+                DatabaseUtil.initializeDatabase();
             } else {
                 System.out.println("Servidor iniciado em MODO DE TESTE (sem banco de dados)");
             }

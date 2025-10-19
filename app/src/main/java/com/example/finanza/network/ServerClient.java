@@ -225,7 +225,8 @@ public class ServerClient {
      * Registra novo usuário no servidor
      */
     public void registrar(String nome, String email, String senha, ServerCallback<String> callback) {
-        String comando = Protocol.buildCommand(Protocol.CMD_REGISTER, nome, email, senha);
+        // Envia comando REGISTER com tipo de cliente "mobile" para criar usuário comum
+        String comando = Protocol.buildCommand(Protocol.CMD_REGISTER, nome, email, senha, "mobile");
         enviarComando(comando, new ServerCallback<String>() {
             @Override
             public void onSuccess(String result) {

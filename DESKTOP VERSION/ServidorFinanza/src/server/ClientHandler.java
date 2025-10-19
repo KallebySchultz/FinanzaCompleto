@@ -264,8 +264,12 @@ public class ClientHandler extends Thread {
             return Protocol.createResponse(Protocol.STATUS_INVALID_DATA, "Senha deve ter pelo menos 6 caracteres");
         }
         
-        // Parâmetro opcional: tipo de usuário (admin ou usuario) - padrão é usuario
-        String tipoUsuario = partes.length > 4 ? partes[4] : Usuario.TIPO_USUARIO;
+        // Parâmetro opcional: tipo de cliente ('admin' para desktop ou 'mobile' para app mobile)
+        String tipoCliente = partes.length > 4 ? partes[4] : "mobile";
+        
+        // Determina o tipo de usuário baseado no cliente que está registrando
+        // Desktop (admin) cria administradores, Mobile cria usuários comuns
+        String tipoUsuario = "admin".equals(tipoCliente) ? Usuario.TIPO_ADMIN : Usuario.TIPO_USUARIO;
         
         // Modo de teste
         if (testMode) {
@@ -282,9 +286,9 @@ public class ClientHandler extends Thread {
             return Protocol.createResponse(Protocol.STATUS_USER_EXISTS, "Email já cadastrado");
         }
         
-        // Cria novo usuário (sempre como usuario comum - admin só pode ser criado pelo banco)
+        // Cria novo usuário com o tipo apropriado
         Usuario novoUsuario = new Usuario(nome, email, SecurityUtil.hashSenha(senha));
-        novoUsuario.setTipoUsuario(Usuario.TIPO_USUARIO); // Força tipo usuario para registros via app
+        novoUsuario.setTipoUsuario(tipoUsuario);
         
         if (usuarioDAO.inserir(novoUsuario)) {
             usuarioLogado = novoUsuario;

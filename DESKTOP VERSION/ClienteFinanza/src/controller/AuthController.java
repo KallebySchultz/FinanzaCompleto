@@ -108,7 +108,8 @@ public class AuthController {
             return new LoginResult(false, "Não conectado ao servidor", null);
         }
         
-        String comando = CMD_REGISTER + SEPARATOR + nome + SEPARATOR + email + SEPARATOR + senha;
+        // Envia comando REGISTER com tipo de cliente "admin" para criar usuário administrador
+        String comando = CMD_REGISTER + SEPARATOR + nome + SEPARATOR + email + SEPARATOR + senha + SEPARATOR + "admin";
         String resposta = networkClient.sendCommand(comando);
         
         String[] partes = resposta.split("\\" + SEPARATOR);

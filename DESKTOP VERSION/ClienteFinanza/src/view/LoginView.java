@@ -239,6 +239,14 @@ public class LoginView extends JFrame {
             nomeField.setVisible(true);
             loginButton.setText("Criar Conta");
             registrarButton.setText("Voltar ao Login");
+            
+            // Aviso sobre criação de contas admin
+            JOptionPane.showMessageDialog(this, 
+                "ATENÇÃO: Novos usuários são criados como usuários comuns.\n" +
+                "Para criar um administrador, edite o tipo no banco de dados.\n" +
+                "Apenas administradores podem fazer login neste painel.",
+                "Informação Importante", 
+                JOptionPane.INFORMATION_MESSAGE);
         } else {
             // Modo de login
             setTitle("Finanza Desktop - Login Admin");
@@ -246,7 +254,7 @@ public class LoginView extends JFrame {
             nomeField.setVisible(false);
             nomeField.setText("");
             loginButton.setText("Entrar");
-            registrarButton.setText("Registrar Admin");
+            registrarButton.setText("Registrar Usuário");
         }
         
         pack();

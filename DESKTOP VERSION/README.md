@@ -77,10 +77,20 @@ O servidor iniciará na porta **8080** e criará automaticamente as tabelas do b
 ### Erro: "Driver MySQL não encontrado"
 
 **Solução**: Baixe o MySQL Connector/J e adicione ao classpath do projeto:
+
+**Opção 1 - Download Manual:**
 1. Baixe de: https://dev.mysql.com/downloads/connector/j/
 2. Crie uma pasta `lib` no diretório `DESKTOP VERSION`
-3. Copie o arquivo `.jar` para essa pasta
+3. Copie o arquivo `.jar` para essa pasta (ex: `mysql-connector-j-8.0.33.jar`)
 4. O projeto já está configurado para usar `../lib/mysql-connector-j-8.0.33.jar`
+
+**Opção 2 - Download via curl/wget:**
+```bash
+mkdir -p "DESKTOP VERSION/lib"
+cd "DESKTOP VERSION/lib"
+curl -L -o mysql-connector-j-8.0.33.jar \
+  "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar"
+```
 
 ### Erro: "Não foi possível conectar ao banco de dados"
 

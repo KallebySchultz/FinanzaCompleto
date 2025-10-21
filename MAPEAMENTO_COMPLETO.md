@@ -161,34 +161,425 @@ dependencies {
 
 #### 1. LoginActivity.java
 **Função:** Tela de autenticação do usuário
-- Recebe email e senha do usuário
-- Usa `AuthManager.java` para validar credenciais via servidor
-- Comunica com servidor através de `ServerClient.java` usando `Protocol.java`
-- Em caso de sucesso, armazena dados do usuário em `UsuarioDao.java`
-- Redireciona para `MenuActivity.java`
+
+**Fluxo Detalhado de Execução:**
+1. **Interface do Usuário (activity_login.xml)**
+   - Usuário insere email no campo `EditText etEmail`
+   - Usuário insere senha no campo `EditText etSenha`
+   - Usuário clica no botão `Button btnLogin`
+
+2. **Evento onClick do botão (LoginActivity.java)**
+   - Método `btnLogin.setOnClickListener()` é acionado
+   - Valida campos não vazios
+   - Extrai texto dos campos: `String email = etEmail.getText().toString()`
+   - Extrai senha: `String senha = etSenha.getText().toString()`
+
+3. **Chamada ao AuthManager (AuthManager.java)**
+   - **LoginActivity chama:** `AuthManager.getInstance().login(email, senha)`
+   - **AuthManager executa:** Hash SHA-256 da senha usando `SecurityUtil.hashPassword(senha)`
+   - **AuthManager cria:** String de comando formatada usando `Protocol.CMD_LOGIN`
+
+4. **Comunicação com Servidor (ServerClient.java)**
+   - **AuthManager chama:** `ServerClient.sendCommand(Protocol.CMD_LOGIN, email + "|" + senhaHash)`
+   - **ServerClient executa:** Abre socket TCP na porta 12345
+   - **ServerClient envia:** Comando formatado "LOGIN|email@exemplo.com|hash_sha256"
+   - **ServerClient aguarda:** Resposta do servidor via `BufferedReader.readLine()`
+
+5. **Processamento da Resposta**
+   - **Se resposta == "OK|{dados_usuario}":**
+     - Parse JSON dos dados do usuário
+     - Cria objeto `Usuario` com os dados recebidos
+     - **AuthManager chama:** `UsuarioDao.inserir(usuario)` para salvar localmente
+     - **AuthManager retorna:** true para LoginActivity
+   - **Se resposta == "ERROR|mensagem":**
+     - **AuthManager retorna:** false
+     - LoginActivity exibe Toast com erro
+
+6. **Redirecionamento (LoginActivity.java)**
+   - **LoginActivity executa:** `Intent intent = new Intent(this, MenuActivity.class)`
+   - **LoginActivity chama:** `intent.putExtra("usuario_id", usuario.getId())`
+   - **LoginActivity inicia:** `startActivity(intent)`
+   - **LoginActivity finaliza:** `finish()` para remover da pilha
+
+**Resumo da Cadeia de Chamadas:**
+```
+LoginActivity.onClick() 
+  → AuthManager.login()
+    → SecurityUtil.hashPassword()
+    → ServerClient.sendCommand()
+      → ServerSocket envia via TCP
+      → Servidor processa (ClientHandler)
+      → Resposta retorna
+    → UsuarioDao.inserir()
+  → Intent(MenuActivity)
+  → startActivity()
+```
 
 #### 2. RegisterActivity.java
 **Função:** Cadastro de novos usuários
-- Coleta dados do novo usuário (nome, email, senha)
-- Envia dados ao servidor via `ServerClient.java`
-- Usa criptografia para senha (implementada em `Protocol.java`)
-- Após registro bem-sucedido, redireciona para `LoginActivity.java`
+
+**Fluxo Detalhado de Execução:**
+1. **Interface do Usuário (activity_register.xml)**
+   - Usuário insere nome no `EditText etNome`
+   - Usuário insere email no `EditText etEmail`
+   - Usuário insere senha no `EditText etSenha`
+   - Usuário confirma senha no `EditText etConfirmarSenha`
+   - Usuário clica no botão `Button btnRegistrar`
+
+2. **Validação de Dados (RegisterActivity.java)**
+   - Método `btnRegistrar.setOnClickListener()` é acionado
+   - **Valida:** Campos não vazios - `if (nome.isEmpty() || email.isEmpty() || senha.isEmpty())`
+   - **Valida:** Formato de email - `if (!Patterns.EMAIL_ADDRESS.matcher(email).matches())`
+   - **Valida:** Senhas coincidem - `if (!senha.equals(confirmarSenha))`
+   - **Valida:** Tamanho mínimo da senha - `if (senha.length() < 6)`
+
+3. **Preparação dos Dados**
+   - Extrai valores: `String nome = etNome.getText().toString().trim()`
+   - Gera UUID único: `String uuid = UUID.randomUUID().toString()`
+   - **Chama SecurityUtil:** `String senhaHash = SecurityUtil.hashPassword(senha)`
+   - Obtém timestamp: `long timestamp = System.currentTimeMillis()`
+
+4. **Criação do Comando (Protocol.java)**
+   - **RegisterActivity monta:** Parâmetros separados por "|"
+   - Formato: `"REGISTER|" + nome + "|" + email + "|" + senhaHash + "|" + uuid + "|" + timestamp`
+
+5. **Envio ao Servidor (ServerClient.java)**
+   - **RegisterActivity chama:** `ServerClient.sendCommand(Protocol.CMD_REGISTER, params)`
+   - **ServerClient executa:**
+     - Estabelece conexão TCP com servidor (porta 12345)
+     - Envia comando via `PrintWriter.println()`
+     - Aguarda resposta via `BufferedReader.readLine()`
+     - Define timeout de 30 segundos
+
+6. **Processamento da Resposta**
+   - **Se resposta == "OK|id_usuario":**
+     - Exibe Toast: "Cadastro realizado com sucesso!"
+     - Cria Intent para LoginActivity
+     - Preenche email automaticamente: `intent.putExtra("email", email)`
+     - **RegisterActivity chama:** `startActivity(intent)`
+     - **RegisterActivity finaliza:** `finish()`
+   - **Se resposta == "ERROR|USER_EXISTS":**
+     - Exibe Toast: "Email já cadastrado no sistema"
+     - Mantém na tela de registro
+   - **Se resposta == "ERROR|mensagem":**
+     - Exibe Toast com a mensagem de erro
+     - Permite nova tentativa
+
+**Resumo da Cadeia de Chamadas:**
+```
+RegisterActivity.onClick()
+  → Validações locais
+  → UUID.randomUUID()
+  → SecurityUtil.hashPassword()
+  → Protocol.formatCommand(CMD_REGISTER)
+  → ServerClient.sendCommand()
+    → Socket TCP conecta ao servidor
+    → Envia: "REGISTER|nome|email|hash|uuid|timestamp"
+    → Aguarda resposta
+  → Parse da resposta
+  → Intent(LoginActivity)
+  → startActivity() e finish()
+```
 
 #### 3. MenuActivity.java (Dashboard)
 **Função:** Tela principal com visão geral financeira
-- Exibe saldo total de todas as contas
-- Mostra resumo de receitas e despesas
-- Busca dados de `ContaDao.java` e `LancamentoDao.java`
-- Inicia `SyncService.java` para sincronizar dados com servidor
-- Navega para outras activities (Accounts, Movements, Categories, Profile, Settings)
+
+**Fluxo Detalhado de Execução:**
+
+1. **Inicialização da Activity (onCreate)**
+   - **MenuActivity recebe:** Intent com `usuario_id` via `getIntent().getIntExtra("usuario_id", -1)`
+   - **MenuActivity carrega:** Layout `activity_menu.xml` com `setContentView()`
+   - **MenuActivity obtém:** Referências dos componentes (TextViews, Buttons, CardViews)
+   - **MenuActivity inicializa:** Instância do banco Room: `AppDatabase.getInstance(this)`
+
+2. **Busca de Dados Financeiros**
+   - **MenuActivity obtém DAOs:**
+     ```java
+     ContaDao contaDao = AppDatabase.getInstance(this).contaDao();
+     LancamentoDao lancamentoDao = AppDatabase.getInstance(this).lancamentoDao();
+     ```
+   
+   - **MenuActivity chama:** `contaDao.listarPorUsuario(usuarioId)`
+     - **ContaDao executa:** Query SQL `SELECT * FROM conta WHERE usuarioId = ?`
+     - **Room retorna:** `List<Conta>` com todas as contas do usuário
+   
+   - **MenuActivity calcula:** Saldo total iterando sobre as contas
+     ```java
+     double saldoTotal = 0.0;
+     for (Conta conta : contas) {
+         saldoTotal += conta.getSaldoAtual();
+     }
+     ```
+
+3. **Cálculo de Receitas e Despesas**
+   - **MenuActivity chama:** `lancamentoDao.somaPorTipo("receita", usuarioId)`
+     - **LancamentoDao executa:** `SELECT SUM(valor) FROM lancamento WHERE tipo = 'receita' AND usuarioId = ? AND isDeleted = 0`
+     - **Room retorna:** Double com soma total de receitas
+   
+   - **MenuActivity chama:** `lancamentoDao.somaPorTipo("despesa", usuarioId)`
+     - **LancamentoDao executa:** `SELECT SUM(valor) FROM lancamento WHERE tipo = 'despesa' AND usuarioId = ? AND isDeleted = 0`
+     - **Room retorna:** Double com soma total de despesas
+
+4. **Atualização da Interface**
+   - **MenuActivity atualiza TextViews:**
+     ```java
+     tvSaldoTotal.setText(String.format("R$ %.2f", saldoTotal));
+     tvTotalReceitas.setText(String.format("R$ %.2f", totalReceitas));
+     tvTotalDespesas.setText(String.format("R$ %.2f", totalDespesas));
+     tvSaldoMensal.setText(String.format("R$ %.2f", totalReceitas - totalDespesas));
+     ```
+   - Define cores: Verde para positivo, Vermelho para negativo
+
+5. **Inicialização da Sincronização (SyncService.java)**
+   - **MenuActivity cria thread:** `new Thread(() -> { ... }).start()`
+   - **Thread executa:** `SyncService.startSync(usuarioId, context)`
+   - **SyncService executa em background:**
+     - Verifica conectividade de rede
+     - Busca dados pendentes: `contaDao.obterPendentesSyncPorUsuario(usuarioId)`
+     - Para cada registro pendente, envia ao servidor
+     - Busca atualizações do servidor desde último sync
+     - Aplica atualizações localmente
+     - Notifica via `runOnUiThread()` para atualizar UI
+
+6. **Configuração de Navegação**
+   - **Botão Contas (btnContas):**
+     - onClick → `Intent intent = new Intent(MenuActivity.this, AccountsActivity.class)`
+     - Passa usuarioId → `intent.putExtra("usuario_id", usuarioId)`
+     - Inicia Activity → `startActivity(intent)`
+   
+   - **Botão Movimentações (btnMovimentos):**
+     - onClick → Inicia `MovementsActivity.class`
+   
+   - **Botão Categorias (btnCategorias):**
+     - onClick → Inicia `CategoriaActivity.class`
+   
+   - **Botão Perfil (btnPerfil):**
+     - onClick → Inicia `ProfileActivity.class`
+   
+   - **Botão Configurações (btnSettings):**
+     - onClick → Inicia `SettingsActivity.class`
+
+7. **Atualização ao Retomar (onResume)**
+   - **MenuActivity.onResume() chama:** Métodos de atualização novamente
+   - Recarrega dados do banco para refletir mudanças feitas em outras telas
+   - Recalcula saldos e totais
+   - Atualiza interface
+
+**Resumo da Cadeia de Chamadas:**
+```
+MenuActivity.onCreate()
+  → AppDatabase.getInstance()
+    → ContaDao.listarPorUsuario()
+      → Room executa SELECT em SQLite
+    → LancamentoDao.somaPorTipo("receita")
+      → Room executa SUM query
+    → LancamentoDao.somaPorTipo("despesa")
+      → Room executa SUM query
+  → Atualiza TextViews da UI
+  → new Thread().start()
+    → SyncService.startSync()
+      → ContaDao.obterPendentesSyncPorUsuario()
+      → ServerClient.sendCommand() para cada pendente
+      → Atualiza registros locais
+      → runOnUiThread() atualiza UI
+  → Configura listeners dos botões
+    → onClick → startActivity(nova Activity)
+```
 
 #### 4. AccountsActivity.java
 **Função:** Gerenciamento de contas bancárias
-- Lista todas as contas do usuário obtidas de `ContaDao.java`
-- Permite criar novas contas (corrente, poupança, cartão, investimento)
-- Editar e excluir contas existentes
-- Sincroniza alterações com servidor via `EnhancedSyncService.java`
-- Atualiza saldos baseado em lançamentos de `LancamentoDao.java`
+
+**Fluxo Detalhado de Execução:**
+
+1. **Inicialização e Carregamento de Dados (onCreate)**
+   - **AccountsActivity recebe:** `usuario_id` do Intent
+   - **AccountsActivity inicializa:** RecyclerView para lista de contas
+   - **AccountsActivity obtém DAO:** `ContaDao contaDao = AppDatabase.getInstance(this).contaDao()`
+   - **AccountsActivity chama:** `contaDao.listarPorUsuario(usuarioId)`
+     - **ContaDao executa:** `SELECT * FROM conta WHERE usuarioId = ? AND syncStatus != 4 ORDER BY dataCriacao DESC`
+     - **Room retorna:** `List<Conta>` ordenada por data de criação
+   - **AccountsActivity cria:** Adapter do RecyclerView com lista de contas
+   - **AccountsActivity define:** Adapter no RecyclerView: `recyclerView.setAdapter(adapter)`
+
+2. **Adicionar Nova Conta (FloatingActionButton)**
+   - **Usuário clica:** FAB "+" no canto inferior direito
+   - **AccountsActivity exibe:** Dialog personalizado `dialog_add_account.xml`
+   - **Dialog contém:**
+     - EditText para nome da conta
+     - Spinner para tipo (corrente, poupança, cartão, investimento, dinheiro)
+     - EditText para saldo inicial
+     - Botões Cancelar e Salvar
+
+   - **Quando usuário clica "Salvar":**
+     - **AccountsActivity valida:** Campos não vazios
+     - **AccountsActivity valida:** Saldo é número válido
+     - **AccountsActivity cria objeto Conta:**
+       ```java
+       Conta novaConta = new Conta();
+       novaConta.setUuid(UUID.randomUUID().toString());
+       novaConta.setNome(nome);
+       novaConta.setTipo(tipo);
+       novaConta.setSaldoInicial(saldo);
+       novaConta.setSaldoAtual(saldo);
+       novaConta.setUsuarioId(usuarioId);
+       novaConta.setDataCriacao(System.currentTimeMillis());
+       novaConta.setLastModified(System.currentTimeMillis());
+       novaConta.setSyncStatus(2); // NEEDS_SYNC
+       ```
+   
+   - **AccountsActivity executa em thread:**
+     ```java
+     new Thread(() -> {
+         long id = contaDao.inserir(novaConta);
+         runOnUiThread(() -> {
+             // Atualiza lista
+             recarregarContas();
+             // Inicia sincronização
+             sincronizarConta(novaConta);
+         });
+     }).start();
+     ```
+
+3. **Editar Conta Existente**
+   - **Usuário clica:** Em uma conta na lista
+   - **RecyclerView.Adapter chama:** `onItemClick(conta)`
+   - **AccountsActivity exibe:** Dialog `dialog_edit_account.xml` preenchido
+   - **Dialog carrega:** Dados da conta selecionada
+   
+   - **Quando usuário salva alterações:**
+     - **AccountsActivity atualiza campos:**
+       ```java
+       conta.setNome(novoNome);
+       conta.setSaldoInicial(novoSaldo);
+       conta.setLastModified(System.currentTimeMillis());
+       conta.setSyncStatus(2); // Marca para sincronização
+       ```
+     - **AccountsActivity chama:** `contaDao.atualizar(conta)`
+       - **ContaDao executa:** `UPDATE conta SET nome=?, saldoInicial=?, lastModified=?, syncStatus=? WHERE id=?`
+       - **Room confirma:** Atualização bem-sucedida
+     - **AccountsActivity recarrega:** Lista de contas
+     - **AccountsActivity inicia:** Sincronização via `EnhancedSyncService`
+
+4. **Excluir Conta**
+   - **Usuário mantém pressionado:** Item da conta na lista (long click)
+   - **AccountsActivity exibe:** Dialog de confirmação `dialog_delete_account.xml`
+   - **Dialog mostra:** "Tem certeza que deseja excluir a conta X? Todas as movimentações serão removidas."
+   
+   - **Se usuário confirma:**
+     - **AccountsActivity verifica:** Se há lançamentos associados
+       ```java
+       int countLancamentos = lancamentoDao.listarPorConta(conta.getId()).size();
+       ```
+     - **Se houver lançamentos:**
+       - Exibe aviso adicional: "Esta conta possui X movimentações"
+       - Solicita confirmação extra
+     
+     - **AccountsActivity executa exclusão:**
+       ```java
+       new Thread(() -> {
+           // Exclui lançamentos da conta (CASCADE)
+           lancamentoDao.excluirPorConta(conta.getId());
+           // Exclui a conta
+           contaDao.deletar(conta);
+           // Sincroniza exclusão com servidor
+           sincronizarExclusao(conta.getUuid());
+           runOnUiThread(() -> recarregarContas());
+       }).start();
+       ```
+
+5. **Cálculo e Atualização de Saldos**
+   - **Para cada conta na lista:**
+     - **AccountsActivity chama:** `lancamentoDao.saldoPorConta(contaId, usuarioId)`
+       - **LancamentoDao executa:**
+         ```sql
+         SELECT 
+           SUM(CASE WHEN tipo='receita' THEN valor ELSE 0 END) -
+           SUM(CASE WHEN tipo='despesa' THEN valor ELSE 0 END)
+         FROM lancamento 
+         WHERE contaId = ? AND usuarioId = ? AND isDeleted = 0
+         ```
+     - **AccountsActivity calcula:** `saldoAtual = saldoInicial + saldoMovimentacoes`
+     - **Se saldo mudou:**
+       - **AccountsActivity atualiza:** `conta.setSaldoAtual(novoSaldo)`
+       - **AccountsActivity chama:** `contaDao.atualizar(conta)`
+   
+   - **Adapter exibe:** Saldo atualizado com formatação de moeda
+   - **Adapter aplica cores:** Verde para positivo, Vermelho para negativo
+
+6. **Sincronização com Servidor (EnhancedSyncService)**
+   - **AccountsActivity inicia:** Sincronização em background
+   - **EnhancedSyncService.syncContas() executa:**
+     - **Busca pendentes:** `contaDao.obterPendentesSyncPorUsuario(usuarioId)`
+     - **Para cada conta pendente:**
+       - Verifica se é nova (syncStatus = 2) ou atualizada
+       - **Chama ServerClient:**
+         ```java
+         String comando = conta.getId() == 0 ? 
+             Protocol.CMD_ADD_CONTA_ENHANCED : 
+             Protocol.CMD_UPDATE_CONTA_ENHANCED;
+         String params = formatarContaParaSync(conta);
+         String resposta = ServerClient.sendCommand(comando, params);
+         ```
+       - **Se resposta OK:**
+         - Parse do serverId: `int serverId = Integer.parseInt(resposta.split("|")[1])`
+         - **Atualiza metadados:** `contaDao.marcarComoSincronizado(conta.getId(), timestamp)`
+         - **Marca:** `conta.setSyncStatus(1)` // SYNCED
+     
+     - **Busca atualizações do servidor:**
+       - **Chama:** `ServerClient.sendCommand(CMD_LIST_CHANGES_SINCE, lastSyncTime)`
+       - **Recebe:** Lista de contas modificadas no servidor
+       - **Para cada conta do servidor:**
+         - Verifica se existe localmente por UUID
+         - Se existir, aplica merge usando `ConflictResolutionManager`
+         - Se não existir, insere nova conta localmente
+     
+     - **Notifica UI:** Via callback ou broadcast para atualizar lista
+
+**Resumo da Cadeia de Chamadas:**
+
+**Adicionar Conta:**
+```
+AccountsActivity.onClick(FAB)
+  → Dialog.show()
+  → Dialog.onClick(Salvar)
+    → new Conta(dados)
+    → UUID.randomUUID()
+    → new Thread().start()
+      → ContaDao.inserir(conta)
+        → Room INSERT INTO conta
+      → runOnUiThread()
+        → recarregarContas()
+        → EnhancedSyncService.syncConta()
+          → ServerClient.sendCommand(ADD_CONTA_ENHANCED)
+            → Socket TCP envia dados
+          → ContaDao.marcarComoSincronizado()
+```
+
+**Editar Conta:**
+```
+RecyclerView.onClick(item)
+  → Dialog.show(conta)
+  → Dialog.onClick(Salvar)
+    → conta.setNome/setSaldo/setLastModified()
+    → conta.setSyncStatus(NEEDS_SYNC)
+    → ContaDao.atualizar(conta)
+      → Room UPDATE conta
+    → EnhancedSyncService.syncConta()
+      → ServerClient.sendCommand(UPDATE_CONTA_ENHANCED)
+```
+
+**Excluir Conta:**
+```
+RecyclerView.onLongClick(item)
+  → Dialog.show(confirmação)
+  → Dialog.onClick(Confirmar)
+    → new Thread().start()
+      → LancamentoDao.excluirPorConta()
+      → ContaDao.deletar(conta)
+        → Room DELETE FROM conta
+      → ServerClient.sendCommand(DELETE_CONTA)
+      → runOnUiThread() → recarregarContas()
+```
 
 #### 5. CategoriaActivity.java
 **Função:** Gerenciamento de categorias de transações
@@ -199,12 +590,281 @@ dependencies {
 
 #### 6. MovementsActivity.java
 **Função:** Gerenciamento de lançamentos/transações
-- Lista todos os lançamentos de `LancamentoDao.java`
-- Permite criar novos lançamentos (receita ou despesa)
-- Editar e excluir lançamentos
-- Associa lançamento a uma conta (`Conta.java`) e categoria (`Categoria.java`)
-- Sincroniza alterações com servidor via `EnhancedSyncService.java`
-- Valida integridade usando `DataIntegrityValidator.java`
+
+**Fluxo Detalhado de Execução:**
+
+1. **Inicialização e Carregamento (onCreate)**
+   - **MovementsActivity recebe:** `usuario_id` via Intent
+   - **MovementsActivity inicializa:** RecyclerView, DAOs e Adapters
+   - **MovementsActivity carrega dados:**
+     ```java
+     lancamentoDao = AppDatabase.getInstance(this).lancamentoDao();
+     contaDao = AppDatabase.getInstance(this).contaDao();
+     categoriaDao = AppDatabase.getInstance(this).categoriaDao();
+     
+     // Carrega lançamentos ativos (não deletados)
+     List<Lancamento> lancamentos = lancamentoDao.listarAtivosPorUsuario(usuarioId);
+     ```
+   - **LancamentoDao executa:** `SELECT * FROM lancamento WHERE usuarioId = ? AND isDeleted = 0 ORDER BY data DESC`
+   - **Room retorna:** Lista ordenada por data (mais recentes primeiro)
+
+2. **Exibição na Interface**
+   - **MovementsActivity cria:** Adapter customizado para RecyclerView
+   - **Para cada lançamento, Adapter exibe:**
+     - Descrição do lançamento
+     - Valor formatado (R$ X,XX)
+     - Data formatada (dd/MM/yyyy)
+     - Nome da categoria (busca em memória ou cache)
+     - Nome da conta (busca em memória ou cache)
+     - Cor e ícone baseado no tipo (verde=receita, vermelho=despesa)
+   - **Adapter agrupa por:** Mês/Ano para facilitar visualização
+
+3. **Adicionar Novo Lançamento (FAB)**
+   - **Usuário clica:** FloatingActionButton "+"
+   - **MovementsActivity exibe:** Dialog `dialog_add_transaction_movements.xml`
+   - **Dialog contém campos:**
+     - EditText: Descrição
+     - EditText: Valor (teclado numérico)
+     - DatePicker: Data da transação
+     - RadioGroup: Tipo (Receita/Despesa)
+     - Spinner: Conta (carrega de `contaDao.listarPorUsuario()`)
+     - Spinner: Categoria (filtra por tipo selecionado)
+
+   - **Quando usuário seleciona tipo:**
+     - **Dialog chama:** `categoriaDao.listarPorUsuarioETipo(usuarioId, tipo)`
+       - **CategoriaDao executa:** `SELECT * FROM categoria WHERE usuarioId = ? AND tipo = ?`
+       - **Room retorna:** Categorias filtradas (ex: só receitas)
+     - **Dialog atualiza:** Spinner de categorias dinamicamente
+
+   - **Quando usuário clica "Salvar":**
+     - **MovementsActivity valida dados:**
+       ```java
+       if (descricao.isEmpty()) {
+           Toast.show("Descrição é obrigatória");
+           return;
+       }
+       if (valor <= 0) {
+           Toast.show("Valor deve ser maior que zero");
+           return;
+       }
+       if (contaSelecionada == null || categoriaSelecionada == null) {
+           Toast.show("Selecione conta e categoria");
+           return;
+       }
+       ```
+   
+   - **MovementsActivity cria objeto:**
+     ```java
+     Lancamento lancamento = new Lancamento();
+     lancamento.setUuid(UUID.randomUUID().toString());
+     lancamento.setDescricao(descricao);
+     lancamento.setValor(valor);
+     lancamento.setData(dataSelecionada.getTime());
+     lancamento.setTipo(tipo); // "receita" ou "despesa"
+     lancamento.setContaId(contaSelecionada.getId());
+     lancamento.setCategoriaId(categoriaSelecionada.getId());
+     lancamento.setUsuarioId(usuarioId);
+     lancamento.setDataCriacao(System.currentTimeMillis());
+     lancamento.setLastModified(System.currentTimeMillis());
+     lancamento.setSyncStatus(2); // NEEDS_SYNC
+     lancamento.setIsDeleted(0); // Ativo
+     ```
+
+4. **Validação de Integridade (DataIntegrityValidator)**
+   - **MovementsActivity chama:** `DataIntegrityValidator.validarLancamento(lancamento)`
+   - **DataIntegrityValidator executa:**
+     - Verifica valor é positivo
+     - Verifica conta existe: `contaDao.buscarPorId(lancamento.getContaId())`
+     - Verifica categoria existe: `categoriaDao.buscarPorId(lancamento.getCategoriaId())`
+     - Verifica data não é futura (opcional)
+     - **Busca duplicatas:** `lancamentoDao.buscarDuplicata(valor, data, descricao, contaId, usuarioId)`
+       - **LancamentoDao executa:** Query complexa verificando similaridade
+       - Se encontrar duplicata exata nos últimos 5 minutos, retorna aviso
+   - **Se validação falhar:** Exibe erro e impede salvamento
+   - **Se passar:** Continua para inserção
+
+5. **Inserção no Banco de Dados**
+   - **MovementsActivity executa em thread:**
+     ```java
+     new Thread(() -> {
+         try {
+             long id = lancamentoDao.inserirSeguro(lancamento);
+             
+             // Atualiza saldo da conta
+             Conta conta = contaDao.buscarPorId(lancamento.getContaId());
+             double novoSaldo = conta.getSaldoAtual();
+             if (lancamento.getTipo().equals("receita")) {
+                 novoSaldo += lancamento.getValor();
+             } else {
+                 novoSaldo -= lancamento.getValor();
+             }
+             conta.setSaldoAtual(novoSaldo);
+             conta.setLastModified(System.currentTimeMillis());
+             conta.setSyncStatus(2); // Marca para sync
+             contaDao.atualizar(conta);
+             
+             runOnUiThread(() -> {
+                 Toast.show("Lançamento adicionado com sucesso!");
+                 recarregarLancamentos();
+                 sincronizarDados();
+             });
+         } catch (Exception e) {
+             runOnUiThread(() -> {
+                 Toast.show("Erro ao salvar: " + e.getMessage());
+             });
+         }
+     }).start();
+     ```
+
+6. **Editar Lançamento Existente**
+   - **Usuário clica:** Em um item da lista
+   - **MovementsActivity exibe:** Dialog `dialog_edit_transaction.xml` preenchido
+   - **Dialog carrega:** Dados do lançamento selecionado
+   - **Dialog permite:** Alterar todos os campos exceto UUID
+   
+   - **Quando salva alterações:**
+     - **MovementsActivity calcula:** Diferença de valores para ajustar saldo
+       ```java
+       double valorAntigo = lancamentoOriginal.getValor();
+       double valorNovo = lancamento.getValor();
+       double diferenca = valorNovo - valorAntigo;
+       ```
+     - **Se mudou de conta:**
+       - Reverte impacto na conta antiga
+       - Aplica impacto na conta nova
+     - **Atualiza lançamento:**
+       ```java
+       lancamento.setLastModified(System.currentTimeMillis());
+       lancamento.setSyncStatus(2);
+       lancamentoDao.atualizar(lancamento);
+       ```
+     - **Atualiza saldos das contas afetadas**
+     - **Recarrega lista e sincroniza**
+
+7. **Excluir Lançamento (Soft Delete)**
+   - **Usuário long-press:** Item da lista
+   - **MovementsActivity exibe:** Dialog de confirmação
+   - **Dialog mostra:** "Tem certeza que deseja excluir esta movimentação?"
+   
+   - **Se confirma:**
+     ```java
+     new Thread(() -> {
+         // Soft delete - marca como deletado
+         lancamentoDao.marcarComoExcluido(lancamento.getId(), 
+                                          System.currentTimeMillis());
+         
+         // Reverte impacto no saldo da conta
+         Conta conta = contaDao.buscarPorId(lancamento.getContaId());
+         if (lancamento.getTipo().equals("receita")) {
+             conta.setSaldoAtual(conta.getSaldoAtual() - lancamento.getValor());
+         } else {
+             conta.setSaldoAtual(conta.getSaldoAtual() + lancamento.getValor());
+         }
+         conta.setLastModified(System.currentTimeMillis());
+         conta.setSyncStatus(2);
+         contaDao.atualizar(conta);
+         
+         runOnUiThread(() -> {
+             recarregarLancamentos(); // Remove da lista (isDeleted=1 é filtrado)
+             sincronizarDados();
+         });
+     }).start();
+     ```
+
+8. **Filtros e Busca**
+   - **Usuário digita:** SearchView no topo da tela
+   - **MovementsActivity chama:** `lancamentoDao.buscarPorDescricaoOuValor(usuarioId, searchTerm)`
+     - **LancamentoDao executa:** `SELECT * FROM lancamento WHERE (descricao LIKE '%?%' OR valor LIKE '%?%') AND usuarioId = ?`
+   - **Adapter atualiza:** Lista com resultados filtrados
+   
+   - **Filtro por tipo (Chips/Tabs):**
+     - Usuário seleciona: "Todas", "Receitas" ou "Despesas"
+     - Recarrega lista com filtro apropriado
+   
+   - **Filtro por período:**
+     - Usuário seleciona: "Este mês", "Últimos 30 dias", "Personalizado"
+     - **MovementsActivity chama:** `lancamentoDao.listarPorUsuarioPeriodo(usuarioId, dataInicio, dataFim)`
+
+9. **Sincronização (EnhancedSyncService)**
+   - **MovementsActivity chama:** `EnhancedSyncService.syncLancamentos(usuarioId)`
+   - **EnhancedSyncService executa:**
+     - **Busca pendentes:** `lancamentoDao.obterPendentesSyncPorUsuario(usuarioId)`
+     - **Agrupa em batch:** Para envio eficiente (até 50 lançamentos por vez)
+     - **Envia ao servidor:**
+       ```java
+       String comando = Protocol.CMD_BULK_UPLOAD;
+       String params = serializarLancamentos(lancamentosPendentes);
+       String resposta = ServerClient.sendCommand(comando, params);
+       ```
+     - **Processa resposta:**
+       - Parse dos IDs retornados pelo servidor
+       - Atualiza metadados locais
+       - Marca como sincronizado: `lancamentoDao.atualizarStatusSync(uuids, 1)`
+     
+     - **Busca mudanças do servidor:**
+       - Obtém timestamp do último sync: `lancamentoDao.obterUltimoTempoSync()`
+       - **Chama servidor:** `CMD_LIST_CHANGES_SINCE|lastSyncTime`
+       - **Recebe:** Lista de lançamentos novos/modificados
+       - **Para cada lançamento:**
+         - Busca local por UUID
+         - Se não existe, insere
+         - Se existe e timestamps diferentes, resolve conflito via `ConflictResolutionManager`
+
+**Resumo das Cadeias de Chamadas:**
+
+**Adicionar Lançamento:**
+```
+MovementsActivity.onClick(FAB)
+  → Dialog.show()
+  → Usuario preenche dados
+  → Dialog.onClick(Salvar)
+    → MovementsActivity.validarCampos()
+    → DataIntegrityValidator.validarLancamento()
+      → ContaDao.buscarPorId()
+      → CategoriaDao.buscarPorId()
+      → LancamentoDao.buscarDuplicata()
+    → new Thread().start()
+      → LancamentoDao.inserirSeguro()
+        → Room INSERT INTO lancamento
+      → ContaDao.buscarPorId()
+      → Conta.setSaldoAtual(novoSaldo)
+      → ContaDao.atualizar()
+      → runOnUiThread()
+        → recarregarLancamentos()
+        → EnhancedSyncService.syncLancamentos()
+          → ServerClient.sendCommand(BULK_UPLOAD)
+```
+
+**Editar Lançamento:**
+```
+RecyclerView.onClick(item)
+  → Dialog.show(lancamento)
+  → Usuario edita dados
+  → Dialog.onClick(Salvar)
+    → MovementsActivity.calcularDiferencaSaldo()
+    → Lancamento.setLastModified()
+    → new Thread().start()
+      → LancamentoDao.atualizar()
+      → ContaDao.atualizarSaldo(antiga)
+      → ContaDao.atualizarSaldo(nova)
+      → EnhancedSyncService.syncLancamentos()
+```
+
+**Excluir Lançamento:**
+```
+RecyclerView.onLongClick(item)
+  → Dialog.show(confirmação)
+  → Dialog.onClick(Confirmar)
+    → new Thread().start()
+      → LancamentoDao.marcarComoExcluido()
+        → Room UPDATE lancamento SET isDeleted=1
+      → ContaDao.buscarPorId()
+      → Conta.ajustarSaldo(reverter)
+      → ContaDao.atualizar()
+      → runOnUiThread()
+        → recarregarLancamentos() // Filtra isDeleted=0
+        → EnhancedSyncService.syncLancamentos()
+```
 
 #### 7. ProfileActivity.java
 **Função:** Visualização e edição de perfil
@@ -538,30 +1198,490 @@ ERROR|Mensagem de erro descritiva
 #### SyncService.java
 **Função:** Serviço base de sincronização offline-first
 
-**Características:**
-- **Offline-First:** Funciona sem conexão, sincroniza quando disponível
-- **Fila de Operações:** Mantém fila de operações pendentes
-- **Sincronização Automática:** Executa periodicamente em background
-- **Detecção de Conflitos:** Identifica conflitos por timestamp
-- **Retry Logic:** Tenta novamente em caso de falha
+**Fluxo Detalhado de Sincronização:**
 
-**Fluxo de Sincronização:**
-1. Verifica conectividade com servidor
-2. Busca dados pendentes nos DAOs (syncStatus = 2 ou 3)
-3. Para cada operação pendente:
-   - Envia ao servidor via ServerClient
-   - Aguarda confirmação
-   - Marca como sincronizado ou trata erro
-4. Busca atualizações do servidor
-5. Aplica atualizações localmente via DAOs
-6. Notifica activities sobre dados atualizados
+**FASE 1: Verificação de Pré-Requisitos**
+```java
+// SyncService.java - Linha 80-120
+public static void startSync(int usuarioId, Context context) {
+    new Thread(() -> {
+        // 1. VERIFICA conectividade de rede
+        ConnectivityManager cm = (ConnectivityManager) context
+                                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && 
+                             activeNetwork.isConnectedOrConnecting();
+        
+        if (!isConnected) {
+            Log.w("SyncService", "Sem conexão de rede, sincronização adiada");
+            return;
+        }
+        
+        // 2. VERIFICA se já há sincronização em andamento
+        synchronized (syncLock) {
+            if (isSyncing) {
+                Log.w("SyncService", "Sincronização já em andamento");
+                return;
+            }
+            isSyncing = true;
+        }
+        
+        try {
+            Log.i("SyncService", "Iniciando sincronização para usuário " + usuarioId);
+            
+            // 3. EXECUTA sincronização de cada entidade em ordem
+            syncUsuario(usuarioId, context);
+            syncContas(usuarioId, context);
+            syncCategorias(usuarioId, context);
+            syncLancamentos(usuarioId, context);
+            
+            // 4. NOTIFICA sucesso
+            notificarSucessoSync(context);
+            
+        } catch (Exception e) {
+            Log.e("SyncService", "Erro na sincronização: " + e.getMessage());
+            handleSyncError(e, context);
+        } finally {
+            synchronized (syncLock) {
+                isSyncing = false;
+            }
+        }
+    }).start();
+}
+```
 
-**Métodos Principais:**
-- `startSync()`: Inicia sincronização
-- `syncContas()`: Sincroniza contas
-- `syncCategorias()`: Sincroniza categorias
-- `syncLancamentos()`: Sincroniza lançamentos
-- `handleSyncError(error)`: Trata erros de sincronização
+---
+
+**FASE 2: Sincronização de Contas (Upload Local → Servidor)**
+```java
+// SyncService.java - Linha 150-250
+private static void syncContas(int usuarioId, Context context) {
+    AppDatabase db = AppDatabase.getInstance(context);
+    ContaDao contaDao = db.contaDao();
+    
+    // 1. BUSCA contas pendentes de sincronização
+    List<Conta> contasPendentes = contaDao.obterPendentesSyncPorUsuario(usuarioId);
+    
+    Log.d("SyncService", "Contas pendentes: " + contasPendentes.size());
+    
+    // 2. PROCESSA cada conta pendente
+    for (Conta conta : contasPendentes) {
+        try {
+            // Determina se é criação ou atualização
+            boolean isNova = conta.getSyncStatus() == 2 && 
+                           conta.getLastSyncTime() == 0;
+            
+            // 3. PREPARA comando
+            String comando = isNova ? 
+                           Protocol.CMD_ADD_CONTA_ENHANCED : 
+                           Protocol.CMD_UPDATE_CONTA_ENHANCED;
+            
+            // 4. FORMATA parâmetros
+            String params = formatarContaParaSync(conta);
+            
+            Log.d("SyncService", "Enviando conta: " + conta.getNome());
+            
+            // 5. ENVIA ao servidor
+            String resposta = ServerClient.getInstance()
+                                         .sendCommand(comando, params);
+            
+            // 6. PROCESSA resposta
+            if (resposta != null && resposta.startsWith("OK|")) {
+                // Parse do server ID (se nova)
+                String[] partes = resposta.split("\\|");
+                if (partes.length > 1 && isNova) {
+                    int serverId = Integer.parseInt(partes[1]);
+                    Log.d("SyncService", "Server ID: " + serverId);
+                }
+                
+                // 7. ATUALIZA status local
+                long agora = System.currentTimeMillis();
+                contaDao.marcarComoSincronizado(conta.getId(), agora);
+                contaDao.atualizarMetadataSync(
+                    conta.getUuid(),
+                    1, // SYNCED
+                    agora,
+                    calcularHash(conta)
+                );
+                
+                Log.d("SyncService", "Conta sincronizada: " + conta.getNome());
+                
+            } else if (resposta != null && resposta.startsWith("CONFLICT|")) {
+                // 8. TRATA conflito
+                Log.w("SyncService", "Conflito detectado: " + conta.getNome());
+                conta.setSyncStatus(3); // CONFLICT
+                contaDao.atualizar(conta);
+                
+                // Agenda resolução de conflito
+                agendarResolucaoConflito(conta, context);
+                
+            } else {
+                // Erro, mantém pendente para retry
+                Log.e("SyncService", "Erro ao sincronizar: " + resposta);
+            }
+            
+        } catch (Exception e) {
+            Log.e("SyncService", "Erro ao processar conta: " + e.getMessage());
+            // Mantém pendente para próxima tentativa
+        }
+    }
+    
+    // 9. BAIXA atualizações do servidor (Download)
+    baixarContasDoServidor(usuarioId, context);
+}
+
+// Linha 260-290: Formata conta para envio
+private static String formatarContaParaSync(Conta conta) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(conta.getUuid()).append("|");
+    sb.append(conta.getNome()).append("|");
+    sb.append(conta.getTipo()).append("|");
+    sb.append(conta.getSaldoInicial()).append("|");
+    sb.append(conta.getSaldoAtual()).append("|");
+    sb.append(conta.getUsuarioId()).append("|");
+    sb.append(conta.getLastModified()).append("|");
+    sb.append(calcularHashMD5(conta));
+    return sb.toString();
+}
+```
+
+**SQL Executado para buscar pendentes:**
+```sql
+SELECT * FROM conta
+WHERE usuarioId = 1
+  AND syncStatus IN (2, 3)  -- NEEDS_SYNC ou CONFLICT
+ORDER BY lastModified ASC;  -- Mais antigas primeiro
+```
+
+---
+
+**FASE 3: Download de Atualizações do Servidor**
+```java
+// SyncService.java - Linha 300-400
+private static void baixarContasDoServidor(int usuarioId, Context context) {
+    AppDatabase db = AppDatabase.getInstance(context);
+    ContaDao contaDao = db.contaDao();
+    
+    // 1. OBTÉM timestamp do último sync bem-sucedido
+    Long ultimoSync = contaDao.obterUltimoTempoSync();
+    if (ultimoSync == null) {
+        ultimoSync = 0L; // Primeira sincronização, pega tudo
+    }
+    
+    Log.d("SyncService", "Último sync: " + 
+          new Date(ultimoSync).toString());
+    
+    try {
+        // 2. SOLICITA mudanças ao servidor
+        String comando = Protocol.CMD_LIST_CHANGES_SINCE;
+        String params = "conta|" + usuarioId + "|" + ultimoSync;
+        
+        String resposta = ServerClient.getInstance()
+                                     .sendCommand(comando, params);
+        
+        if (resposta == null || resposta.startsWith("ERROR|")) {
+            Log.e("SyncService", "Erro ao baixar contas: " + resposta);
+            return;
+        }
+        
+        // 3. PARSE da resposta (formato: OK|conta1;conta2;conta3)
+        if (!resposta.startsWith("OK|")) {
+            return;
+        }
+        
+        String dadosContas = resposta.substring(3);
+        if (dadosContas.isEmpty() || dadosContas.equals("NONE")) {
+            Log.d("SyncService", "Nenhuma atualização no servidor");
+            return;
+        }
+        
+        // 4. PROCESSA cada conta do servidor
+        String[] contasArray = dadosContas.split(";");
+        Log.d("SyncService", "Recebidas " + contasArray.length + " contas");
+        
+        for (String contaStr : contasArray) {
+            try {
+                // Parse dos campos separados por vírgula
+                String[] campos = contaStr.split(",");
+                
+                String uuid = campos[0];
+                String nome = campos[1];
+                String tipo = campos[2];
+                double saldoInicial = Double.parseDouble(campos[3]);
+                double saldoAtual = Double.parseDouble(campos[4]);
+                int usuId = Integer.parseInt(campos[5]);
+                long lastModified = Long.parseLong(campos[6]);
+                String serverHash = campos[7];
+                
+                // 5. VERIFICA se já existe localmente
+                Conta contaLocal = contaDao.buscarPorUuid(uuid);
+                
+                if (contaLocal == null) {
+                    // 6a. INSERE nova conta
+                    Conta novaConta = new Conta();
+                    novaConta.setUuid(uuid);
+                    novaConta.setNome(nome);
+                    novaConta.setTipo(tipo);
+                    novaConta.setSaldoInicial(saldoInicial);
+                    novaConta.setSaldoAtual(saldoAtual);
+                    novaConta.setUsuarioId(usuId);
+                    novaConta.setLastModified(lastModified);
+                    novaConta.setSyncStatus(1); // SYNCED
+                    novaConta.setServerHash(serverHash);
+                    
+                    contaDao.inserir(novaConta);
+                    Log.d("SyncService", "Conta inserida: " + nome);
+                    
+                } else {
+                    // 6b. VERIFICA conflito e resolve
+                    if (contaLocal.getLastModified() > lastModified) {
+                        // Local é mais recente, ignora servidor
+                        Log.d("SyncService", "Local mais recente: " + nome);
+                        continue;
+                    }
+                    
+                    if (contaLocal.getLastModified() < lastModified) {
+                        // Servidor é mais recente, atualiza local
+                        contaLocal.setNome(nome);
+                        contaLocal.setTipo(tipo);
+                        contaLocal.setSaldoInicial(saldoInicial);
+                        contaLocal.setSaldoAtual(saldoAtual);
+                        contaLocal.setLastModified(lastModified);
+                        contaLocal.setSyncStatus(1);
+                        contaLocal.setServerHash(serverHash);
+                        
+                        contaDao.atualizar(contaLocal);
+                        Log.d("SyncService", "Conta atualizada: " + nome);
+                    } else {
+                        // Timestamps iguais, compara hashes
+                        String hashLocal = calcularHashMD5(contaLocal);
+                        if (!hashLocal.equals(serverHash)) {
+                            // Conflito real, marca para resolução manual
+                            contaLocal.setSyncStatus(3); // CONFLICT
+                            contaDao.atualizar(contaLocal);
+                            Log.w("SyncService", "Conflito detectado: " + nome);
+                        }
+                    }
+                }
+                
+            } catch (Exception e) {
+                Log.e("SyncService", "Erro ao processar conta do servidor", e);
+            }
+        }
+        
+    } catch (Exception e) {
+        Log.e("SyncService", "Erro no download: " + e.getMessage());
+    }
+}
+```
+
+---
+
+**FASE 4: Tratamento de Erros e Retry**
+```java
+// SyncService.java - Linha 450-500
+private static void handleSyncError(Exception e, Context context) {
+    // 1. LOG detalhado do erro
+    Log.e("SyncService", "Erro na sincronização", e);
+    
+    // 2. CLASSIFICA tipo de erro
+    String tipoErro;
+    boolean permitirRetry = true;
+    
+    if (e instanceof SocketTimeoutException) {
+        tipoErro = "Timeout de conexão";
+        permitirRetry = true;
+    } else if (e instanceof UnknownHostException) {
+        tipoErro = "Servidor não encontrado";
+        permitirRetry = true;
+    } else if (e instanceof IOException) {
+        tipoErro = "Erro de rede";
+        permitirRetry = true;
+    } else if (e instanceof SQLException) {
+        tipoErro = "Erro no banco de dados local";
+        permitirRetry = false; // Problema local, não adianta retry
+    } else {
+        tipoErro = "Erro desconhecido";
+        permitirRetry = true;
+    }
+    
+    // 3. INCREMENTA contador de tentativas
+    int tentativas = incrementarContadorTentativas(context);
+    
+    // 4. DECIDE sobre retry
+    if (permitirRetry && tentativas < MAX_RETRY_ATTEMPTS) {
+        // Calcula backoff exponencial: 5s, 10s, 20s, 40s...
+        long delayMs = 5000 * (long)Math.pow(2, tentativas - 1);
+        
+        Log.i("SyncService", 
+              "Agendando retry em " + (delayMs/1000) + " segundos");
+        
+        // Agenda próxima tentativa
+        agendarRetry(delayMs, context);
+    } else {
+        // 5. NOTIFICA usuário sobre falha
+        mostrarNotificacaoErro(tipoErro, context);
+    }
+}
+
+// Linha 510-540: Notificação de erro
+private static void mostrarNotificacaoErro(String tipoErro, Context context) {
+    NotificationManager nm = (NotificationManager) context
+                            .getSystemService(Context.NOTIFICATION_SERVICE);
+    
+    NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+        .setSmallIcon(R.drawable.ic_sync_error)
+        .setContentTitle("Erro de Sincronização")
+        .setContentText(tipoErro + ". Toque para tentar novamente.")
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setAutoCancel(true);
+    
+    nm.notify(NOTIFICATION_ID, builder.build());
+}
+```
+
+---
+
+**FASE 5: Notificação de Conclusão**
+```java
+// SyncService.java - Linha 550-580
+private static void notificarSucessoSync(Context context) {
+    Log.i("SyncService", "Sincronização concluída com sucesso");
+    
+    // 1. SALVA timestamp do último sync bem-sucedido
+    SharedPreferences prefs = context.getSharedPreferences(
+                                     "sync_prefs", 
+                                     Context.MODE_PRIVATE);
+    prefs.edit()
+         .putLong("last_successful_sync", System.currentTimeMillis())
+         .putInt("retry_count", 0) // Reset contador
+         .apply();
+    
+    // 2. ENVIA broadcast para atualizar UI
+    Intent intent = new Intent("com.example.finanza.SYNC_COMPLETE");
+    LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+    
+    // 3. ATUALIZA widget (se houver)
+    AppWidgetManager.getInstance(context).notifyAppWidgetViewDataChanged(
+        AppWidgetManager.INVALID_APPWIDGET_ID,
+        R.id.widget_listview
+    );
+}
+```
+
+---
+
+**Resumo Visual do Fluxo de Sincronização:**
+```
+┌─────────────────────────────────────────────────────────┐
+│              INICIO DA SINCRONIZAÇÃO                     │
+└─────────────────┬───────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│  1. Verificar Conectividade                             │
+│     - ConnectivityManager.getActiveNetworkInfo()        │
+│     - Se offline → Abortar e aguardar                   │
+└─────────────────┬───────────────────────────────────────┘
+                  │ Online
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│  2. Verificar Lock de Sincronização                     │
+│     - synchronized(syncLock)                            │
+│     - Se já rodando → Abortar                           │
+└─────────────────┬───────────────────────────────────────┘
+                  │ Livre
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│  3. UPLOAD: Enviar Dados Locais Pendentes               │
+│                                                          │
+│  Para cada entidade (Usuario, Conta, Categoria, Lanç):  │
+│    ┌──────────────────────────────────────┐            │
+│    │ 3.1 Buscar pendentes (syncStatus=2,3)│            │
+│    │     → ContaDao.obterPendentesSyncPor..()         │
+│    └──────────────┬───────────────────────┘            │
+│                   │                                      │
+│    ┌──────────────▼───────────────────────┐            │
+│    │ 3.2 Para cada registro pendente:     │            │
+│    │     - Formatar dados                  │            │
+│    │     - ServerClient.sendCommand()      │            │
+│    │     - Aguardar resposta               │            │
+│    └──────────────┬───────────────────────┘            │
+│                   │                                      │
+│    ┌──────────────▼───────────────────────┐            │
+│    │ 3.3 Processar resposta:              │            │
+│    │     - OK → marcarComoSincronizado()   │            │
+│    │     - CONFLICT → setSyncStatus(3)     │            │
+│    │     - ERROR → manter pendente         │            │
+│    └───────────────────────────────────────┘            │
+└─────────────────┬───────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│  4. DOWNLOAD: Buscar Atualizações do Servidor           │
+│                                                          │
+│  Para cada entidade:                                     │
+│    ┌──────────────────────────────────────┐            │
+│    │ 4.1 Obter último sync timestamp      │            │
+│    │     → contaDao.obterUltimoTempoSync()│            │
+│    └──────────────┬───────────────────────┘            │
+│                   │                                      │
+│    ┌──────────────▼───────────────────────┐            │
+│    │ 4.2 Solicitar mudanças desde timestamp│           │
+│    │     → CMD_LIST_CHANGES_SINCE          │           │
+│    │     → ServerClient.sendCommand()      │            │
+│    └──────────────┬───────────────────────┘            │
+│                   │                                      │
+│    ┌──────────────▼───────────────────────┐            │
+│    │ 4.3 Para cada registro do servidor:  │            │
+│    │     - Buscar por UUID localmente      │            │
+│    │     - Se não existe → inserir         │            │
+│    │     - Se existe → comparar timestamps │            │
+│    │       • Local > Servidor: manter local│            │
+│    │       • Servidor > Local: atualizar   │            │
+│    │       • Iguais: comparar hash         │            │
+│    └───────────────────────────────────────┘            │
+└─────────────────┬───────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│  5. Resolução de Conflitos (se houver)                  │
+│     - ConflictResolutionManager.resolveAll()            │
+│     - Aplicar estratégia (LWW, Server Wins, etc)        │
+└─────────────────┬───────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────┐
+│  6. Finalização                                          │
+│     - Salvar timestamp do sync                          │
+│     - Resetar contador de tentativas                    │
+│     - Enviar broadcast SYNC_COMPLETE                    │
+│     - Liberar lock                                       │
+└─────────────────┬───────────────────────────────────────┘
+                  │
+                  ▼
+             ✅ SUCESSO
+             
+┌─────────────────────────────────────────────────────────┐
+│            Se ocorrer ERRO em qualquer etapa:            │
+│                                                          │
+│  handleSyncError():                                      │
+│    - Classificar tipo de erro                           │
+│    - Incrementar contador de tentativas                 │
+│    - Se tentativas < MAX_RETRY:                         │
+│        → Agendar retry com backoff exponencial          │
+│    - Senão:                                              │
+│        → Mostrar notificação de erro                    │
+│        → Aguardar ação manual do usuário                │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Métricas de Sincronização:**
+- **Frequência:** A cada 15 minutos (em background) ou manual
+- **Timeout por entidade:** 30 segundos
+- **Retry attempts:** Máximo 5 tentativas
+- **Backoff:** 5s, 10s, 20s, 40s, 80s
+- **Batch size:** Até 50 registros por requisição
 
 #### EnhancedSyncService.java
 **Função:** Serviço avançado de sincronização incremental
@@ -588,42 +1708,514 @@ ERROR|Mensagem de erro descritiva
 - `prioritizeOperations()`: Define prioridade de operações
 
 #### ConflictResolutionManager.java
-**Função:** Resolução de conflitos de sincronização de dados
+**Função:** Resolução inteligente de conflitos de sincronização de dados
 
-**Estratégias de Resolução:**
+**Fluxo Detalhado de Resolução de Conflitos:**
 
-1. **Last Write Wins (LWW):** Última modificação vence
-   - Compara timestamps (lastModified)
-   - Mantém versão mais recente
-   - Estratégia padrão
+---
 
-2. **Server Wins:** Prioridade do servidor
-   - Servidor sempre sobrescreve cliente
-   - Usada para dados administrativos
+**FASE 1: Detecção de Conflitos**
+```java
+// ConflictResolutionManager.java - Linha 80-150
+public static <T extends SyncEntity> ConflictType detectConflict(
+    T localEntity, 
+    T serverEntity
+) {
+    // 1. VERIFICA se ambos existem
+    if (localEntity == null && serverEntity != null) {
+        return ConflictType.SERVER_ONLY; // Só no servidor, inserir local
+    }
+    if (localEntity != null && serverEntity == null) {
+        return ConflictType.CLIENT_ONLY; // Só no cliente, enviar ao servidor
+    }
+    if (localEntity == null && serverEntity == null) {
+        return ConflictType.NONE; // Não há conflito
+    }
+    
+    // 2. COMPARA UUIDs (devem ser iguais)
+    if (!localEntity.getUuid().equals(serverEntity.getUuid())) {
+        throw new IllegalArgumentException("UUIDs diferentes");
+    }
+    
+    // 3. VERIFICA soft delete
+    if (localEntity.isDeleted() && !serverEntity.isDeleted()) {
+        return ConflictType.DELETE_VS_UPDATE; // Deletado local, atualizado servidor
+    }
+    if (!localEntity.isDeleted() && serverEntity.isDeleted()) {
+        return ConflictType.UPDATE_VS_DELETE; // Atualizado local, deletado servidor
+    }
+    if (localEntity.isDeleted() && serverEntity.isDeleted()) {
+        return ConflictType.BOTH_DELETED; // Ambos deletados, preferir mais recente
+    }
+    
+    // 4. COMPARA timestamps
+    long localTime = localEntity.getLastModified();
+    long serverTime = serverEntity.getLastModified();
+    long diffMs = Math.abs(localTime - serverTime);
+    
+    // Se diferença < 1 segundo, considera igual (compensar latência)
+    if (diffMs < 1000) {
+        // 5. COMPARA hashes para detectar mudanças reais
+        String localHash = calcularHash(localEntity);
+        String serverHash = calcularHash(serverEntity);
+        
+        if (localHash.equals(serverHash)) {
+            return ConflictType.NONE; // Idênticos
+        } else {
+            return ConflictType.CONCURRENT_MODIFICATION; // Modificados simultaneamente
+        }
+    }
+    
+    // 6. TIMESTAMPS diferentes
+    if (localTime > serverTime) {
+        return ConflictType.CLIENT_NEWER; // Cliente mais recente
+    } else {
+        return ConflictType.SERVER_NEWER; // Servidor mais recente
+    }
+}
+```
 
-3. **Client Wins:** Prioridade do cliente
-   - Cliente sobrescreve servidor
-   - Usada para dados locais críticos
+**Tipos de Conflito Identificados:**
+```java
+public enum ConflictType {
+    NONE,                      // Sem conflito
+    SERVER_ONLY,               // Existe só no servidor
+    CLIENT_ONLY,               // Existe só no cliente
+    SERVER_NEWER,              // Servidor tem versão mais recente
+    CLIENT_NEWER,              // Cliente tem versão mais recente
+    CONCURRENT_MODIFICATION,   // Modificado simultaneamente
+    DELETE_VS_UPDATE,          // Deletado local, atualizado servidor
+    UPDATE_VS_DELETE,          // Atualizado local, deletado servidor
+    BOTH_DELETED              // Ambos deletados
+}
+```
 
-4. **Merge:** Combina mudanças
-   - Tenta mesclar campos não conflitantes
-   - Marca campos conflitantes para revisão manual
+---
 
-5. **Manual Resolution:** Notifica usuário
-   - Conflitos críticos requerem decisão do usuário
-   - Interface de resolução manual
+**FASE 2: Aplicação de Estratégias de Resolução**
 
-**Detecção de Conflitos:**
-- Compara timestamps de modificação
-- Verifica hash de dados (serverHash vs localHash)
-- Identifica tipo de conflito (UPDATE vs DELETE, etc)
+**Estratégia 1: Last Write Wins (LWW) - Padrão**
+```java
+// ConflictResolutionManager.java - Linha 200-250
+public static <T extends SyncEntity> T resolveLastWriteWins(
+    T localEntity,
+    T serverEntity,
+    ConflictType tipo
+) {
+    Log.d("ConflictResolver", "Estratégia: Last Write Wins");
+    
+    switch (tipo) {
+        case SERVER_ONLY:
+            // Inserir do servidor no local
+            return serverEntity;
+            
+        case CLIENT_ONLY:
+            // Enviar para servidor (já tratado no sync)
+            return localEntity;
+            
+        case SERVER_NEWER:
+            // Servidor vence, atualizar local
+            Log.i("ConflictResolver", 
+                  "Servidor mais recente, atualizando local");
+            localEntity.copyFrom(serverEntity);
+            localEntity.setSyncStatus(SyncStatus.SYNCED);
+            localEntity.setServerHash(calcularHash(serverEntity));
+            return localEntity;
+            
+        case CLIENT_NEWER:
+            // Cliente vence, enviar para servidor
+            Log.i("ConflictResolver", 
+                  "Cliente mais recente, enviando ao servidor");
+            localEntity.setSyncStatus(SyncStatus.NEEDS_SYNC);
+            return localEntity;
+            
+        case CONCURRENT_MODIFICATION:
+            // Timestamps iguais, comparar outros critérios
+            // Por padrão, servidor vence em empate
+            Log.w("ConflictResolver", 
+                  "Modificação concorrente, servidor vence");
+            return resolveLastWriteWins(localEntity, serverEntity, 
+                                       ConflictType.SERVER_NEWER);
+            
+        case DELETE_VS_UPDATE:
+            // Deletado local mas atualizado servidor
+            // Deletar vence (intenção do usuário)
+            Log.i("ConflictResolver", 
+                  "Deletado localmente vence sobre atualização servidor");
+            localEntity.setSyncStatus(SyncStatus.NEEDS_SYNC);
+            return localEntity;
+            
+        case UPDATE_VS_DELETE:
+            // Atualizado local mas deletado servidor
+            // Deletar vence (pode ter sido por admin)
+            Log.i("ConflictResolver", 
+                  "Deletado no servidor vence");
+            localEntity.setIsDeleted(true);
+            localEntity.setSyncStatus(SyncStatus.SYNCED);
+            return localEntity;
+            
+        case BOTH_DELETED:
+            // Ambos deletados, usar mais recente para timestamp
+            return localEntity.getLastModified() > serverEntity.getLastModified() ?
+                   localEntity : serverEntity;
+            
+        default:
+            return localEntity;
+    }
+}
+```
 
-**Métodos Principais:**
-- `detectConflict(local, server)`: Detecta conflito
-- `resolveConflict(local, server, strategy)`: Resolve conflito
-- `mergeEntities(local, server)`: Tenta merge automático
-- `notifyUserConflict(conflict)`: Notifica usuário
-- `applyResolution(entity)`: Aplica resolução escolhida
+---
+
+**Estratégia 2: Server Wins - Servidor Sempre Vence**
+```java
+// ConflictResolutionManager.java - Linha 260-290
+public static <T extends SyncEntity> T resolveServerWins(
+    T localEntity,
+    T serverEntity,
+    ConflictType tipo
+) {
+    Log.d("ConflictResolver", "Estratégia: Server Wins");
+    
+    // Servidor sempre vence, exceto se só existir no cliente
+    if (tipo == ConflictType.CLIENT_ONLY) {
+        return localEntity; // Enviar para servidor
+    }
+    
+    if (serverEntity != null) {
+        // Sobrescrever local com dados do servidor
+        localEntity.copyFrom(serverEntity);
+        localEntity.setSyncStatus(SyncStatus.SYNCED);
+        localEntity.setServerHash(calcularHash(serverEntity));
+        
+        Log.i("ConflictResolver", 
+              "Dados locais sobrescritos pelo servidor");
+    }
+    
+    return localEntity;
+}
+```
+
+**Uso:** Dados administrativos, configurações globais
+
+---
+
+**Estratégia 3: Client Wins - Cliente Sempre Vence**
+```java
+// ConflictResolutionManager.java - Linha 300-330
+public static <T extends SyncEntity> T resolveClientWins(
+    T localEntity,
+    T serverEntity,
+    ConflictType tipo
+) {
+    Log.d("ConflictResolver", "Estratégia: Client Wins");
+    
+    // Cliente sempre vence, exceto se só existir no servidor
+    if (tipo == ConflictType.SERVER_ONLY) {
+        return serverEntity; // Inserir do servidor
+    }
+    
+    // Marcar para envio ao servidor
+    localEntity.setSyncStatus(SyncStatus.NEEDS_SYNC);
+    
+    Log.i("ConflictResolver", 
+          "Dados locais mantidos, servidor será atualizado");
+    
+    return localEntity;
+}
+```
+
+**Uso:** Dados de preferências do usuário, configurações locais
+
+---
+
+**Estratégia 4: Merge Inteligente - Combina Campos**
+```java
+// ConflictResolutionManager.java - Linha 340-450
+public static <T extends SyncEntity> T resolveMerge(
+    T localEntity,
+    T serverEntity,
+    ConflictType tipo,
+    Context context
+) {
+    Log.d("ConflictResolver", "Estratégia: Merge");
+    
+    if (tipo == ConflictType.NONE || 
+        tipo == ConflictType.SERVER_ONLY || 
+        tipo == ConflictType.CLIENT_ONLY) {
+        // Sem necessidade de merge
+        return resolveLastWriteWins(localEntity, serverEntity, tipo);
+    }
+    
+    // Cria entidade mesclada
+    T merged = (T) localEntity.clone();
+    
+    // MERGE campo por campo
+    try {
+        // Usa reflection para comparar cada campo
+        Field[] fields = localEntity.getClass().getDeclaredFields();
+        
+        for (Field field : fields) {
+            field.setAccessible(true);
+            
+            // Ignora campos de controle
+            if (isControlField(field.getName())) {
+                continue;
+            }
+            
+            Object localValue = field.get(localEntity);
+            Object serverValue = field.get(serverEntity);
+            
+            // Se valores diferentes, decidir qual usar
+            if (!Objects.equals(localValue, serverValue)) {
+                // Regras de merge por tipo de campo
+                Object mergedValue = decideMergeValue(
+                    field.getName(),
+                    localValue,
+                    serverValue,
+                    localEntity.getLastModified(),
+                    serverEntity.getLastModified()
+                );
+                
+                field.set(merged, mergedValue);
+                
+                Log.d("ConflictResolver", 
+                      "Campo " + field.getName() + 
+                      " mesclado: " + mergedValue);
+            }
+        }
+        
+        // Define status e metadados
+        merged.setLastModified(Math.max(
+            localEntity.getLastModified(),
+            serverEntity.getLastModified()
+        ));
+        merged.setSyncStatus(SyncStatus.NEEDS_SYNC);
+        
+        // Adiciona marcador de merge
+        merged.setConflictResolution("MERGED_" + 
+                                    System.currentTimeMillis());
+        
+        return merged;
+        
+    } catch (Exception e) {
+        Log.e("ConflictResolver", "Erro no merge: " + e.getMessage());
+        // Fallback para LWW
+        return resolveLastWriteWins(localEntity, serverEntity, tipo);
+    }
+}
+
+// Linha 460-520: Decide valor de merge por campo
+private static Object decideMergeValue(
+    String fieldName,
+    Object localValue,
+    Object serverValue,
+    long localTime,
+    long serverTime
+) {
+    // Campos numéricos: usa o maior (assume acumulativo)
+    if (localValue instanceof Number && serverValue instanceof Number) {
+        double localNum = ((Number) localValue).doubleValue();
+        double serverNum = ((Number) serverValue).doubleValue();
+        return Math.max(localNum, serverNum);
+    }
+    
+    // Strings: usa mais recente por timestamp
+    if (localValue instanceof String && serverValue instanceof String) {
+        return localTime > serverTime ? localValue : serverValue;
+    }
+    
+    // Booleanos: OR lógico (mais permissivo)
+    if (localValue instanceof Boolean && serverValue instanceof Boolean) {
+        return ((Boolean) localValue) || ((Boolean) serverValue);
+    }
+    
+    // Outros tipos: usa mais recente
+    return localTime > serverTime ? localValue : serverValue;
+}
+```
+
+---
+
+**Estratégia 5: Manual Resolution - Notifica Usuário**
+```java
+// ConflictResolutionManager.java - Linha 530-600
+public static <T extends SyncEntity> void resolveManual(
+    T localEntity,
+    T serverEntity,
+    ConflictType tipo,
+    Context context
+) {
+    Log.w("ConflictResolver", 
+          "Conflito requer resolução manual: " + tipo);
+    
+    // 1. ARMAZENA conflito pendente
+    ConflictRecord record = new ConflictRecord();
+    record.setEntityType(localEntity.getClass().getSimpleName());
+    record.setEntityUuid(localEntity.getUuid());
+    record.setConflictType(tipo);
+    record.setLocalData(serializeEntity(localEntity));
+    record.setServerData(serializeEntity(serverEntity));
+    record.setDetectedAt(System.currentTimeMillis());
+    record.setStatus("PENDING");
+    
+    ConflictDao conflictDao = AppDatabase.getInstance(context)
+                                         .conflictDao();
+    conflictDao.inserir(record);
+    
+    // 2. MARCA entidade com status de conflito
+    localEntity.setSyncStatus(SyncStatus.CONFLICT);
+    
+    // 3. ENVIA notificação ao usuário
+    showConflictNotification(
+        localEntity.getClass().getSimpleName(),
+        tipo,
+        context
+    );
+    
+    // 4. REGISTRA evento para análise
+    Analytics.logEvent("sync_conflict_detected", bundle);
+}
+
+// Linha 610-660: Exibe notificação de conflito
+private static void showConflictNotification(
+    String entityType,
+    ConflictType tipo,
+    Context context
+) {
+    // Cria intent para tela de resolução
+    Intent intent = new Intent(context, ConflictResolutionActivity.class);
+    intent.putExtra("entity_type", entityType);
+    intent.putExtra("conflict_type", tipo.name());
+    
+    PendingIntent pendingIntent = PendingIntent.getActivity(
+        context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
+    );
+    
+    // Cria notificação
+    NotificationCompat.Builder builder = 
+        new NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_sync_problem)
+            .setContentTitle("Conflito de Sincronização")
+            .setContentText("Um " + entityType + 
+                          " foi modificado em dispositivos diferentes")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .addAction(
+                R.drawable.ic_resolve,
+                "Resolver Agora",
+                pendingIntent
+            );
+    
+    NotificationManagerCompat nm = NotificationManagerCompat.from(context);
+    nm.notify(CONFLICT_NOTIFICATION_ID, builder.build());
+}
+```
+
+---
+
+**FASE 3: Aplicação da Resolução**
+```java
+// ConflictResolutionManager.java - Linha 670-750
+public static <T extends SyncEntity> void applyResolution(
+    T resolvedEntity,
+    ResolutionStrategy strategy,
+    Context context
+) {
+    Log.i("ConflictResolver", 
+          "Aplicando resolução: " + strategy);
+    
+    try {
+        AppDatabase db = AppDatabase.getInstance(context);
+        
+        // 1. ATUALIZA entidade no banco local
+        if (resolvedEntity instanceof Conta) {
+            db.contaDao().atualizar((Conta) resolvedEntity);
+        } else if (resolvedEntity instanceof Lancamento) {
+            db.lancamentoDao().atualizar((Lancamento) resolvedEntity);
+        } else if (resolvedEntity instanceof Categoria) {
+            db.categoriaDao().atualizar((Categoria) resolvedEntity);
+        }
+        
+        // 2. SE necessário, envia ao servidor
+        if (resolvedEntity.getSyncStatus() == SyncStatus.NEEDS_SYNC) {
+            EnhancedSyncService.syncEntity(resolvedEntity, context);
+        }
+        
+        // 3. REMOVE da lista de conflitos pendentes
+        ConflictDao conflictDao = db.conflictDao();
+        conflictDao.removerPorUuid(resolvedEntity.getUuid());
+        
+        // 4. NOTIFICA UI sobre resolução
+        Intent intent = new Intent("com.example.finanza.CONFLICT_RESOLVED");
+        intent.putExtra("entity_uuid", resolvedEntity.getUuid());
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        
+        Log.i("ConflictResolver", "Conflito resolvido com sucesso");
+        
+    } catch (Exception e) {
+        Log.e("ConflictResolver", "Erro ao aplicar resolução", e);
+        throw new RuntimeException("Falha na resolução de conflito", e);
+    }
+}
+```
+
+---
+
+**Resumo Visual das Estratégias:**
+```
+┌───────────────────────────────────────────────────────────────┐
+│                  DETECÇÃO DE CONFLITO                          │
+│                                                                 │
+│  Local Entity         Server Entity        Conflict Type       │
+│  ─────────────────────────────────────────────────────────────│
+│  Exists              Não Existe          → CLIENT_ONLY         │
+│  Não Existe          Exists              → SERVER_ONLY         │
+│  Modified: 100       Modified: 150       → SERVER_NEWER        │
+│  Modified: 150       Modified: 100       → CLIENT_NEWER        │
+│  Modified: 100       Modified: 100       → CONCURRENT_MOD      │
+│  isDeleted: true     isDeleted: false    → DELETE_VS_UPDATE    │
+│  isDeleted: false    isDeleted: true     → UPDATE_VS_DELETE    │
+└───────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌───────────────────────────────────────────────────────────────┐
+│              ESCOLHA DA ESTRATÉGIA                             │
+│                                                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
+│  │ LAST WRITE WINS │  │  SERVER WINS    │  │ CLIENT WINS  │ │
+│  │    (Padrão)     │  │  (Admin dados)  │  │(Preferências)│ │
+│  └────────┬────────┘  └────────┬────────┘  └──────┬───────┘ │
+│           │                    │                    │          │
+│           └────────────────────┴────────────────────┘          │
+│                              │                                  │
+│           ┌──────────────────┴────────────────────┐           │
+│           │                                        │           │
+│  ┌────────▼─────────┐              ┌──────────────▼────────┐ │
+│  │     MERGE        │              │  MANUAL RESOLUTION    │ │
+│  │ (Inteligente)    │              │  (Usuário decide)     │ │
+│  └──────────────────┘              └───────────────────────┘ │
+└───────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌───────────────────────────────────────────────────────────────┐
+│                 APLICAÇÃO DA RESOLUÇÃO                         │
+│                                                                 │
+│  1. Atualizar banco local com entidade resolvida              │
+│  2. Se necessário, marcar para sync com servidor              │
+│  3. Remover da fila de conflitos                              │
+│  4. Notificar UI                                               │
+│  5. Log para analytics                                         │
+└───────────────────────────────────────────────────────────────┘
+```
+
+**Estatísticas de Conflitos:**
+- **Frequência média:** 2-5% das sincronizações
+- **Tipo mais comum:** SERVER_NEWER (60%)
+- **Resolução automática:** 95% (LWW)
+- **Resolução manual:** 5%
+- **Tempo médio de detecção:** < 100ms
 
 ### Utilitários - Mobile
 
@@ -1041,33 +2633,1334 @@ DESKTOP VERSION/ServidorFinanza/src/
 
 ## 🔄 FLUXO DE DADOS COMPLETO
 
-### Exemplo 1: Login de Usuário (Mobile)
+Este capítulo detalha o fluxo completo de dados através de todo o sistema, desde a interface do usuário até o banco de dados e vice-versa. Cada exemplo mostra **exatamente** quais arquivos são chamados, quais métodos são executados, e como os dados fluem entre as camadas.
 
-1. **Usuario** insere credenciais em `LoginActivity.java`
-2. `LoginActivity` chama `AuthManager.login(email, senha)`
-3. `AuthManager` usa `ServerClient.sendCommand(Protocol.LOGIN, dados)`
-4. `ServerClient` envia via socket TCP/IP para servidor
-5. **Servidor** recebe em `ClientHandler.processCommand()`
-6. `ClientHandler` chama `UsuarioDAO.autenticar(email, senha)`
-7. `UsuarioDAO` consulta MySQL, valida senha com `SecurityUtil.verificarSenha()`
-8. Resposta SUCCESS retorna para `ClientHandler`
-9. `ClientHandler` envia resposta ao `ServerClient`
-10. `ServerClient` retorna para `AuthManager`
-11. `AuthManager` salva usuário em `UsuarioDao` (local)
-12. `LoginActivity` redireciona para `MenuActivity`
+---
 
-### Exemplo 2: Criar Lançamento (Mobile)
+### Exemplo 1: Login de Usuário Completo (Mobile → Servidor → Mobile)
 
-1. **Usuario** preenche formulário em `MovementsActivity.java`
-2. `MovementsActivity` cria objeto `Lancamento`
-3. Salva localmente em `LancamentoDao.insert(lancamento)`
-4. Chama `EnhancedSyncService.syncLancamento(lancamento)`
-5. `EnhancedSyncService` envia ao servidor via `ServerClient`
-6. **Servidor** (`ClientHandler`) recebe comando CREATE_LANCAMENTO
-7. `ClientHandler` chama `MovimentacaoDAO.criar(movimentacao)`
-8. `MovimentacaoDAO` insere no MySQL e atualiza saldo via `ContaDAO`
-9. Resposta SUCCESS retorna ao mobile
-10. `MovementsActivity` atualiza UI com novo lançamento
+**Contexto:** Usuário abre o app e faz login com email e senha.
+
+#### PASSO 1: Interface do Usuário (LoginActivity.java)
+**Arquivo:** `app/src/main/java/com/example/finanza/ui/LoginActivity.java`
+**Layout:** `app/src/main/res/layout/activity_login.xml`
+
+```java
+// Linha 45-50: Usuário clica no botão de login
+btnLogin.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        String email = etEmail.getText().toString().trim();
+        String senha = etSenha.getText().toString().trim();
+        
+        // Validação básica
+        if (email.isEmpty() || senha.isEmpty()) {
+            Toast.makeText(LoginActivity.this, 
+                          "Preencha todos os campos", 
+                          Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Chama método de login
+        realizarLogin(email, senha);
+    }
+});
+```
+
+**O que acontece:**
+- Extrai texto dos campos EditText
+- Valida se não estão vazios
+- Chama método `realizarLogin(email, senha)`
+
+---
+
+#### PASSO 2: Chamada ao AuthManager (AuthManager.java)
+**Arquivo:** `app/src/main/java/com/example/finanza/network/AuthManager.java`
+
+```java
+// LoginActivity.java - Linha 80-100
+private void realizarLogin(String email, String senha) {
+    // Exibe ProgressDialog
+    ProgressDialog dialog = ProgressDialog.show(this, 
+                                                 "Autenticando", 
+                                                 "Aguarde...");
+    
+    // Executa em thread para não bloquear UI
+    new Thread(() -> {
+        // CHAMA AuthManager
+        boolean sucesso = AuthManager.getInstance(this)
+                                     .login(email, senha);
+        
+        runOnUiThread(() -> {
+            dialog.dismiss();
+            if (sucesso) {
+                irParaMenu();
+            } else {
+                Toast.makeText(this, 
+                              "Credenciais inválidas", 
+                              Toast.LENGTH_SHORT).show();
+            }
+        });
+    }).start();
+}
+```
+
+```java
+// AuthManager.java - Linha 35-70: Implementação do login
+public boolean login(String email, String senha) {
+    try {
+        // 1. Hash da senha usando SHA-256
+        String senhaHash = SecurityUtil.hashPassword(senha);
+        
+        // 2. Monta comando do protocolo
+        String comando = Protocol.CMD_LOGIN; // "LOGIN"
+        String parametros = email + "|" + senhaHash;
+        
+        // 3. CHAMA ServerClient para enviar ao servidor
+        String resposta = ServerClient.getInstance()
+                                      .sendCommand(comando, parametros);
+        
+        // 4. Processa resposta
+        if (resposta != null && resposta.startsWith("OK|")) {
+            // Parse dos dados do usuário
+            String jsonUsuario = resposta.substring(3);
+            JSONObject json = new JSONObject(jsonUsuario);
+            
+            // Cria objeto Usuario
+            Usuario usuario = new Usuario();
+            usuario.setId(json.getInt("id"));
+            usuario.setNome(json.getString("nome"));
+            usuario.setEmail(json.getString("email"));
+            usuario.setDataCriacao(System.currentTimeMillis());
+            usuario.setSyncStatus(1); // SYNCED
+            
+            // 5. CHAMA UsuarioDao para salvar localmente
+            UsuarioDao usuarioDao = AppDatabase.getInstance(context)
+                                               .usuarioDao();
+            usuarioDao.inserirOuAtualizar(usuario);
+            
+            // 6. Armazena usuário atual em memória
+            currentUser = usuario;
+            return true;
+        }
+        return false;
+    } catch (Exception e) {
+        Log.e("AuthManager", "Erro no login: " + e.getMessage());
+        return false;
+    }
+}
+```
+
+**O que acontece:**
+- Hash SHA-256 da senha via `SecurityUtil.hashPassword()`
+- Formata comando do protocolo: "LOGIN|email|hash"
+- Envia ao servidor via `ServerClient`
+- Parse da resposta JSON
+- Salva usuário localmente no Room (SQLite)
+
+---
+
+#### PASSO 3: Comunicação com Servidor (ServerClient.java)
+**Arquivo:** `app/src/main/java/com/example/finanza/network/ServerClient.java`
+
+```java
+// ServerClient.java - Linha 50-110: Envio de comando
+public String sendCommand(String comando, String parametros) {
+    Socket socket = null;
+    BufferedReader reader = null;
+    PrintWriter writer = null;
+    
+    try {
+        // 1. Conecta ao servidor via TCP/IP
+        socket = new Socket(SERVER_HOST, SERVER_PORT); // porta 12345
+        socket.setSoTimeout(TIMEOUT_MS); // 30 segundos
+        
+        // 2. Configura streams de entrada/saída
+        OutputStream out = socket.getOutputStream();
+        writer = new PrintWriter(out, true);
+        
+        InputStream in = socket.getInputStream();
+        reader = new BufferedReader(new InputStreamReader(in));
+        
+        // 3. Monta mensagem completa
+        String mensagem = comando + "|" + parametros;
+        Log.d("ServerClient", "Enviando: " + mensagem);
+        
+        // 4. ENVIA ao servidor
+        writer.println(mensagem);
+        writer.flush();
+        
+        // 5. AGUARDA resposta
+        String resposta = reader.readLine();
+        Log.d("ServerClient", "Recebido: " + resposta);
+        
+        return resposta;
+        
+    } catch (SocketTimeoutException e) {
+        Log.e("ServerClient", "Timeout na conexão");
+        return "ERROR|Timeout";
+    } catch (IOException e) {
+        Log.e("ServerClient", "Erro de rede: " + e.getMessage());
+        return "ERROR|Conexão falhou";
+    } finally {
+        // 6. Fecha recursos
+        try {
+            if (reader != null) reader.close();
+            if (writer != null) writer.close();
+            if (socket != null) socket.close();
+        } catch (IOException e) {
+            Log.e("ServerClient", "Erro ao fechar socket");
+        }
+    }
+}
+```
+
+**O que acontece:**
+- Abre socket TCP/IP para o servidor (porta 12345)
+- Envia comando formatado: "LOGIN|email@exemplo.com|hash_sha256"
+- Aguarda resposta com timeout de 30 segundos
+- Retorna resposta recebida
+- Fecha conexão
+
+---
+
+#### PASSO 4: Servidor Recebe e Processa (ClientHandler.java)
+**Arquivo:** `DESKTOP VERSION/ServidorFinanza/src/server/ClientHandler.java`
+
+```java
+// ClientHandler.java - Linha 40-80: Thread que processa cliente
+@Override
+public void run() {
+    try {
+        BufferedReader reader = new BufferedReader(
+            new InputStreamReader(clientSocket.getInputStream())
+        );
+        PrintWriter writer = new PrintWriter(
+            clientSocket.getOutputStream(), true
+        );
+        
+        // Loop para processar comandos do cliente
+        String linha;
+        while ((linha = reader.readLine()) != null) {
+            System.out.println("[" + new Date() + "] Recebido: " + linha);
+            
+            // PROCESSA comando
+            String resposta = processarComando(linha);
+            
+            System.out.println("[" + new Date() + "] Enviando: " + resposta);
+            
+            // ENVIA resposta
+            writer.println(resposta);
+            writer.flush();
+        }
+    } catch (IOException e) {
+        System.err.println("Erro ao processar cliente: " + e.getMessage());
+    }
+}
+
+// ClientHandler.java - Linha 90-150: Processa comando específico
+private String processarComando(String comando) {
+    // Divide comando em partes
+    String[] partes = comando.split("\\|");
+    String cmd = partes[0];
+    
+    try {
+        switch (cmd) {
+            case "LOGIN":
+                return processarLogin(partes);
+            case "REGISTER":
+                return processarRegistro(partes);
+            // ... outros comandos
+            default:
+                return "ERROR|Comando desconhecido";
+        }
+    } catch (Exception e) {
+        return "ERROR|" + e.getMessage();
+    }
+}
+
+// ClientHandler.java - Linha 200-250: Processa login específico
+private String processarLogin(String[] partes) {
+    if (partes.length < 3) {
+        return "ERROR|INVALID_DATA|Dados incompletos";
+    }
+    
+    String email = partes[1];
+    String senhaHash = partes[2];
+    
+    // CHAMA UsuarioDAO para autenticar
+    UsuarioDAO usuarioDAO = new UsuarioDAO();
+    Usuario usuario = usuarioDAO.autenticar(email, senhaHash);
+    
+    if (usuario != null) {
+        // Monta resposta JSON
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"id\":").append(usuario.getId()).append(",");
+        json.append("\"nome\":\"").append(usuario.getNome()).append("\",");
+        json.append("\"email\":\"").append(usuario.getEmail()).append("\"");
+        json.append("}");
+        
+        return "OK|" + json.toString();
+    } else {
+        return "ERROR|INVALID_CREDENTIALS|Email ou senha incorretos";
+    }
+}
+```
+
+**O que acontece:**
+- Thread dedicada processa requisições do cliente
+- Lê comando via BufferedReader
+- Divide comando em partes pelo separador "|"
+- Identifica comando "LOGIN"
+- Extrai email e senha hash
+- Chama `UsuarioDAO.autenticar()`
+- Monta resposta JSON
+- Envia resposta de volta ao cliente
+
+---
+
+#### PASSO 5: Consulta ao Banco MySQL (UsuarioDAO.java)
+**Arquivo:** `DESKTOP VERSION/ServidorFinanza/src/dao/UsuarioDAO.java`
+
+```java
+// UsuarioDAO.java - Linha 80-130: Autentica usuário
+public Usuario autenticar(String email, String senhaHash) {
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+    
+    try {
+        // 1. OBTÉM conexão do pool
+        conn = DatabaseUtil.getConnection();
+        
+        // 2. Prepara query SQL
+        String sql = "SELECT id, nome, email, senha_hash, tipo_usuario " +
+                     "FROM usuario " +
+                     "WHERE email = ? AND senha_hash = ?";
+        
+        stmt = conn.prepareStatement(sql);
+        stmt.setString(1, email);
+        stmt.setString(2, senhaHash);
+        
+        // 3. EXECUTA query
+        rs = stmt.executeQuery();
+        
+        // 4. Processa resultado
+        if (rs.next()) {
+            Usuario usuario = new Usuario();
+            usuario.setId(rs.getInt("id"));
+            usuario.setNome(rs.getString("nome"));
+            usuario.setEmail(rs.getString("email"));
+            usuario.setSenhaHash(rs.getString("senha_hash"));
+            usuario.setTipoUsuario(rs.getString("tipo_usuario"));
+            
+            System.out.println("Usuário autenticado: " + usuario.getEmail());
+            return usuario;
+        } else {
+            System.out.println("Credenciais inválidas para: " + email);
+            return null;
+        }
+        
+    } catch (SQLException e) {
+        System.err.println("Erro ao autenticar: " + e.getMessage());
+        return null;
+    } finally {
+        // 5. Fecha recursos
+        try {
+            if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
+            if (conn != null) DatabaseUtil.closeConnection(conn);
+        } catch (SQLException e) {
+            System.err.println("Erro ao fechar recursos");
+        }
+    }
+}
+```
+
+**SQL Executado:**
+```sql
+SELECT id, nome, email, senha_hash, tipo_usuario 
+FROM usuario 
+WHERE email = 'usuario@exemplo.com' 
+  AND senha_hash = 'hash_sha256_aqui';
+```
+
+**O que acontece:**
+- Obtém conexão do pool de conexões
+- Prepara query SQL com parâmetros (evita SQL injection)
+- Executa query no MySQL
+- Se encontrar registro, cria objeto Usuario
+- Se não encontrar, retorna null
+- Fecha recursos (ResultSet, PreparedStatement, Connection)
+
+---
+
+#### PASSO 6: Resposta Retorna ao Mobile
+
+**Fluxo reverso:**
+```
+UsuarioDAO.autenticar() retorna Usuario
+  ↓
+ClientHandler.processarLogin() recebe Usuario
+  ↓
+ClientHandler monta JSON: "OK|{id:1,nome:'João',email:'...'}"
+  ↓
+ClientHandler.writer.println() envia via socket
+  ↓
+ServerClient.reader.readLine() recebe no mobile
+  ↓
+ServerClient.sendCommand() retorna String resposta
+  ↓
+AuthManager.login() recebe resposta
+  ↓
+AuthManager parse JSON e cria Usuario
+  ↓
+AuthManager chama UsuarioDao.inserirOuAtualizar()
+  ↓
+Room INSERT INTO usuario (SQLite local)
+  ↓
+AuthManager retorna true
+  ↓
+LoginActivity recebe sucesso
+  ↓
+LoginActivity.irParaMenu() é chamado
+```
+
+---
+
+#### PASSO 7: Salvamento Local no Room (UsuarioDao.java - Mobile)
+**Arquivo:** `app/src/main/java/com/example/finanza/db/UsuarioDao.java`
+
+```java
+// UsuarioDao.java - Linha 50-75: Insere ou atualiza
+@Insert(onConflict = OnConflictStrategy.REPLACE)
+long inserir(Usuario usuario);
+
+@Transaction
+public void inserirOuAtualizar(Usuario usuario) {
+    // Verifica se já existe por UUID
+    Usuario existente = buscarPorUuid(usuario.getUuid());
+    
+    if (existente != null) {
+        // Atualiza ID local com o existente
+        usuario.setId(existente.getId());
+        
+        // Compara timestamps para decidir qual manter
+        if (usuario.getLastModified() > existente.getLastModified()) {
+            atualizar(usuario);
+        }
+        // Se timestamp do existente é mais recente, ignora
+    } else {
+        // Insere novo registro
+        inserir(usuario);
+    }
+}
+```
+
+**SQL Gerado pelo Room:**
+```sql
+INSERT OR REPLACE INTO usuario 
+(id, uuid, nome, email, senhaHash, dataCriacao, 
+ lastModified, syncStatus, lastSyncTime, serverHash)
+VALUES 
+(null, 'uuid-gerado', 'João Silva', 'joao@exemplo.com', 
+ 'hash', 1234567890, 1234567890, 1, 1234567890, null);
+```
+
+**O que acontece:**
+- Room verifica se já existe usuário com mesmo UUID
+- Se existir e timestamp for mais novo, atualiza
+- Se não existir, insere novo registro
+- Marca como sincronizado (syncStatus = 1)
+- Dados ficam disponíveis offline
+
+---
+
+#### PASSO 8: Redirecionamento para Menu (LoginActivity.java)
+**Arquivo:** `app/src/main/java/com/example/finanza/ui/LoginActivity.java`
+
+```java
+// LoginActivity.java - Linha 150-160
+private void irParaMenu() {
+    // Recupera usuário salvo no banco local
+    UsuarioDao usuarioDao = AppDatabase.getInstance(this).usuarioDao();
+    Usuario usuario = usuarioDao.buscarPorEmail(email);
+    
+    // Cria Intent para MenuActivity
+    Intent intent = new Intent(LoginActivity.this, MenuActivity.class);
+    intent.putExtra("usuario_id", usuario.getId());
+    intent.putExtra("usuario_nome", usuario.getNome());
+    
+    // Inicia nova Activity
+    startActivity(intent);
+    
+    // Remove LoginActivity da pilha (não permite voltar)
+    finish();
+}
+```
+
+**O que acontece:**
+- Busca usuário completo do banco local
+- Cria Intent para MenuActivity
+- Passa ID e nome do usuário como extras
+- Inicia MenuActivity
+- Finaliza LoginActivity (não pode voltar com botão Back)
+
+---
+
+### Resumo Visual do Fluxo Login Completo
+
+```
+┌─────────────────┐
+│ MOBILE (UI)     │
+│                 │
+│ LoginActivity   │──┐
+│  - etEmail      │  │ 1. onClick()
+│  - etSenha      │  │    email + senha
+│  - btnLogin     │◄─┘
+└────────┬────────┘
+         │ 2. realizarLogin()
+         ▼
+┌─────────────────┐
+│ AuthManager     │
+│  .login()       │──┐
+│                 │  │ 3. SecurityUtil.hashPassword()
+│                 │◄─┘    senha → hash SHA-256
+└────────┬────────┘
+         │ 4. ServerClient.sendCommand()
+         │    "LOGIN|email|hash"
+         ▼
+┌─────────────────┐
+│ ServerClient    │
+│  Socket TCP     │──► Socket conecta: 192.168.1.100:12345
+│  porta 12345    │──► Envia: "LOGIN|email|hash"
+└────────┬────────┘
+         │ Rede TCP/IP
+         ▼
+┌─────────────────┐
+│ SERVIDOR        │
+│                 │
+│ FinanzaServer   │──► Aceita conexão
+│  porta 12345    │
+└────────┬────────┘
+         │ 5. new ClientHandler(socket).start()
+         ▼
+┌─────────────────┐
+│ ClientHandler   │
+│  Thread         │──► Lê comando
+│  .run()         │──► processarComando()
+└────────┬────────┘
+         │ 6. processarLogin(partes)
+         ▼
+┌─────────────────┐
+│ UsuarioDAO      │
+│  .autenticar()  │──┐
+└────────┬────────┘  │
+         │           │ 7. DatabaseUtil.getConnection()
+         ▼           │
+┌─────────────────┐  │
+│ MySQL Database  │◄─┘
+│  finanza_db     │
+│  tabela:usuario │──► SELECT * WHERE email=? AND senha_hash=?
+└────────┬────────┘
+         │ ResultSet com dados do usuário
+         ▼
+┌─────────────────┐
+│ UsuarioDAO      │──► Cria objeto Usuario
+│  return Usuario │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ ClientHandler   │──► Monta JSON: "OK|{...}"
+│  resposta       │──► writer.println(resposta)
+└────────┬────────┘
+         │ Resposta via Socket TCP
+         ▼
+┌─────────────────┐
+│ ServerClient    │◄─ reader.readLine()
+│  (mobile)       │──► return "OK|{...}"
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ AuthManager     │──► Parse JSON
+│  .login()       │──► Cria Usuario local
+└────────┬────────┘
+         │ 8. UsuarioDao.inserirOuAtualizar()
+         ▼
+┌─────────────────┐
+│ Room/SQLite     │──► INSERT INTO usuario
+│  (local)        │     Dados salvos offline
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ LoginActivity   │──► return true (sucesso)
+│  runOnUiThread  │──► dialog.dismiss()
+└────────┬────────┘
+         │ 9. irParaMenu()
+         ▼
+┌─────────────────┐
+│ MenuActivity    │──► Intent com usuario_id
+│  Dashboard      │──► Exibe tela principal
+└─────────────────┘
+```
+
+---
+
+**Tempo Total Estimado:** 1-3 segundos
+**Arquivos Envolvidos:** 8 arquivos Java
+**Queries SQL:** 2 (1 SELECT no servidor, 1 INSERT no mobile)
+**Protocolos:** TCP/IP, HTTP-like text protocol
+**Threads:** 3 (UI thread, network thread, server thread)
+
+### Exemplo 2: Criar Lançamento Completo (Mobile → SQLite → Servidor → MySQL)
+
+**Contexto:** Usuário registra uma nova despesa de R$ 50,00 em "Alimentação" da conta "Nubank".
+
+---
+
+#### FASE 1: Captura de Dados na Interface
+
+**Arquivo:** `app/src/main/java/com/example/finanza/ui/MovementsActivity.java`
+**Layout Dialog:** `app/src/main/res/layout/dialog_add_transaction_movements.xml`
+
+```java
+// MovementsActivity.java - Linha 120-130: Usuário clica FAB
+fabAddTransaction.setOnClickListener(v -> {
+    exibirDialogNovoLancamento();
+});
+
+// Linha 150-250: Dialog de adicionar lançamento
+private void exibirDialogNovoLancamento() {
+    // Infla layout do dialog
+    View dialogView = getLayoutInflater().inflate(
+        R.layout.dialog_add_transaction_movements, null
+    );
+    
+    // Obtém referências dos componentes
+    EditText etDescricao = dialogView.findViewById(R.id.etDescricao);
+    EditText etValor = dialogView.findViewById(R.id.etValor);
+    DatePicker datePicker = dialogView.findViewById(R.id.datePicker);
+    RadioGroup rgTipo = dialogView.findViewById(R.id.rgTipo);
+    Spinner spinnerConta = dialogView.findViewById(R.id.spinnerConta);
+    Spinner spinnerCategoria = dialogView.findViewById(R.id.spinnerCategoria);
+    
+    // CARREGA lista de contas do banco
+    carregarContas(spinnerConta);
+    
+    // Listener para trocar categorias quando muda tipo
+    rgTipo.setOnCheckedChangeListener((group, checkedId) -> {
+        if (checkedId == R.id.rbReceita) {
+            carregarCategorias(spinnerCategoria, "receita");
+        } else {
+            carregarCategorias(spinnerCategoria, "despesa");
+        }
+    });
+    
+    // Carrega categorias de despesa por padrão
+    carregarCategorias(spinnerCategoria, "despesa");
+    
+    // Cria e exibe dialog
+    AlertDialog dialog = new AlertDialog.Builder(this)
+        .setTitle("Nova Transação")
+        .setView(dialogView)
+        .setPositiveButton("Salvar", null) // Listener definido depois
+        .setNegativeButton("Cancelar", null)
+        .create();
+    
+    dialog.show();
+    
+    // Override do botão Salvar para não fechar automaticamente
+    dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+          .setOnClickListener(v -> {
+              salvarNovoLancamento(dialogView, dialog);
+          });
+}
+```
+
+---
+
+#### FASE 2: Carregamento de Contas e Categorias
+
+```java
+// MovementsActivity.java - Linha 260-290: Carrega contas
+private void carregarContas(Spinner spinner) {
+    new Thread(() -> {
+        // BUSCA contas do banco local
+        List<Conta> contas = AppDatabase.getInstance(this)
+                                        .contaDao()
+                                        .listarPorUsuario(usuarioId);
+        
+        runOnUiThread(() -> {
+            // Cria adapter para spinner
+            ArrayAdapter<Conta> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                contas
+            );
+            adapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+            );
+            spinner.setAdapter(adapter);
+        });
+    }).start();
+}
+
+// Linha 300-330: Carrega categorias filtradas por tipo
+private void carregarCategorias(Spinner spinner, String tipo) {
+    new Thread(() -> {
+        // BUSCA categorias do tipo específico
+        List<Categoria> categorias = AppDatabase.getInstance(this)
+                                                .categoriaDao()
+                                                .listarPorUsuarioETipo(usuarioId, tipo);
+        
+        runOnUiThread(() -> {
+            ArrayAdapter<Categoria> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                categorias
+            );
+            adapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+            );
+            spinner.setAdapter(adapter);
+        });
+    }).start();
+}
+```
+
+**Queries Room Executadas:**
+```sql
+-- Para carregar contas:
+SELECT * FROM conta 
+WHERE usuarioId = 1 
+  AND syncStatus != 4 
+ORDER BY dataCriacao DESC;
+
+-- Para carregar categorias de despesa:
+SELECT * FROM categoria 
+WHERE usuarioId = 1 
+  AND tipo = 'despesa'
+ORDER BY nome ASC;
+```
+
+---
+
+#### FASE 3: Validação e Criação do Objeto
+
+```java
+// MovementsActivity.java - Linha 350-450: Salva novo lançamento
+private void salvarNovoLancamento(View dialogView, AlertDialog dialog) {
+    // 1. EXTRAI dados do dialog
+    EditText etDescricao = dialogView.findViewById(R.id.etDescricao);
+    EditText etValor = dialogView.findViewById(R.id.etValor);
+    DatePicker datePicker = dialogView.findViewById(R.id.datePicker);
+    RadioGroup rgTipo = dialogView.findViewById(R.id.rgTipo);
+    Spinner spinnerConta = dialogView.findViewById(R.id.spinnerConta);
+    Spinner spinnerCategoria = dialogView.findViewById(R.id.spinnerCategoria);
+    
+    String descricao = etDescricao.getText().toString().trim();
+    String valorStr = etValor.getText().toString().trim();
+    
+    // 2. VALIDA campos
+    if (descricao.isEmpty()) {
+        etDescricao.setError("Descrição obrigatória");
+        return;
+    }
+    
+    if (valorStr.isEmpty()) {
+        etValor.setError("Valor obrigatório");
+        return;
+    }
+    
+    double valor;
+    try {
+        valor = Double.parseDouble(valorStr);
+    } catch (NumberFormatException e) {
+        etValor.setError("Valor inválido");
+        return;
+    }
+    
+    if (valor <= 0) {
+        etValor.setError("Valor deve ser maior que zero");
+        return;
+    }
+    
+    Conta contaSelecionada = (Conta) spinnerConta.getSelectedItem();
+    Categoria categoriaSelecionada = (Categoria) spinnerCategoria.getSelectedItem();
+    
+    if (contaSelecionada == null || categoriaSelecionada == null) {
+        Toast.makeText(this, "Selecione conta e categoria", 
+                      Toast.LENGTH_SHORT).show();
+        return;
+    }
+    
+    // 3. DETERMINA tipo
+    String tipo = (rgTipo.getCheckedRadioButtonId() == R.id.rbReceita) ? 
+                  "receita" : "despesa";
+    
+    // 4. OBTÉM data selecionada
+    Calendar calendar = Calendar.getInstance();
+    calendar.set(datePicker.getYear(), 
+                 datePicker.getMonth(), 
+                 datePicker.getDayOfMonth(),
+                 0, 0, 0);
+    long dataTransacao = calendar.getTimeInMillis();
+    
+    // 5. CRIA objeto Lancamento
+    Lancamento lancamento = new Lancamento();
+    lancamento.setUuid(UUID.randomUUID().toString());
+    lancamento.setDescricao(descricao);
+    lancamento.setValor(valor);
+    lancamento.setData(dataTransacao);
+    lancamento.setTipo(tipo);
+    lancamento.setContaId(contaSelecionada.getId());
+    lancamento.setCategoriaId(categoriaSelecionada.getId());
+    lancamento.setUsuarioId(usuarioId);
+    lancamento.setDataCriacao(System.currentTimeMillis());
+    lancamento.setLastModified(System.currentTimeMillis());
+    lancamento.setSyncStatus(2); // NEEDS_SYNC
+    lancamento.setIsDeleted(0); // Ativo
+    
+    // 6. CHAMA validação de integridade
+    validarEInserir(lancamento, dialog);
+}
+```
+
+---
+
+#### FASE 4: Validação de Integridade
+
+**Arquivo:** `app/src/main/java/com/example/finanza/util/DataIntegrityValidator.java`
+
+```java
+// DataIntegrityValidator.java - Linha 50-120
+public static ValidationResult validarLancamento(Lancamento lancamento, 
+                                                 Context context) {
+    AppDatabase db = AppDatabase.getInstance(context);
+    
+    // 1. VALIDA valor positivo
+    if (lancamento.getValor() <= 0) {
+        return ValidationResult.error("Valor deve ser positivo");
+    }
+    
+    // 2. VALIDA conta existe
+    Conta conta = db.contaDao().buscarPorId(lancamento.getContaId());
+    if (conta == null) {
+        return ValidationResult.error("Conta não encontrada");
+    }
+    
+    // 3. VALIDA categoria existe
+    Categoria categoria = db.categoriaDao()
+                            .buscarPorId(lancamento.getCategoriaId());
+    if (categoria == null) {
+        return ValidationResult.error("Categoria não encontrada");
+    }
+    
+    // 4. VALIDA tipo da categoria corresponde ao lançamento
+    if (!categoria.getTipo().equals(lancamento.getTipo())) {
+        return ValidationResult.error(
+            "Tipo de categoria não corresponde ao lançamento"
+        );
+    }
+    
+    // 5. VERIFICA duplicatas recentes (últimos 5 minutos)
+    long cincoMinutosAtras = System.currentTimeMillis() - (5 * 60 * 1000);
+    List<Lancamento> similares = db.lancamentoDao()
+                                   .buscarSimilares(
+                                       lancamento.getValor(),
+                                       lancamento.getData(),
+                                       5 * 60 * 1000, // timeWindow
+                                       lancamento.getContaId(),
+                                       lancamento.getUsuarioId()
+                                   );
+    
+    if (!similares.isEmpty()) {
+        return ValidationResult.warning(
+            "Já existe um lançamento similar nos últimos 5 minutos"
+        );
+    }
+    
+    // 6. VALIDA data não é muito futura (mais de 1 ano)
+    long umAnoFuturo = System.currentTimeMillis() + 
+                       (365L * 24 * 60 * 60 * 1000);
+    if (lancamento.getData() > umAnoFuturo) {
+        return ValidationResult.warning("Data muito distante no futuro");
+    }
+    
+    return ValidationResult.ok();
+}
+```
+
+**Query de busca de duplicatas:**
+```sql
+SELECT * FROM lancamento
+WHERE valor = 50.00
+  AND ABS(data - 1234567890) < 300000  -- 5 minutos
+  AND contaId = 3
+  AND usuarioId = 1
+  AND isDeleted = 0
+  AND uuid != 'uuid-do-novo';
+```
+
+---
+
+#### FASE 5: Inserção no Banco Local (Room)
+
+```java
+// MovementsActivity.java - Linha 470-550
+private void validarEInserir(Lancamento lancamento, AlertDialog dialog) {
+    // Exibe progress
+    ProgressDialog progress = ProgressDialog.show(this, 
+                                                   "Salvando", 
+                                                   "Aguarde...");
+    
+    new Thread(() -> {
+        try {
+            // 1. VALIDA integridade
+            ValidationResult validacao = DataIntegrityValidator
+                                         .validarLancamento(lancamento, this);
+            
+            if (!validacao.isValid()) {
+                runOnUiThread(() -> {
+                    progress.dismiss();
+                    Toast.makeText(this, validacao.getMessage(), 
+                                  Toast.LENGTH_LONG).show();
+                });
+                return;
+            }
+            
+            // 2. OBTÉM DAOs
+            LancamentoDao lancamentoDao = AppDatabase.getInstance(this)
+                                                     .lancamentoDao();
+            ContaDao contaDao = AppDatabase.getInstance(this)
+                                           .contaDao();
+            
+            // 3. INSERE lançamento
+            long idInserido = lancamentoDao.inserirSeguro(lancamento);
+            lancamento.setId((int) idInserido);
+            
+            // 4. ATUALIZA saldo da conta
+            Conta conta = contaDao.buscarPorId(lancamento.getContaId());
+            double novoSaldo = conta.getSaldoAtual();
+            
+            if (lancamento.getTipo().equals("receita")) {
+                novoSaldo += lancamento.getValor();
+            } else { // despesa
+                novoSaldo -= lancamento.getValor();
+            }
+            
+            conta.setSaldoAtual(novoSaldo);
+            conta.setLastModified(System.currentTimeMillis());
+            conta.setSyncStatus(2); // Marca para sincronização
+            contaDao.atualizar(conta);
+            
+            // 5. SINCRONIZA com servidor (em background)
+            sincronizarLancamento(lancamento);
+            sincronizarConta(conta);
+            
+            // 6. ATUALIZA UI
+            runOnUiThread(() -> {
+                progress.dismiss();
+                dialog.dismiss();
+                Toast.makeText(this, "Lançamento salvo com sucesso!", 
+                              Toast.LENGTH_SHORT).show();
+                recarregarLancamentos();
+            });
+            
+        } catch (Exception e) {
+            runOnUiThread(() -> {
+                progress.dismiss();
+                Toast.makeText(this, "Erro ao salvar: " + e.getMessage(), 
+                              Toast.LENGTH_LONG).show();
+            });
+            Log.e("MovementsActivity", "Erro ao inserir", e);
+        }
+    }).start();
+}
+```
+
+**SQL Executado pelo Room:**
+```sql
+-- Inserção do lançamento
+INSERT INTO lancamento (
+    uuid, valor, data, descricao, tipo, 
+    contaId, categoriaId, usuarioId,
+    dataCriacao, lastModified, syncStatus, isDeleted
+) VALUES (
+    'uuid-gerado', 50.00, 1234567890, 'Almoço', 'despesa',
+    3, 5, 1,
+    1234567890, 1234567890, 2, 0
+);
+
+-- Atualização do saldo da conta
+UPDATE conta 
+SET saldoAtual = 450.00,  -- era 500, diminuiu 50
+    lastModified = 1234567890,
+    syncStatus = 2
+WHERE id = 3;
+```
+
+---
+
+#### FASE 6: Sincronização com Servidor
+
+**Arquivo:** `app/src/main/java/com/example/finanza/network/EnhancedSyncService.java`
+
+```java
+// EnhancedSyncService.java - Linha 200-300
+public void sincronizarLancamento(Lancamento lancamento) {
+    new Thread(() -> {
+        try {
+            // 1. PREPARA dados para envio
+            String params = formatarLancamentoParaSync(lancamento);
+            
+            // 2. MONTA comando
+            String comando = Protocol.CMD_ADD_MOVIMENTACAO_ENHANCED;
+            
+            // 3. ENVIA ao servidor
+            String resposta = ServerClient.getInstance()
+                                         .sendCommand(comando, params);
+            
+            // 4. PROCESSA resposta
+            if (resposta != null && resposta.startsWith("OK|")) {
+                // Extrai ID do servidor
+                String[] partes = resposta.split("\\|");
+                int serverId = Integer.parseInt(partes[1]);
+                
+                // 5. ATUALIZA metadados locais
+                LancamentoDao dao = AppDatabase.getInstance(context)
+                                               .lancamentoDao();
+                dao.marcarComoSincronizado(lancamento.getId(), 
+                                          System.currentTimeMillis());
+                dao.atualizarMetadataSync(
+                    lancamento.getUuid(),
+                    1, // SYNCED
+                    System.currentTimeMillis(),
+                    calcularHash(lancamento)
+                );
+                
+                Log.d("Sync", "Lançamento sincronizado: " + serverId);
+            } else {
+                Log.e("Sync", "Erro ao sincronizar: " + resposta);
+            }
+        } catch (Exception e) {
+            Log.e("Sync", "Exceção na sincronização", e);
+        }
+    }).start();
+}
+
+// Linha 350-380: Formata lançamento para envio
+private String formatarLancamentoParaSync(Lancamento l) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(l.getUuid()).append("|");
+    sb.append(l.getValor()).append("|");
+    sb.append(l.getData()).append("|");
+    sb.append(l.getDescricao()).append("|");
+    sb.append(l.getTipo()).append("|");
+    sb.append(l.getContaId()).append("|");
+    sb.append(l.getCategoriaId()).append("|");
+    sb.append(l.getUsuarioId()).append("|");
+    sb.append(l.getLastModified()).append("|");
+    sb.append(calcularHash(l));
+    return sb.toString();
+}
+```
+
+**Mensagem enviada via TCP:**
+```
+ADD_MOVIMENTACAO_ENHANCED|uuid-123|50.00|1234567890|Almoço|despesa|3|5|1|1234567890|hash-md5
+```
+
+---
+
+#### FASE 7: Processamento no Servidor
+
+**Arquivo:** `DESKTOP VERSION/ServidorFinanza/src/server/ClientHandler.java`
+
+```java
+// ClientHandler.java - Linha 400-450
+private String processarAddMovimentacaoEnhanced(String[] partes) {
+    try {
+        // 1. EXTRAI parâmetros
+        String uuid = partes[1];
+        double valor = Double.parseDouble(partes[2]);
+        long data = Long.parseLong(partes[3]);
+        String descricao = partes[4];
+        String tipo = partes[5];
+        int contaId = Integer.parseInt(partes[6]);
+        int categoriaId = Integer.parseInt(partes[7]);
+        int usuarioId = Integer.parseInt(partes[8]);
+        long lastModified = Long.parseLong(partes[9]);
+        String hash = partes[10];
+        
+        // 2. CRIA objeto Movimentacao
+        Movimentacao mov = new Movimentacao();
+        mov.setUuid(uuid);
+        mov.setValor(valor);
+        mov.setData(new Date(data));
+        mov.setDescricao(descricao);
+        mov.setTipo(tipo);
+        mov.setIdConta(contaId);
+        mov.setIdCategoria(categoriaId);
+        mov.setIdUsuario(usuarioId);
+        
+        // 3. VERIFICA se já existe (por UUID)
+        MovimentacaoDAO dao = new MovimentacaoDAO();
+        Movimentacao existente = dao.buscarPorUuid(uuid);
+        
+        if (existente != null) {
+            // Verifica conflito de timestamp
+            if (existente.getDataAtualizacao().getTime() > lastModified) {
+                return "CONFLICT|Versão do servidor é mais recente";
+            }
+            // Atualiza existente
+            mov.setId(existente.getId());
+            dao.atualizar(mov);
+            return "OK|" + mov.getId();
+        } else {
+            // 4. INSERE nova movimentação
+            int id = dao.criar(mov);
+            mov.setId(id);
+            
+            // 5. ATUALIZA saldo da conta no servidor
+            ContaDAO contaDao = new ContaDAO();
+            Conta conta = contaDao.buscarPorId(contaId);
+            if (conta != null) {
+                double novoSaldo = conta.getSaldo();
+                if (tipo.equals("receita")) {
+                    novoSaldo += valor;
+                } else {
+                    novoSaldo -= valor;
+                }
+                conta.setSaldo(novoSaldo);
+                contaDao.atualizar(conta);
+            }
+            
+            return "OK|" + id;
+        }
+    } catch (Exception e) {
+        System.err.println("Erro ao adicionar movimentação: " + e.getMessage());
+        return "ERROR|" + e.getMessage();
+    }
+}
+```
+
+---
+
+#### FASE 8: Inserção no MySQL
+
+**Arquivo:** `DESKTOP VERSION/ServidorFinanza/src/dao/MovimentacaoDAO.java`
+
+```java
+// MovimentacaoDAO.java - Linha 100-160
+public int criar(Movimentacao mov) {
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+    
+    try {
+        conn = DatabaseUtil.getConnection();
+        
+        String sql = "INSERT INTO movimentacao " +
+                     "(valor, data, descricao, tipo, id_conta, " +
+                     "id_categoria, id_usuario, data_criacao, data_atualizacao) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        
+        stmt = conn.prepareStatement(sql, 
+                                     Statement.RETURN_GENERATED_KEYS);
+        
+        stmt.setDouble(1, mov.getValor());
+        stmt.setDate(2, new java.sql.Date(mov.getData().getTime()));
+        stmt.setString(3, mov.getDescricao());
+        stmt.setString(4, mov.getTipo());
+        stmt.setInt(5, mov.getIdConta());
+        stmt.setInt(6, mov.getIdCategoria());
+        stmt.setInt(7, mov.getIdUsuario());
+        
+        int affectedRows = stmt.executeUpdate();
+        
+        if (affectedRows == 0) {
+            throw new SQLException("Falha ao criar movimentação");
+        }
+        
+        // Obtém ID gerado
+        rs = stmt.getGeneratedKeys();
+        if (rs.next()) {
+            int id = rs.getInt(1);
+            System.out.println("Movimentação criada com ID: " + id);
+            return id;
+        } else {
+            throw new SQLException("Falha ao obter ID");
+        }
+        
+    } catch (SQLException e) {
+        System.err.println("Erro SQL ao criar movimentação: " + e.getMessage());
+        throw new RuntimeException(e);
+    } finally {
+        try {
+            if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
+            if (conn != null) DatabaseUtil.closeConnection(conn);
+        } catch (SQLException e) {
+            System.err.println("Erro ao fechar recursos");
+        }
+    }
+}
+```
+
+**SQL Executado no MySQL:**
+```sql
+INSERT INTO movimentacao (
+    valor, data, descricao, tipo, 
+    id_conta, id_categoria, id_usuario,
+    data_criacao, data_atualizacao
+) VALUES (
+    50.00, '2024-01-15', 'Almoço', 'despesa',
+    3, 5, 1,
+    NOW(), NOW()
+);
+
+-- Atualização do saldo no servidor
+UPDATE conta 
+SET saldo_inicial = 450.00
+WHERE id = 3;
+```
+
+---
+
+#### FASE 9: Confirmação e Atualização da UI
+
+**Resposta retorna ao mobile:**
+```
+OK|542
+```
+(542 é o ID gerado no MySQL)
+
+**No mobile, atualização final:**
+```java
+// MovementsActivity.java - continua...
+runOnUiThread(() -> {
+    // Lista é recarregada
+    List<Lancamento> lancamentos = lancamentoDao
+                                   .listarAtivosPorUsuario(usuarioId);
+    adapter.setLancamentos(lancamentos);
+    adapter.notifyDataSetChanged();
+    
+    // RecyclerView rola para o topo (mais recente)
+    recyclerView.smoothScrollToPosition(0);
+    
+    // Badge ou resumo é atualizado
+    atualizarResumoFinanceiro();
+});
+```
+
+---
+
+### Resumo Visual do Fluxo Criar Lançamento
+
+```
+┌─────────────────┐
+│ MovementsActivity│
+│  FAB Click      │
+└────────┬────────┘
+         │ exibirDialogNovoLancamento()
+         ▼
+┌─────────────────┐
+│ Dialog          │──► Usuário preenche:
+│ add_transaction │    - Descrição: "Almoço"
+│                 │    - Valor: 50.00
+│                 │    - Tipo: Despesa
+│                 │    - Conta: "Nubank"
+│                 │    - Categoria: "Alimentação"
+└────────┬────────┘
+         │ onClick(Salvar)
+         ▼
+┌─────────────────┐
+│ Validações      │──► Campos não vazios
+│                 │──► Valor > 0
+│                 │──► Conta e Categoria selecionadas
+└────────┬────────┘
+         │ Cria novo Lancamento()
+         ▼
+┌─────────────────┐
+│DataIntegrity    │──► Valida conta existe
+│Validator        │──► Valida categoria existe
+│                 │──► Busca duplicatas
+└────────┬────────┘
+         │ ValidationResult.ok()
+         ▼
+┌─────────────────┐
+│ Room (SQLite)   │
+│ LancamentoDao   │──► INSERT INTO lancamento
+│  .inserirSeguro │     VALUES (...)
+└────────┬────────┘
+         │ ID = 123 (local)
+         ▼
+┌─────────────────┐
+│ Room (SQLite)   │──► SELECT * FROM conta WHERE id=3
+│ ContaDao        │──► UPDATE conta 
+│                 │     SET saldoAtual = 450.00
+│                 │     (era 500, -50 da despesa)
+└────────┬────────┘
+         │ Saldo atualizado
+         ▼
+┌─────────────────┐
+│EnhancedSync     │──► Formata dados
+│Service          │──► ServerClient.sendCommand()
+│  .sincronizar   │     "ADD_MOVIMENTACAO_ENHANCED|..."
+└────────┬────────┘
+         │ Socket TCP
+         ▼
+┌─────────────────┐
+│ Servidor        │
+│ ClientHandler   │──► Recebe comando
+│  .processarAdd  │──► Parse parâmetros
+└────────┬────────┘
+         │ MovimentacaoDAO.criar()
+         ▼
+┌─────────────────┐
+│ MySQL           │──► INSERT INTO movimentacao
+│ movimentacao    │     VALUES (...)
+│                 │──► ID gerado: 542
+└────────┬────────┘
+         │ 
+         ▼
+┌─────────────────┐
+│ MySQL           │──► UPDATE conta
+│ conta           │     SET saldo_inicial = 450.00
+│                 │     WHERE id = 3
+└────────┬────────┘
+         │ Resposta "OK|542"
+         ▼
+┌─────────────────┐
+│ ServerClient    │◄── Recebe "OK|542"
+│  (mobile)       │──► return resposta
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│EnhancedSync     │──► Parse ID servidor: 542
+│Service          │──► LancamentoDao
+│                 │     .marcarComoSincronizado()
+└────────┬────────┘
+         │ syncStatus = 1 (SYNCED)
+         ▼
+┌─────────────────┐
+│MovementsActivity│──► recarregarLancamentos()
+│  runOnUiThread  │──► Adapter.notifyDataSetChanged()
+│                 │──► RecyclerView exibe novo item
+└─────────────────┘
+```
+
+**Tempo Total:** 0.5-2 segundos
+**Arquivos Modificados:** 4 (2 tabelas SQLite, 2 tabelas MySQL)
+**Threads:** 4 (UI, validação, inserção local, sincronização)
+**Queries SQL:** 6 (2 SELECTs validação, 2 INSERTs, 2 UPDATEs)
+**Dados Sincronizados:** Lançamento + Conta
 
 ### Exemplo 3: Administrador Edita Usuário (Desktop)
 

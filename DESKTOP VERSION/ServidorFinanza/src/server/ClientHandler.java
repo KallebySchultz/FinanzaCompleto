@@ -12,172 +12,461 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Manipulador de clientes conectados ao servidor
- * Processa comandos recebidos dos clientes e envia respostas
+ * ClientHandler - Manipulador de Clientes Conectados ao Servidor
+ * 
+ * Esta classe extends Thread e é responsável por processar todos os comandos
+ * recebidos de um cliente específico (mobile ou desktop) conectado ao servidor.
+ * 
+ * Funcionalidades:
+ * - Executar em thread separada para cada cliente conectado
+ * - Receber comandos via Socket TCP/IP
+ * - Processar 40+ tipos de comandos diferentes
+ * - Interagir com banco de dados MySQL via DAOs
+ * - Enviar respostas formatadas de volta ao cliente
+ * - Manter sessão do usuário durante conexão
+ * - Gerenciar autenticação e autorização
+ * 
+ * Arquitetura:
+ * - Uma instância de ClientHandler por cliente conectado
+ * - Cada instância roda em thread própria
+ * - Comunicação via BufferedReader (entrada) e PrintWriter (saída)
+ * - Protocolo de texto delimitado por pipes (|)
+ * 
+ * Comandos suportados (40+):
+ * - Autenticação: LOGIN, REGISTER, LOGOUT, RESET_PASSWORD, CHANGE_PASSWORD
+ * - Dashboard: GET_DASHBOARD
+ * - Contas: LIST, ADD, UPDATE, DELETE
+ * - Categorias: LIST, ADD, UPDATE, DELETE
+ * - Movimentações: LIST, ADD, UPDATE, DELETE (com filtros)
+ * - Perfil: GET, UPDATE
+ * - Admin: Gerenciamento completo de usuários e dados
+ * 
+ * Fluxo de processamento:
+ * 1. Cliente conecta → Servidor cria ClientHandler
+ * 2. ClientHandler.run() → Entra em loop de leitura
+ * 3. Cliente envia comando → ClientHandler recebe
+ * 4. processarComando() → Identifica tipo de comando
+ * 5. processar<TipoComando>() → Executa lógica específica
+ * 6. Interage com DAO → Acessa banco MySQL
+ * 7. Formata resposta via Protocol
+ * 8. Envia resposta ao cliente
+ * 9. Volta ao passo 3 (loop)
+ * 
+ * Formato de comandos:
+ * - Entrada: "COMANDO|param1|param2|param3|..."
+ * - Saída: "STATUS|dados" ou "ERROR|mensagem"
+ * 
+ * Exemplo de interação:
+ * Cliente →  "LOGIN|joao@gmail.com|senha_hash"
+ * Handler →  Valida credenciais no banco
+ * Handler →  "OK|{id:1,nome:João,email:joao@gmail.com}"
+ * Cliente ←  Recebe confirmação
+ * 
+ * Segurança:
+ * - Senhas recebidas já vêm criptografadas (SHA-256)
+ * - Validação de parâmetros em cada comando
+ * - Tratamento de exceções para evitar vazamento de informações
+ * - Controle de sessão por conexão
+ * 
+ * Modo de teste:
+ * - testMode=true: Simula respostas sem acessar banco
+ * - Útil para testes automatizados
+ * 
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
  */
 public class ClientHandler extends Thread {
+    /** Formato padrão para datas (dd/MM/yyyy) */
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd/MM/yyyy");
     
+    /** Socket de comunicação com o cliente */
     private Socket clientSocket;
+    
+    /** Stream de entrada para receber comandos do cliente */
     private BufferedReader input;
+    
+    /** Stream de saída para enviar respostas ao cliente */
     private PrintWriter output;
+    
+    /** Flag que indica se está em modo de teste (sem banco) */
     private boolean testMode;
+    
+    /** DAO para acesso à tabela de usuários */
     private UsuarioDAO usuarioDAO;
+    
+    /** DAO para acesso à tabela de contas */
     private ContaDAO contaDAO;
+    
+    /** DAO para acesso à tabela de categorias */
     private CategoriaDAO categoriaDAO;
+    
+    /** DAO para acesso à tabela de movimentações */
     private MovimentacaoDAO movimentacaoDAO;
+    
+    /** Usuário atualmente autenticado nesta conexão */
     private Usuario usuarioLogado;
     
+    /**
+     * Construtor do ClientHandler
+     * 
+     * Inicializa um manipulador para processar comandos de um cliente específico.
+     * 
+     * @param clientSocket Socket de comunicação com o cliente conectado
+     * @param testMode true para modo de teste (sem banco), false para produção
+     * 
+     * Modo de teste:
+     * - Desabilita acesso ao banco de dados
+     * - Retorna respostas simuladas
+     * - Útil para testes unitários e integração
+     * 
+     * Inicialização:
+     * - Armazena socket do cliente
+     * - Cria instâncias dos DAOs para acesso ao banco
+     * - Prepara ambiente para processamento de comandos
+     */
     public ClientHandler(Socket clientSocket, boolean testMode) {
+        // Armazena socket para comunicação posterior
         this.clientSocket = clientSocket;
+        
+        // Define modo de operação (teste ou produção)
         this.testMode = testMode;
-        this.usuarioDAO = new UsuarioDAO();
-        this.contaDAO = new ContaDAO();
-        this.categoriaDAO = new CategoriaDAO();
-        this.movimentacaoDAO = new MovimentacaoDAO();
+        
+        // Inicializa DAOs para acesso ao banco de dados
+        // Cada DAO gerencia uma tabela específica
+        this.usuarioDAO = new UsuarioDAO();         // Gerencia tabela 'usuario'
+        this.contaDAO = new ContaDAO();             // Gerencia tabela 'conta'
+        this.categoriaDAO = new CategoriaDAO();     // Gerencia tabela 'categoria'
+        this.movimentacaoDAO = new MovimentacaoDAO(); // Gerencia tabela 'movimentacao'
     }
     
+    /**
+     * Método principal da thread - Loop de processamento de comandos
+     * 
+     * Este método é executado quando a thread é iniciada (start()).
+     * Implementa o loop principal de comunicação com o cliente.
+     * 
+     * Fluxo de execução:
+     * 1. INICIALIZAÇÃO
+     *    - Cria streams de entrada (BufferedReader) e saída (PrintWriter)
+     *    - Obtém endereço do cliente para log
+     *    - Exibe mensagem de conexão bem-sucedida
+     * 
+     * 2. LOOP DE COMANDOS (while)
+     *    - Lê linha de comando do cliente (BLOQUEANTE)
+     *    - input.readLine() bloqueia até receber \n ou cliente desconectar
+     *    - Se retornar null, cliente desconectou → sai do loop
+     *    - Se retornar comando, processa via processarComando()
+     *    - Envia resposta de volta ao cliente
+     *    - Volta ao início do loop
+     * 
+     * 3. ENCERRAMENTO
+     *    - Sai do loop quando cliente desconecta (readLine retorna null)
+     *    - Finally garante que fecharConexao() sempre execute
+     *    - Fecha streams e socket
+     * 
+     * Logs:
+     * - "Cliente conectado: IP:PORTA" → Conexão estabelecida
+     * - "Comando recebido: COMANDO|..."  → Cliente enviou comando
+     * - "Resposta enviada: STATUS|..."   → Servidor respondeu
+     * 
+     * Tratamento de erros:
+     * - IOException: Erro de rede (cliente desconectou abruptamente, timeout, etc)
+     * - Finally: Sempre fecha conexão, mesmo se houver exceção
+     * 
+     * Thread:
+     * - Cada cliente tem sua própria thread
+     * - Thread morre quando cliente desconecta
+     * - Servidor continua aceitando novos clientes
+     */
     @Override
     public void run() {
         try {
-            input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            // ========== FASE 1: INICIALIZAÇÃO DOS STREAMS ==========
+            // Cria BufferedReader para ler comandos do cliente
+            // InputStreamReader converte bytes em caracteres (UTF-8)
+            // BufferedReader adiciona buffering para performance
+            input = new BufferedReader(
+                new InputStreamReader(clientSocket.getInputStream())
+            );
+            
+            // Cria PrintWriter para enviar respostas ao cliente
+            // true = auto-flush (envia imediatamente após println)
             output = new PrintWriter(clientSocket.getOutputStream(), true);
             
+            // Obtém endereço IP e porta do cliente para log
             String clientAddress = clientSocket.getRemoteSocketAddress().toString();
-            System.out.println("Cliente conectado: " + clientAddress);
+            System.out.println("✓ Cliente conectado: " + clientAddress);
             
+            // ========== FASE 2: LOOP DE PROCESSAMENTO ==========
             String comando;
+            // Loop infinito que só para quando cliente desconectar
             while ((comando = input.readLine()) != null) {
-                System.out.println("Comando recebido: " + comando);
+                // readLine() BLOQUEIA aqui esperando cliente enviar comando
+                // Retorna null quando cliente fecha conexão
+                // Retorna String com o comando quando cliente envia
+                
+                // Log do comando recebido
+                System.out.println("➤ Comando recebido: " + comando);
+                
+                // Processa o comando e obtém resposta
+                // processarComando() faz parse e executa lógica apropriada
                 String resposta = processarComando(comando);
-                System.out.println("Resposta enviada: " + resposta);
+                
+                // Log da resposta que será enviada
+                System.out.println("← Resposta enviada: " + resposta);
+                
+                // Envia resposta de volta ao cliente
+                // println adiciona \n no final
+                // auto-flush garante envio imediato
                 output.println(resposta);
+                
+                // Volta ao início do loop para próximo comando
             }
             
+            // Se chegou aqui, cliente desconectou (readLine retornou null)
+            System.out.println("✗ Cliente desconectado: " + clientAddress);
+            
         } catch (IOException e) {
-            System.err.println("Erro na comunicação com cliente: " + e.getMessage());
+            // Erro de I/O durante comunicação
+            // Causas comuns:
+            // - Cliente desconectou abruptamente
+            // - Timeout de rede
+            // - Perda de conexão
+            System.err.println("✗ Erro na comunicação com cliente: " + e.getMessage());
+            
         } finally {
+            // ========== FASE 3: LIMPEZA E ENCERRAMENTO ==========
+            // Finally SEMPRE executa, mesmo se houver exceção
+            // Garante que recursos sejam liberados
             fecharConexao();
         }
     }
     
     /**
      * Processa comando recebido do cliente
+     * 
+     * Este é o "roteador" principal de comandos. Recebe o comando raw,
+     * faz parse, identifica o tipo e delega para método específico.
+     * 
+     * @param comando String com comando no formato "COMANDO|param1|param2|..."
+     * @return String com resposta no formato "STATUS|dados" ou "ERROR|mensagem"
+     * 
+     * Fluxo de processamento:
+     * 1. PARSE DO COMANDO
+     *    - Protocol.parseCommand() divide comando por pipes (|)
+     *    - Retorna array: ["COMANDO", "param1", "param2", ...]
+     *    - partes[0] é sempre o tipo do comando
+     * 
+     * 2. VALIDAÇÃO BÁSICA
+     *    - Verifica se array tem pelo menos 1 elemento
+     *    - Se vazio, comando é inválido
+     * 
+     * 3. SWITCH/CASE (Roteamento)
+     *    - Compara comando com constantes do Protocol
+     *    - Delega para método processar<TipoComando>()
+     *    - Cada método é especialista em um tipo de operação
+     * 
+     * 4. TRATAMENTO DE EXCEÇÕES
+     *    - Captura qualquer exceção não tratada
+     *    - Retorna erro genérico sem expor detalhes internos
+     *    - Log completo no servidor para debug
+     * 
+     * Categorias de comandos (40+):
+     * 
+     * ┌─ AUTENTICAÇÃO (5 comandos) ────────────────┐
+     * │ LOGIN, REGISTER, LOGOUT,                    │
+     * │ RESET_PASSWORD, CHANGE_PASSWORD             │
+     * └─────────────────────────────────────────────┘
+     * 
+     * ┌─ DASHBOARD (1 comando) ────────────────────┐
+     * │ GET_DASHBOARD                               │
+     * └─────────────────────────────────────────────┘
+     * 
+     * ┌─ CONTAS (4 comandos) ──────────────────────┐
+     * │ LIST_CONTAS, ADD_CONTA,                     │
+     * │ UPDATE_CONTA, DELETE_CONTA                  │
+     * └─────────────────────────────────────────────┘
+     * 
+     * ┌─ CATEGORIAS (5 comandos) ──────────────────┐
+     * │ LIST_CATEGORIAS, LIST_CATEGORIAS_TIPO,      │
+     * │ ADD_CATEGORIA, UPDATE_CATEGORIA,            │
+     * │ DELETE_CATEGORIA                            │
+     * └─────────────────────────────────────────────┘
+     * 
+     * ┌─ MOVIMENTAÇÕES (6 comandos) ───────────────┐
+     * │ LIST_MOVIMENTACOES,                         │
+     * │ LIST_MOVIMENTACOES_PERIODO,                 │
+     * │ LIST_MOVIMENTACOES_CONTA,                   │
+     * │ ADD_MOVIMENTACAO, UPDATE_MOVIMENTACAO,      │
+     * │ DELETE_MOVIMENTACAO                         │
+     * └─────────────────────────────────────────────┘
+     * 
+     * ┌─ PERFIL (2 comandos) ──────────────────────┐
+     * │ GET_PERFIL, UPDATE_PERFIL                   │
+     * └─────────────────────────────────────────────┘
+     * 
+     * ┌─ ADMIN - Usuários (4 comandos) ────────────┐
+     * │ LIST_USERS, UPDATE_USER,                    │
+     * │ UPDATE_USER_PASSWORD, DELETE_USER           │
+     * └─────────────────────────────────────────────┘
+     * 
+     * ┌─ ADMIN - Dados (12 comandos) ──────────────┐
+     * │ ADMIN_LIST_CONTAS_USER,                     │
+     * │ ADMIN_LIST_CATEGORIAS_USER,                 │
+     * │ ADMIN_LIST_MOVIMENTACOES_USER,              │
+     * │ ADMIN_LIST_ALL_CONTAS,                      │
+     * │ ADMIN_LIST_ALL_CATEGORIAS,                  │
+     * │ ADMIN_LIST_ALL_MOVIMENTACOES,               │
+     * │ ADMIN_DELETE_CONTA,                         │
+     * │ ADMIN_DELETE_CATEGORIA,                     │
+     * │ ADMIN_DELETE_MOVIMENTACAO,                  │
+     * │ ADMIN_UPDATE_CONTA,                         │
+     * │ ADMIN_UPDATE_CATEGORIA,                     │
+     * │ ADMIN_UPDATE_MOVIMENTACAO                   │
+     * └─────────────────────────────────────────────┘
+     * 
+     * Exemplos de comandos:
+     * - "LOGIN|joao@gmail.com|senha_hash"
+     * - "ADD_CONTA|Nubank|corrente|1000.00|1"
+     * - "LIST_MOVIMENTACOES_PERIODO|2024-01-01|2024-12-31"
+     * 
+     * Tratamento de erros:
+     * - Comando inválido → "ERROR|Comando inválido"
+     * - Comando desconhecido → "ERROR|Comando não reconhecido: X"
+     * - Exceção interna → "ERROR|Erro interno do servidor"
      */
     private String processarComando(String comando) {
+        // ========== FASE 1: PARSE DO COMANDO ==========
+        // Divide comando por pipes (|)
+        // Exemplo: "LOGIN|email|senha" → ["LOGIN", "email", "senha"]
         String[] partes = Protocol.parseCommand(comando);
         
+        // ========== FASE 2: VALIDAÇÃO BÁSICA ==========
+        // Verifica se há pelo menos um elemento (o comando em si)
         if (partes.length == 0) {
             return Protocol.createErrorResponse("Comando inválido");
         }
         
+        // Obtém tipo do comando (sempre primeiro elemento)
         String cmd = partes[0];
         
         try {
+            // ========== FASE 3: ROTEAMENTO POR SWITCH/CASE ==========
+            // Compara comando e delega para método especializado
             switch (cmd) {
+                // ────────── AUTENTICAÇÃO ──────────
                 case Protocol.CMD_LOGIN:
-                    return processarLogin(partes);
+                    return processarLogin(partes);  // Login: Valida email+senha
                     
                 case Protocol.CMD_REGISTER:
-                    return processarRegistro(partes);
+                    return processarRegistro(partes);  // Cadastro: Cria novo usuário
                     
                 case Protocol.CMD_LOGOUT:
-                    return processarLogout();
+                    return processarLogout();  // Logout: Limpa sessão
                     
                 case Protocol.CMD_RESET_PASSWORD:
-                    return processarResetSenha(partes);
+                    return processarResetSenha(partes);  // Reset: Envia email
                     
                 case Protocol.CMD_CHANGE_PASSWORD:
-                    return processarAlterarSenha(partes);
+                    return processarAlterarSenha(partes);  // Trocar senha
                     
-                // Dashboard
+                // ────────── DASHBOARD ──────────
                 case Protocol.CMD_GET_DASHBOARD:
-                    return processarGetDashboard();
+                    return processarGetDashboard();  // Dados resumo financeiro
                     
-                // Contas
+                // ────────── CONTAS ──────────
                 case Protocol.CMD_LIST_CONTAS:
-                    return processarListContas();
+                    return processarListContas();  // Lista todas as contas
                 case Protocol.CMD_ADD_CONTA:
-                    return processarAddConta(partes);
+                    return processarAddConta(partes);  // Adiciona nova conta
                 case Protocol.CMD_UPDATE_CONTA:
-                    return processarUpdateConta(partes);
+                    return processarUpdateConta(partes);  // Atualiza conta
                 case Protocol.CMD_DELETE_CONTA:
-                    return processarDeleteConta(partes);
+                    return processarDeleteConta(partes);  // Remove conta
                     
-                // Categorias
+                // ────────── CATEGORIAS ──────────
                 case Protocol.CMD_LIST_CATEGORIAS:
-                    return processarListCategorias();
+                    return processarListCategorias();  // Lista categorias
                 case Protocol.CMD_LIST_CATEGORIAS_TIPO:
-                    return processarListCategoriasTipo(partes);
+                    return processarListCategoriasTipo(partes);  // Por tipo
                 case Protocol.CMD_ADD_CATEGORIA:
-                    return processarAddCategoria(partes);
+                    return processarAddCategoria(partes);  // Adiciona categoria
                 case Protocol.CMD_UPDATE_CATEGORIA:
-                    return processarUpdateCategoria(partes);
+                    return processarUpdateCategoria(partes);  // Atualiza
                 case Protocol.CMD_DELETE_CATEGORIA:
-                    return processarDeleteCategoria(partes);
+                    return processarDeleteCategoria(partes);  // Remove
                     
-                // Movimentações
+                // ────────── MOVIMENTAÇÕES ──────────
                 case Protocol.CMD_LIST_MOVIMENTACOES:
-                    return processarListMovimentacoes();
+                    return processarListMovimentacoes();  // Lista todas
                 case Protocol.CMD_LIST_MOVIMENTACOES_PERIODO:
-                    return processarListMovimentacoesPeriodo(partes);
+                    return processarListMovimentacoesPeriodo(partes);  // Por período
                 case Protocol.CMD_LIST_MOVIMENTACOES_CONTA:
-                    return processarListMovimentacoesConta(partes);
+                    return processarListMovimentacoesConta(partes);  // Por conta
                 case Protocol.CMD_ADD_MOVIMENTACAO:
-                    return processarAddMovimentacao(partes);
+                    return processarAddMovimentacao(partes);  // Adiciona
                 case Protocol.CMD_UPDATE_MOVIMENTACAO:
-                    return processarUpdateMovimentacao(partes);
+                    return processarUpdateMovimentacao(partes);  // Atualiza
                 case Protocol.CMD_DELETE_MOVIMENTACAO:
-                    return processarDeleteMovimentacao(partes);
+                    return processarDeleteMovimentacao(partes);  // Remove
                     
-                // Perfil
+                // ────────── PERFIL ──────────
                 case Protocol.CMD_GET_PERFIL:
-                    return processarGetPerfil();
+                    return processarGetPerfil();  // Busca dados do usuário
                 case Protocol.CMD_UPDATE_PERFIL:
-                    return processarUpdatePerfil(partes);
+                    return processarUpdatePerfil(partes);  // Atualiza perfil
                 
-                // Admin - Gerenciamento de usuários
+                // ────────── ADMIN - Gerenciamento de usuários ──────────
                 case Protocol.CMD_LIST_USERS:
-                    return processarListUsers();
+                    return processarListUsers();  // Lista todos usuários (admin)
                 case Protocol.CMD_UPDATE_USER:
-                    return processarUpdateUser(partes);
+                    return processarUpdateUser(partes);  // Edita usuário (admin)
                 case Protocol.CMD_UPDATE_USER_PASSWORD:
-                    return processarUpdateUserPassword(partes);
+                    return processarUpdateUserPassword(partes);  // Troca senha usuário
                 case Protocol.CMD_DELETE_USER:
-                    return processarDeleteUser(partes);
+                    return processarDeleteUser(partes);  // Remove usuário (admin)
                 
-                // Admin - Gerenciamento de dados de usuários
+                // ────────── ADMIN - Gerenciamento de dados de usuários ──────────
                 case Protocol.CMD_ADMIN_LIST_CONTAS_USER:
-                    return processarAdminListContasUser(partes);
+                    return processarAdminListContasUser(partes);  // Contas de usuário
                 case Protocol.CMD_ADMIN_LIST_CATEGORIAS_USER:
-                    return processarAdminListCategoriasUser(partes);
+                    return processarAdminListCategoriasUser(partes);  // Categorias
                 case Protocol.CMD_ADMIN_LIST_MOVIMENTACOES_USER:
-                    return processarAdminListMovimentacoesUser(partes);
+                    return processarAdminListMovimentacoesUser(partes);  // Movimentações
                 case Protocol.CMD_ADMIN_LIST_ALL_CONTAS:
-                    return processarAdminListAllContas();
+                    return processarAdminListAllContas();  // Todas contas sistema
                 case Protocol.CMD_ADMIN_LIST_ALL_CATEGORIAS:
-                    return processarAdminListAllCategorias();
+                    return processarAdminListAllCategorias();  // Todas categorias
                 case Protocol.CMD_ADMIN_LIST_ALL_MOVIMENTACOES:
-                    return processarAdminListAllMovimentacoes();
+                    return processarAdminListAllMovimentacoes();  // Todas movimentações
                 case Protocol.CMD_ADMIN_DELETE_CONTA:
-                    return processarAdminDeleteConta(partes);
+                    return processarAdminDeleteConta(partes);  // Remove conta usuário
                 case Protocol.CMD_ADMIN_DELETE_CATEGORIA:
-                    return processarAdminDeleteCategoria(partes);
+                    return processarAdminDeleteCategoria(partes);  // Remove categoria
                 case Protocol.CMD_ADMIN_DELETE_MOVIMENTACAO:
-                    return processarAdminDeleteMovimentacao(partes);
+                    return processarAdminDeleteMovimentacao(partes);  // Remove movimentação
                 case Protocol.CMD_ADMIN_UPDATE_CONTA:
-                    return processarAdminUpdateConta(partes);
+                    return processarAdminUpdateConta(partes);  // Atualiza conta usuário
                 case Protocol.CMD_ADMIN_UPDATE_CATEGORIA:
-                    return processarAdminUpdateCategoria(partes);
+                    return processarAdminUpdateCategoria(partes);  // Atualiza categoria
                 case Protocol.CMD_ADMIN_UPDATE_MOVIMENTACAO:
-                    return processarAdminUpdateMovimentacao(partes);
+                    return processarAdminUpdateMovimentacao(partes);  // Atualiza movimentação
                     
+                // ────────── DEFAULT (Comando desconhecido) ──────────
                 default:
                     return Protocol.createErrorResponse("Comando não reconhecido: " + cmd);
             }
             
         } catch (Exception e) {
-            System.err.println("Erro ao processar comando '" + cmd + "': " + e.getMessage());
+            // ========== FASE 4: TRATAMENTO DE EXCEÇÕES ==========
+            // Captura qualquer exceção não tratada pelos métodos específicos
+            // Log completo no servidor para debug
+            System.err.println("✗ Erro ao processar comando '" + cmd + "': " + e.getMessage());
+            e.printStackTrace();  // Stack trace para debug
+            
+            // Retorna erro genérico sem expor detalhes internos
+            // Segurança: Não vazar informações do sistema para cliente
             return Protocol.createErrorResponse("Erro interno do servidor");
         }
     }

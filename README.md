@@ -101,6 +101,30 @@ Fluxo: **Cliente (Android/Desktop) → Socket → Servidor Java/MySQL → Respos
 
 ---
 
+## 📊 Documentação Técnica Completa
+
+**🎯 [Acesse a documentação completa com diagramas e fluxogramas aqui](docs/README.md)**
+
+Disponível na pasta `docs/`:
+* **📄 PDF Completo** (`Finanza_Sistema_Completo.pdf` - 2.6 MB)
+  - Documento profissional com todos os diagramas em alta resolução
+  - Ideal para apresentações e documentação formal
+  - **Pronto para entender todo o sistema sem ver o código!**
+
+* **🖼️ 8 Diagramas Detalhados** (pasta `docs/images/`)
+  1. **Arquitetura do Sistema** - Visão geral completa
+  2. **Fluxo Mobile** - Todas as telas e navegação do app Android
+  3. **Protocolo do Servidor** - Mais de 40 comandos documentados
+  4. **Desktop Admin** - Fluxo de administração
+  5. **Banco de Dados** - Esquema ER completo com tabelas e views
+  6. **Sequência: Login** - Processo detalhado de autenticação
+  7. **Sequência: Transação** - Fluxo de adicionar movimentação
+  8. **Sincronização** - Como funciona a sincronização de dados
+
+**✨ Perfeito para apresentações e compreensão completa do sistema!**
+
+---
+
 ## 📦 Instalação Rápida
 
 ### 🔹 Servidor Desktop

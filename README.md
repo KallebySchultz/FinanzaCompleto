@@ -105,6 +105,32 @@ Fluxo: **Cliente (Android/Desktop) → Socket → Servidor Java/MySQL → Respos
 
 **🎯 [Acesse a documentação completa com diagramas e fluxogramas aqui](docs/README.md)**
 
+### 🆕 **NOVA! Documentação Simplificada em Português**
+
+**Para quem quer entender o sistema de forma simples:**
+
+* 📚 **[Guia de Arquitetura Simplificado](docs/README_ARQUITETURA.md)**
+  - Explicação clara de MVC (Model-View-Controller)
+  - O que é Model, View, Controller e DAO
+  - Como cada parte funciona
+  - Analogias simples para não-técnicos
+  - **Perfeito para iniciantes!**
+
+* 📖 **[Guia de Arquivos Java](docs/GUIA_ARQUIVOS_JAVA.md)**
+  - Lista TODOS os arquivos .java
+  - O que cada arquivo faz
+  - Responsabilidade de cada classe
+  - Estrutura Desktop, Servidor e Mobile
+  - **Ideal para entender o código!**
+
+* 🔄 **[Fluxogramas Simples](docs/FLUXOGRAMAS_SIMPLES.md)**
+  - Diagramas Mermaid visuais
+  - Fluxos de login, CRUD, sincronização
+  - Casos de uso completos
+  - **Melhor forma de visualizar o sistema!**
+
+### 📄 Documentação Técnica Original
+
 Disponível na pasta `docs/`:
 * **📄 PDF Completo** (`Finanza_Sistema_Completo.pdf` - 2.6 MB)
   - Documento profissional com todos os diagramas em alta resolução

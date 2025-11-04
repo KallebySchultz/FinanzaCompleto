@@ -4,6 +4,38 @@
 
 Esta documentação contém **fluxogramas, diagramas e especificações técnicas completas** do Sistema Finanza. Todos os diagramas foram criados para permitir que **qualquer pessoa entenda o funcionamento completo do software sem necessidade de acessar o código-fonte**.
 
+---
+
+## 🆕 **NOVA! Documentação Simplificada em Português**
+
+Se você é **iniciante** ou quer entender o sistema de forma **simples e clara**, comece por aqui:
+
+### 📚 [README_ARQUITETURA.md](README_ARQUITETURA.md) - **Guia Simplificado**
+- ✅ Explicação clara do que é MVC (Model-View-Controller)
+- ✅ O que cada camada faz (Model, View, Controller, DAO)
+- ✅ Estrutura completa do Desktop, Servidor e Mobile
+- ✅ Analogias do dia-a-dia para facilitar compreensão
+- ✅ Fluxogramas simples e diretos
+- ✅ **IDEAL PARA QUEM NÃO TEM CONHECIMENTO TÉCNICO!**
+
+### 📖 [GUIA_ARQUIVOS_JAVA.md](GUIA_ARQUIVOS_JAVA.md) - **Guia de Arquivos**
+- ✅ Lista TODOS os arquivos .java do sistema
+- ✅ Explica o que cada arquivo faz
+- ✅ Onde cada arquivo está localizado
+- ✅ Qual a responsabilidade de cada classe
+- ✅ Como tudo se conecta
+- ✅ **PERFEITO PARA ENTENDER CADA PARTE DO CÓDIGO!**
+
+### 🔄 [FLUXOGRAMAS_SIMPLES.md](FLUXOGRAMAS_SIMPLES.md) - **Fluxogramas Visuais**
+- ✅ Diagramas Mermaid renderizados no GitHub
+- ✅ Fluxos de login, registro, CRUD
+- ✅ Como funciona a sincronização
+- ✅ Arquitetura completa visual
+- ✅ Casos de uso passo a passo
+- ✅ **MELHOR FORMA DE VER O SISTEMA FUNCIONANDO!**
+
+---
+
 ## 📁 Estrutura da Documentação
 
 ### 📄 Documento PDF Principal

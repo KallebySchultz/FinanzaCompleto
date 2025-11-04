@@ -25,7 +25,41 @@ Este índice ajuda você a encontrar rapidamente a documentação que precisa, i
 
 ---
 
-### 2. GUIA_RAPIDO.md ⭐ **NOVO!**
+### 2. FLUXOGRAMA_SIMPLES.md + .pdf ⭐ **NOVO!**
+**Público:** Todos (especialmente para explicar o sistema)  
+**Tamanho:** 58 KB (MD) / 140 KB (PDF)  
+**Tempo de leitura:** 20-30 minutos
+
+**Conteúdo:**
+- ✅ **Fluxogramas visuais em ASCII** - Fáceis de entender
+- ✅ **Estrutura de arquivos** por componente (Mobile, Servidor, Desktop)
+- ✅ **Fluxos completos ilustrados:**
+  - Fluxo 1: Login no Mobile (passo a passo visual)
+  - Fluxo 2: Adicionar uma Despesa (com telas)
+  - Fluxo 3: Dashboard (cálculos e queries)
+  - Servidor: Inicialização e processamento
+  - Desktop Admin: Login e edição de usuário
+- ✅ **Qual arquivo chama qual** - Diagramas claros
+- ✅ **O que o usuário vê** em cada etapa
+- ✅ **Banco de dados** - SQLite e MySQL com diagramas
+- ✅ **Protocolo de comunicação** - Tabela de comandos
+- ✅ **Estados de sincronização** explicados
+- ✅ **Resumo de arquivos por função**
+
+**Formato:** Disponível em Markdown e PDF profissional
+
+**Quando usar:**
+- ✅ Precisa explicar o sistema para alguém
+- ✅ Quer entender rapidamente o fluxo de dados
+- ✅ Precisa de um documento para apresentar
+- ✅ Quer ver exatamente qual tela chama qual arquivo
+- ✅ Precisa de um guia de referência rápida
+
+**Começar por aqui se:** Você quer um documento completo mas simples para explicar todo o sistema
+
+---
+
+### 3. GUIA_RAPIDO.md ⭐
 **Público:** Iniciantes e estudantes  
 **Tamanho:** 22 KB  
 **Tempo de leitura:** 15-20 minutos
@@ -54,7 +88,7 @@ Este índice ajuda você a encontrar rapidamente a documentação que precisa, i
 
 ---
 
-### 3. MAPEAMENTO_CODIGO.md ⭐ **NOVO!**
+### 4. MAPEAMENTO_CODIGO.md ⭐
 **Público:** Desenvolvedores que vão trabalhar no código  
 **Tamanho:** 52 KB  
 **Tempo de leitura:** 30-40 minutos
@@ -102,7 +136,7 @@ Este índice ajuda você a encontrar rapidamente a documentação que precisa, i
 
 ---
 
-### 4. MAPEAMENTO_COMPLETO.md
+### 5. MAPEAMENTO_COMPLETO.md + .pdf
 **Público:** Desenvolvedores e estudantes técnicos  
 **Tamanho:** 200+ KB  
 **Tempo de leitura:** 2-3 horas
@@ -128,7 +162,7 @@ Este índice ajuda você a encontrar rapidamente a documentação que precisa, i
 
 ---
 
-### 5. Comentários no Código
+### 6. Comentários no Código
 **Público:** Desenvolvedores lendo o código  
 **Localização:** Dentro dos arquivos .java
 
@@ -169,25 +203,28 @@ Este índice ajuda você a encontrar rapidamente a documentação que precisa, i
 ### 👨‍🎓 Sou Estudante / Aprendendo
 **Caminho recomendado:**
 1. Leia **README.md** (5 min) - Entenda o projeto
-2. Leia **GUIA_RAPIDO.md** (20 min) - Entenda a arquitetura
-3. Abra um arquivo e veja os **comentários no código**
-4. Consulte **MAPEAMENTO_CODIGO.md** quando quiser seguir um fluxo
-5. Consulte **MAPEAMENTO_COMPLETO.md** para detalhes técnicos
+2. Leia **FLUXOGRAMA_SIMPLES.md/pdf** (25 min) - Veja os fluxos visuais
+3. Leia **GUIA_RAPIDO.md** (20 min) - Entenda a arquitetura
+4. Abra um arquivo e veja os **comentários no código**
+5. Consulte **MAPEAMENTO_CODIGO.md** quando quiser seguir um fluxo
+6. Consulte **MAPEAMENTO_COMPLETO.md** para detalhes técnicos
 
 ### 👨‍💻 Vou Trabalhar no Código
 **Caminho recomendado:**
 1. Leia **README.md** (5 min) - Visão geral
-2. Leia **GUIA_RAPIDO.md** (20 min) - Entenda arquitetura
-3. Leia **MAPEAMENTO_CODIGO.md** (40 min) - Entenda fluxos
-4. Consulte **comentários no código** enquanto programa
-5. Use **MAPEAMENTO_COMPLETO.md** como referência
+2. Leia **FLUXOGRAMA_SIMPLES.md/pdf** (25 min) - Veja fluxos visuais
+3. Leia **GUIA_RAPIDO.md** (20 min) - Entenda arquitetura
+4. Leia **MAPEAMENTO_CODIGO.md** (40 min) - Entenda fluxos detalhados
+5. Consulte **comentários no código** enquanto programa
+6. Use **MAPEAMENTO_COMPLETO.md** como referência
 
 ### 👨‍🏫 Vou Apresentar / Explicar
 **Caminho recomendado:**
-1. Leia **GUIA_RAPIDO.md** - Para explicação simplificada
-2. Use diagramas do **GUIA_RAPIDO.md** em slides
-3. Demonstre um fluxo do **MAPEAMENTO_CODIGO.md**
-4. Consulte **MAPEAMENTO_COMPLETO.md** para responder perguntas técnicas
+1. Use **FLUXOGRAMA_SIMPLES.pdf** - Documento perfeito para apresentar
+2. Leia **GUIA_RAPIDO.md** - Para explicação simplificada
+3. Use diagramas do **FLUXOGRAMA_SIMPLES.md** em slides
+4. Demonstre um fluxo do **MAPEAMENTO_CODIGO.md**
+5. Consulte **MAPEAMENTO_COMPLETO.md** para responder perguntas técnicas
 
 ### 🔧 Vou Fazer Manutenção / Debugar
 **Caminho recomendado:**
@@ -204,9 +241,10 @@ Este índice ajuda você a encontrar rapidamente a documentação que precisa, i
 | Documento | Tamanho | Tempo Leitura | Complexidade | Melhor Para |
 |-----------|---------|---------------|--------------|-------------|
 | **README.md** | 6 KB | 5 min | ⭐ Simples | Visão geral inicial |
+| **FLUXOGRAMA_SIMPLES** | 58 KB / 140 KB PDF | 25 min | ⭐⭐ Fácil | Explicar o sistema |
 | **GUIA_RAPIDO.md** | 22 KB | 20 min | ⭐⭐ Fácil | Entender arquitetura |
 | **MAPEAMENTO_CODIGO.md** | 52 KB | 40 min | ⭐⭐⭐ Médio | Trabalhar no código |
-| **MAPEAMENTO_COMPLETO.md** | 200 KB | 2-3 h | ⭐⭐⭐⭐ Avançado | Referência técnica |
+| **MAPEAMENTO_COMPLETO** | 200 KB / 472 KB PDF | 2-3 h | ⭐⭐⭐⭐ Avançado | Referência técnica |
 | **Comentários no Código** | N/A | Variável | ⭐⭐⭐⭐ Avançado | Leitura do código |
 
 ---
@@ -246,10 +284,13 @@ Este índice ajuda você a encontrar rapidamente a documentação que precisa, i
 ```
 FinanzaCompleto/
 ├── README.md                    ← Visão geral do projeto
-├── GUIA_RAPIDO.md              ← ⭐ Guia para iniciantes (NOVO)
-├── MAPEAMENTO_CODIGO.md        ← ⭐ O que chama o quê (NOVO)
+├── FLUXOGRAMA_SIMPLES.md       ← ⭐ Fluxograma visual do sistema (NOVO)
+├── FLUXOGRAMA_SIMPLES.pdf      ← ⭐ Versão PDF profissional (NOVO)
+├── GUIA_RAPIDO.md              ← ⭐ Guia para iniciantes
+├── MAPEAMENTO_CODIGO.md        ← ⭐ O que chama o quê
 ├── MAPEAMENTO_COMPLETO.md      ← Documentação técnica completa
-├── INDICE_DOCUMENTACAO.md      ← ⭐ Este arquivo (NOVO)
+├── MAPEAMENTO_COMPLETO.pdf     ← Versão PDF profissional
+├── INDICE_DOCUMENTACAO.md      ← ⭐ Este arquivo
 ├── CHANGES_SUMMARY.md          ← Histórico de mudanças
 ├── IMPROVEMENTS_SUMMARY.md     ← Melhorias implementadas
 └── TASK_COMPLETION_REPORT.md   ← Relatório de tarefas
@@ -261,36 +302,40 @@ FinanzaCompleto/
 
 **Nunca vi o projeto antes?**
 1. README.md (5 min)
-2. GUIA_RAPIDO.md (20 min)
+2. FLUXOGRAMA_SIMPLES.pdf (25 min) ← **Use este!**
 3. Pronto! Você já entende o básico
 
 **Vou programar nele?**
 1. README.md (5 min)
-2. GUIA_RAPIDO.md (20 min)
-3. MAPEAMENTO_CODIGO.md (40 min)
-4. Comece a codar!
+2. FLUXOGRAMA_SIMPLES.md (25 min)
+3. GUIA_RAPIDO.md (20 min)
+4. MAPEAMENTO_CODIGO.md (40 min)
+5. Comece a codar!
 
 **Preciso apresentar?**
-1. GUIA_RAPIDO.md - Para slides
-2. MAPEAMENTO_CODIGO.md - Para demonstração
-3. MAPEAMENTO_COMPLETO.md - Para perguntas
+1. FLUXOGRAMA_SIMPLES.pdf ← **Perfeito para apresentar!**
+2. GUIA_RAPIDO.md - Para slides adicionais
+3. MAPEAMENTO_CODIGO.md - Para demonstração
+4. MAPEAMENTO_COMPLETO.pdf - Para perguntas técnicas
 
 ---
 
 ## 💡 Dicas
 
 ### Para Estudar
-- Leia na ordem: README → GUIA_RAPIDO → MAPEAMENTO_CODIGO
+- Leia na ordem: README → FLUXOGRAMA_SIMPLES.pdf → GUIA_RAPIDO → MAPEAMENTO_CODIGO
 - Faça anotações enquanto lê
 - Tente seguir um fluxo no código real
 
 ### Para Programar
-- Tenha MAPEAMENTO_CODIGO.md aberto em uma aba
+- Tenha FLUXOGRAMA_SIMPLES.md aberto em uma aba
+- Use MAPEAMENTO_CODIGO.md como referência detalhada
 - Leia comentários no código enquanto programa
-- Use MAPEAMENTO_COMPLETO.md como referência
+- Consulte MAPEAMENTO_COMPLETO.md quando necessário
 
-### Para Ensinar
-- Use diagramas do GUIA_RAPIDO.md
+### Para Ensinar / Apresentar
+- **Use FLUXOGRAMA_SIMPLES.pdf** - Ideal para apresentações
+- Use diagramas do FLUXOGRAMA_SIMPLES.md em slides
 - Demonstre um fluxo completo do MAPEAMENTO_CODIGO.md
 - Mostre comentários no código real
 

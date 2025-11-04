@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação Técnica - Sistema Finanza</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        
+        .intro {
+            padding: 40px;
+            background: #f8f9fa;
+            border-bottom: 3px solid #e9ecef;
+        }
+        
+        .intro h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+        
+        .intro p {
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .download-section {
+            padding: 30px 40px;
+            background: #e3f2fd;
+            border-left: 5px solid #2196F3;
+            margin: 20px 40px;
+            border-radius: 8px;
+        }
+        
+        .download-section h3 {
+            color: #1976D2;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .download-btn:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 30px 40px;
+            background: #fff3e0;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            text-align: center;
+            padding: 20px;
+            min-width: 200px;
+        }
+        
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #FF6B6B;
+        }
+        
+        .stat-label {
+            font-size: 1.1em;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .diagrams {
+            padding: 40px;
+        }
+        
+        .diagrams h2 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+        
+        .diagram-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .diagram-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border: 2px solid #e9ecef;
+        }
+        
+        .diagram-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            border-color: #667eea;
+        }
+        
+        .diagram-image {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .diagram-info {
+            padding: 20px;
+        }
+        
+        .diagram-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .diagram-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .diagram-description {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        
+        .diagram-size {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #999;
+            font-style: italic;
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        footer p {
+            margin: 5px 0;
+        }
+        
+        .features {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+        
+        .features h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .features ul {
+            list-style: none;
+            columns: 2;
+            column-gap: 40px;
+        }
+        
+        .features li {
+            padding: 10px 0;
+            padding-left: 30px;
+            position: relative;
+            font-size: 1.05em;
+        }
+        
+        .features li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            
+            .diagram-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+            
+            .features ul {
+                columns: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 Finanza</h1>
+            <p>Documentação Técnica Completa do Sistema</p>
+        </header>
+        
+        <div class="intro">
+            <h2>📋 Sobre Esta Documentação</h2>
+            <p>Esta documentação contém <strong>fluxogramas, diagramas e especificações técnicas completas</strong> do Sistema Finanza.</p>
+            <p>Todos os diagramas foram criados para permitir que <strong>qualquer pessoa entenda o funcionamento completo do software sem necessidade de acessar o código-fonte</strong>.</p>
+            <p>Perfeito para apresentações, estudos e compreensão da arquitetura do sistema!</p>
+        </div>
+        
+        <div class="download-section">
+            <h3>📄 Documento PDF Completo</h3>
+            <p>Baixe o documento PDF profissional com todos os diagramas em alta resolução (300 DPI):</p>
+            <br>
+            <a href="Finanza_Sistema_Completo.pdf" class="download-btn" download>
+                📥 Download PDF (2.6 MB)
+            </a>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number">8</div>
+                <div class="stat-label">Diagramas Profissionais</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">40+</div>
+                <div class="stat-label">Comandos Documentados</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">19</div>
+                <div class="stat-label">Páginas no PDF</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">300</div>
+                <div class="stat-label">DPI (Alta Qualidade)</div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h3>🎯 Componentes Documentados</h3>
+            <ul>
+                <li>Aplicativo Mobile Android (8 Activities)</li>
+                <li>Servidor Java (Multi-thread)</li>
+                <li>Desktop Admin (Java Swing)</li>
+                <li>Banco de Dados MySQL (4 tabelas + 3 views)</li>
+                <li>Protocolo TCP/IP (40+ comandos)</li>
+                <li>Sincronização de Dados</li>
+                <li>Autenticação e Segurança</li>
+                <li>Fluxos de Usuário Completos</li>
+            </ul>
+        </div>
+        
+        <div class="diagrams">
+            <h2>🖼️ Diagramas Disponíveis</h2>
+            
+            <div class="diagram-grid">
+                <div class="diagram-card">
+                    <img src="images/01_architecture.png" alt="Arquitetura" class="diagram-image">
+                    <div class="diagram-info">
+                        <span class="diagram-number">01</span>
+                        <div class="diagram-title">Arquitetura do Sistema</div>
+                        <div class="diagram-description">
+                            Visão geral completa da arquitetura mostrando Mobile, Server, Desktop Admin, DAOs e Database com todas as conexões TCP/IP.
+                        </div>
+                        <div class="diagram-size">395 KB - 300 DPI</div>
+                    </div>
+                </div>
+                
+                <div class="diagram-card">
+                    <img src="images/02_mobile_flow.png" alt="Mobile Flow" class="diagram-image">
+                    <div class="diagram-info">
+                        <span class="diagram-number">02</span>
+                        <div class="diagram-title">Fluxo do Aplicativo Mobile</div>
+                        <div class="diagram-description">
+                            Fluxograma completo do app Android incluindo login, dashboard, contas, movimentações, categorias, perfil e sincronização.
+                        </div>
+                        <div class="diagram-size">291 KB - 300 DPI</div>
+                    </div>
+                </div>
+                
+                <div class="diagram-card">
+                    <img src="images/03_server_protocol.png" alt="Server Protocol" class="diagram-image">
+                    <div class="diagram-info">
+                        <span class="diagram-number">03</span>
+                        <div class="diagram-title">Protocolo do Servidor</div>
+                        <div class="diagram-description">
+                            Mais de 40 comandos do protocolo TCP/IP documentados, incluindo autenticação, contas, categorias, movimentações e admin.
+                        </div>
+                        <div class="diagram-size">262 KB - 300 DPI</div>
+                    </div>
+                </div>
+                
+                <div class="diagram-card">
+                    <img src="images/04_desktop_admin_flow.png" alt="Desktop Admin" class="diagram-image">
+                    <div class="diagram-info">
+                        <span class="diagram-number">04</span>
+                        <div class="diagram-title">Aplicativo Desktop Admin</div>
+                        <div class="diagram-description">
+                            Fluxo do aplicativo desktop administrativo com login exclusivo, gestão de usuários e edição de perfil.
+                        </div>
+                        <div class="diagram-size">407 KB - 300 DPI</div>
+                    </div>
+                </div>
+                
+                <div class="diagram-card">
+                    <img src="images/05_database_schema.png" alt="Database Schema" class="diagram-image">
+                    <div class="diagram-info">
+                        <span class="diagram-number">05</span>
+                        <div class="diagram-title">Esquema do Banco de Dados</div>
+                        <div class="diagram-description">
+                            Diagrama ER completo com tabelas (usuarios, contas, categorias, lancamentos), views, relacionamentos e triggers.
+                        </div>
+                        <div class="diagram-size">286 KB - 300 DPI</div>
+                    </div>
+                </div>
+                
+                <div class="diagram-card">
+                    <img src="images/06_sequence_login.png" alt="Login Sequence" class="diagram-image">
+                    <div class="diagram-info">
+                        <span class="diagram-number">06</span>
+                        <div class="diagram-title">Sequência: Login</div>
+                        <div class="diagram-description">
+                            Diagrama de sequência detalhado mostrando o processo completo de autenticação desde a entrada de credenciais até o dashboard.
+                        </div>
+                        <div class="diagram-size">253 KB - 300 DPI</div>
+                    </div>
+                </div>
+                
+                <div class="diagram-card">
+                    <img src="images/07_sequence_transaction.png" alt="Transaction Sequence" class="diagram-image">
+                    <div class="diagram-info">
+                        <span class="diagram-number">07</span>
+                        <div class="diagram-title">Sequência: Transação</div>
+                        <div class="diagram-description">
+                            Fluxo completo de adição de uma transação, desde o preenchimento do formulário até a confirmação e atualização local.
+                        </div>
+                        <div class="diagram-size">255 KB - 300 DPI</div>
+                    </div>
+                </div>
+                
+                <div class="diagram-card">
+                    <img src="images/08_sync_flow.png" alt="Sync Flow" class="diagram-image">
+                    <div class="diagram-info">
+                        <span class="diagram-number">08</span>
+                        <div class="diagram-title">Fluxo de Sincronização</div>
+                        <div class="diagram-description">
+                            Processo de sincronização de dados entre mobile e servidor, incluindo modos online e offline.
+                        </div>
+                        <div class="diagram-size">350 KB - 300 DPI</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p><strong>Projeto Finanza - Sistema de Controle Financeiro</strong></p>
+            <p>Trabalho Interdisciplinar - IFSUL Campus Venâncio Aires</p>
+            <p>4º ano Técnico em Informática Integrado ao Ensino Médio</p>
+            <p>Desenvolvido por Kalleby Schultz - 2024</p>
+            <p style="margin-top: 15px; opacity: 0.8;">© 2024 - Finanza System - Todos os direitos reservados</p>
+        </footer>
+    </div>
+</body>
+</html>

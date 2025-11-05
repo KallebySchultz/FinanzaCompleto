@@ -145,6 +145,10 @@ Diagrama do processo de sincronização de dados:
 7. Entenda a **Sincronização** (08) para ver como os dados são mantidos consistentes
 
 ### Para Desenvolvimento
+- 📚 **[MAPEAMENTO-SOFTWARE.md](../MAPEAMENTO-SOFTWARE.md)** - Consulte este guia completo de todos os 48 arquivos do projeto
+  - Documentação detalhada de cada arquivo (Desktop Cliente, Servidor e Mobile)
+  - "O que é?", "O que faz?", "Pontos importantes" para cada componente
+  - Ideal para entender o código e arquitetura interna
 - Use os diagramas como **referência durante o desenvolvimento**
 - Consulte o **Protocolo do Servidor** ao implementar novos comandos
 - Use o **Esquema do Banco** ao criar queries ou modificar estrutura

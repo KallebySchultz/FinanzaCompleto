@@ -105,6 +105,17 @@ Fluxo: **Cliente (Android/Desktop) → Socket → Servidor Java/MySQL → Respos
 
 **🎯 [Acesse a documentação completa com diagramas e fluxogramas aqui](docs/README.md)**
 
+### 📚 Mapeamento de Software
+
+**🗺️ [MAPEAMENTO-SOFTWARE.md](MAPEAMENTO-SOFTWARE.md)** - Guia completo de todos os arquivos do projeto
+- Documentação detalhada de **todos os 48 arquivos** (Desktop Cliente, Desktop Servidor e Mobile)
+- Organizado por componentes com descrições claras: "O que é?", "O que faz?", "Pontos importantes"
+- Inclui diagramas de arquitetura e fluxo de dados
+- Considerações de segurança e melhorias sugeridas
+- **Ideal para desenvolvedores que querem entender ou contribuir com o código!**
+
+### 📄 Documentos e Diagramas
+
 Disponível na pasta `docs/`:
 * **📄 PDF Completo** (`Finanza_Sistema_Completo.pdf` - 2.6 MB)
   - Documento profissional com todos os diagramas em alta resolução

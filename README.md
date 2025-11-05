@@ -108,7 +108,7 @@ Fluxo: **Cliente (Android/Desktop) → Socket → Servidor Java/MySQL → Respos
 ### 📚 Mapeamento de Software
 
 **🗺️ [MAPEAMENTO-SOFTWARE.md](MAPEAMENTO-SOFTWARE.md)** - Guia completo de todos os arquivos do projeto
-- Documentação detalhada de **todos os 48 arquivos** (Desktop Cliente, Desktop Servidor e Mobile)
+- Documentação detalhada de **todos os principais componentes** (Desktop Cliente, Desktop Servidor e Mobile)
 - Organizado por componentes com descrições claras: "O que é?", "O que faz?", "Pontos importantes"
 - Inclui diagramas de arquitetura e fluxo de dados
 - Considerações de segurança e melhorias sugeridas

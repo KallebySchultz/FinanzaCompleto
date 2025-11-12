@@ -131,35 +131,77 @@ public class Protocol {
     /** Comando para excluir categoria */
     public static final String CMD_DELETE_CATEGORIA = "DELETE_CATEGORIA";
     
-    // Transaction/Movement commands
+    // ================== COMANDOS DE MOVIMENTAÇÕES/TRANSAÇÕES ==================
+    
+    /** Comando para listar todas as movimentações (lançamentos) do usuário */
     public static final String CMD_LIST_MOVIMENTACOES = "LIST_MOVIMENTACOES";
+    
+    /** Comando para listar movimentações filtradas por período de data */
     public static final String CMD_LIST_MOVIMENTACOES_PERIODO = "LIST_MOVIMENTACOES_PERIODO";
+    
+    /** Comando para listar movimentações filtradas por conta específica */
     public static final String CMD_LIST_MOVIMENTACOES_CONTA = "LIST_MOVIMENTACOES_CONTA";
+    
+    /** Comando para adicionar nova movimentação financeira */
     public static final String CMD_ADD_MOVIMENTACAO = "ADD_MOVIMENTACAO";
+    
+    /** Comando para atualizar movimentação existente */
     public static final String CMD_UPDATE_MOVIMENTACAO = "UPDATE_MOVIMENTACAO";
+    
+    /** Comando para excluir movimentação */
     public static final String CMD_DELETE_MOVIMENTACAO = "DELETE_MOVIMENTACAO";
     
-    // Enhanced sync commands for incremental and conflict resolution
+    // ================== COMANDOS DE SINCRONIZAÇÃO AVANÇADA ==================
+    
+    /** Comando para verificar status de sincronização do servidor */
     public static final String CMD_SYNC_STATUS = "SYNC_STATUS";
+    
+    /** Comando para executar sincronização incremental (apenas alterações) */
     public static final String CMD_INCREMENTAL_SYNC = "INCREMENTAL_SYNC";
+    
+    /** Comando para listar mudanças no servidor desde um timestamp específico */
     public static final String CMD_LIST_CHANGES_SINCE = "LIST_CHANGES_SINCE";
+    
+    /** Comando para resolver conflito de sincronização */
     public static final String CMD_RESOLVE_CONFLICT = "RESOLVE_CONFLICT";
+    
+    /** Comando para enviar múltiplos registros de uma vez (otimização) */
     public static final String CMD_BULK_UPLOAD = "BULK_UPLOAD";
+    
+    /** Comando para verificar integridade dos dados sincronizados */
     public static final String CMD_VERIFY_INTEGRITY = "VERIFY_INTEGRITY";
     
-    // Enhanced category commands with UUID support
+    // ================== COMANDOS AVANÇADOS - CATEGORIAS COM UUID ==================
+    
+    /** Comando para adicionar categoria com suporte a UUID e metadados de sinc */
     public static final String CMD_ADD_CATEGORIA_ENHANCED = "ADD_CATEGORIA_ENHANCED";
+    
+    /** Comando para atualizar categoria com controle de versão e conflitos */
     public static final String CMD_UPDATE_CATEGORIA_ENHANCED = "UPDATE_CATEGORIA_ENHANCED";
+    
+    /** Comando para sincronizar categoria específica usando UUID */
     public static final String CMD_SYNC_CATEGORIA = "SYNC_CATEGORIA";
     
-    // Enhanced account commands with UUID support
+    // ================== COMANDOS AVANÇADOS - CONTAS COM UUID ==================
+    
+    /** Comando para adicionar conta com suporte a UUID e metadados de sinc */
     public static final String CMD_ADD_CONTA_ENHANCED = "ADD_CONTA_ENHANCED";
+    
+    /** Comando para atualizar conta com controle de versão e conflitos */
     public static final String CMD_UPDATE_CONTA_ENHANCED = "UPDATE_CONTA_ENHANCED";
+    
+    /** Comando para sincronizar conta específica usando UUID */
     public static final String CMD_SYNC_CONTA = "SYNC_CONTA";
     
-    // Enhanced transaction commands with UUID support
+    // ================== COMANDOS AVANÇADOS - MOVIMENTAÇÕES COM UUID ==================
+    
+    /** Comando para adicionar movimentação com suporte a UUID e metadados de sinc */
     public static final String CMD_ADD_MOVIMENTACAO_ENHANCED = "ADD_MOVIMENTACAO_ENHANCED";
+    
+    /** Comando para atualizar movimentação com controle de versão e conflitos */
     public static final String CMD_UPDATE_MOVIMENTACAO_ENHANCED = "UPDATE_MOVIMENTACAO_ENHANCED";
+    
+    /** Comando para sincronizar movimentação específica usando UUID */
     public static final String CMD_SYNC_MOVIMENTACAO = "SYNC_MOVIMENTACAO";
     
     /**

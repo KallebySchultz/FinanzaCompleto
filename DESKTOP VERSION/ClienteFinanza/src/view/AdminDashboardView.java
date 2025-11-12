@@ -11,115 +11,301 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 /**
- * Tela principal de administração para gerenciar usuários e seus dados
+ * AdminDashboardView - Painel de Administração Desktop do Sistema Finanza
+ * 
+ * Esta classe representa a interface gráfica (Swing) principal para
+ * administradores do sistema Finanza. Permite gerenciar todos os usuários
+ * e seus dados financeiros a partir de um aplicativo desktop Java.
+ * 
+ * Funcionalidades Principais:
+ * - Visualizar lista de todos os usuários do sistema
+ * - Editar informações de usuários (nome, email, senha)
+ * - Excluir usuários e seus dados
+ * - Visualizar contas financeiras de todos os usuários
+ * - Visualizar categorias de todos os usuários
+ * - Visualizar movimentações financeiras de todos os usuários
+ * - Editar/excluir contas, categorias e movimentações
+ * - Filtrar dados por usuário específico
+ * - Buscar dados por texto
+ * - Editar próprio perfil de administrador
+ * - Fazer logout do sistema
+ * 
+ * Arquitetura:
+ * - Padrão MVC (Model-View-Controller)
+ * - Interface Swing com JFrame principal
+ * - JTabbedPane com 4 abas (Usuários, Contas, Categorias, Movimentações)
+ * - Comunicação com servidor via AuthController
+ * - Uso de JTable para exibir dados tabulares
+ * - DefaultTableModel para gerenciar dados das tabelas
+ * 
+ * Abas disponíveis:
+ * 1. Usuários: Gerenciamento completo de usuários do sistema
+ * 2. Contas: Visualização e edição de contas bancárias
+ * 3. Categorias: Visualização e edição de categorias financeiras
+ * 4. Movimentações: Visualização e edição de lançamentos financeiros
+ * 
+ * Segurança:
+ * - Acesso exclusivo para usuários com tipo "admin"
+ * - Validação de permissões via AuthController
+ * - Confirmação antes de ações destrutivas (exclusão)
+ * - Não permite administrador excluir a si próprio
+ * 
+ * Layout:
+ * - Header: Título, contador de usuários, informações do admin logado
+ * - Centro: JTabbedPane com as 4 abas de gerenciamento
+ * - Footer: Botões "Editar Meu Perfil" e "Sair"
+ * 
+ * Tecnologias utilizadas:
+ * - Java Swing para interface gráfica
+ * - JTable/DefaultTableModel para tabelas
+ * - BorderLayout e FlowLayout para organização
+ * - MouseAdapter para interação com tabelas
+ * - JDialog para janelas modais
+ * 
+ * @author Finanza Team
+ * @version 1.0
+ * @since 2024
  */
 public class AdminDashboardView extends JFrame {
+    
+    // ================== CONTROLADORES E DADOS DO ADMIN ==================
+    
+    /** Controlador de autenticação e comunicação com servidor */
     private AuthController authController;
+    
+    /** Objeto do usuário administrador atualmente logado */
     private Usuario adminUsuario;
 
-    // Componentes principais
+    // ================== COMPONENTES PRINCIPAIS DA INTERFACE ==================
+    
+    /** Painel de abas principal (Usuários, Contas, Categorias, Movimentações) */
     private JTabbedPane tabbedPane;
+    
+    /** Label que exibe o total de usuários cadastrados no sistema */
     private JLabel totalUsersLabel;
+    
+    /** Botão para editar perfil do próprio administrador */
     private JButton editProfileButton;
+    
+    /** Botão para fazer logout e retornar à tela de login */
     private JButton logoutButton;
 
-    // Aba de Usuários
+    // ================== COMPONENTES DA ABA DE USUÁRIOS ==================
+    
+    /** Tabela que exibe lista de todos os usuários do sistema */
     private JTable usuariosTable;
+    
+    /** Modelo de dados da tabela de usuários (gerencia linhas e colunas) */
     private DefaultTableModel usuariosTableModel;
+    
+    /** Botão para recarregar lista de usuários do servidor */
     private JButton refreshUsersButton;
+    
+    /** Botão para editar usuário selecionado na tabela */
     private JButton editUserButton;
+    
+    /** Botão para excluir usuário selecionado da tabela */
     private JButton deleteUserButton;
+    
+    /** Campo de texto para buscar usuários por nome ou email */
     private JTextField searchUsersField;
+    
+    /** Lista completa de usuários (antes de filtros de busca) */
     private List<Usuario> todosUsuarios;
 
-    // Aba de Contas
+    // ================== COMPONENTES DA ABA DE CONTAS ==================
+    
+    /** Tabela que exibe todas as contas financeiras do sistema */
     private JTable contasTable;
+    
+    /** Modelo de dados da tabela de contas */
     private DefaultTableModel contasTableModel;
+    
+    /** Botão para recarregar lista de contas do servidor */
     private JButton refreshContasButton;
+    
+    /** Botão para editar conta selecionada */
     private JButton editContaButton;
+    
+    /** Botão para excluir conta selecionada */
     private JButton deleteContaButton;
+    
+    /** ComboBox para filtrar contas por usuário específico */
     private JComboBox<String> userFilterContas;
+    
+    /** Campo de texto para buscar contas por nome */
     private JTextField searchContasField;
+    
+    /** Lista completa de contas (antes de filtros) */
     private List<Object[]> todasContas;
 
-    // Aba de Categorias
+    // ================== COMPONENTES DA ABA DE CATEGORIAS ==================
+    
+    /** Tabela que exibe todas as categorias financeiras do sistema */
     private JTable categoriasTable;
+    
+    /** Modelo de dados da tabela de categorias */
     private DefaultTableModel categoriasTableModel;
+    
+    /** Botão para recarregar lista de categorias do servidor */
     private JButton refreshCategoriasButton;
+    
+    /** Botão para editar categoria selecionada */
     private JButton editCategoriaButton;
+    
+    /** Botão para excluir categoria selecionada */
     private JButton deleteCategoriaButton;
+    
+    /** ComboBox para filtrar categorias por usuário específico */
     private JComboBox<String> userFilterCategorias;
+    
+    /** Campo de texto para buscar categorias por nome */
     private JTextField searchCategoriasField;
+    
+    /** Lista completa de categorias (antes de filtros) */
     private List<Object[]> todasCategorias;
 
-    // Aba de Movimentações
+    // ================== COMPONENTES DA ABA DE MOVIMENTAÇÕES ==================
+    
+    /** Tabela que exibe todas as movimentações financeiras do sistema */
     private JTable movimentacoesTable;
+    
+    /** Modelo de dados da tabela de movimentações */
     private DefaultTableModel movimentacoesTableModel;
+    
+    /** Botão para recarregar lista de movimentações do servidor */
     private JButton refreshMovimentacoesButton;
+    
+    /** Botão para editar movimentação selecionada */
     private JButton editMovimentacaoButton;
+    
+    /** Botão para excluir movimentação selecionada */
     private JButton deleteMovimentacaoButton;
+    
+    /** ComboBox para filtrar movimentações por usuário específico */
     private JComboBox<String> userFilterMovimentacoes;
+    
+    /** Campo de texto para buscar movimentações por descrição */
     private JTextField searchMovimentacoesField;
+    
+    /** Lista completa de movimentações (antes de filtros) */
     private List<Object[]> todasMovimentacoes;
 
+    /**
+     * Construtor da tela de administração
+     * 
+     * Inicializa a interface gráfica completa para gerenciamento de
+     * usuários e dados financeiros do sistema Finanza.
+     * 
+     * Fluxo de inicialização:
+     * 1. Armazena controlador e dados do admin logado
+     * 2. Inicializa componentes visuais (janela, botões, tabelas)
+     * 3. Configura layout da interface (header, abas, footer)
+     * 4. Configura listeners de eventos (cliques, mudanças de aba)
+     * 5. Carrega lista inicial de usuários do servidor
+     * 
+     * @param authController Controlador para comunicação com servidor
+     * @param usuario Objeto do usuário administrador logado
+     */
     public AdminDashboardView(AuthController authController, Usuario usuario) {
         this.authController = authController;
         this.adminUsuario = usuario;
+        
+        // Passo 1: Inicializar componentes básicos
         initComponents();
+        
+        // Passo 2: Configurar layout da interface
         setupUI();
+        
+        // Passo 3: Configurar listeners de eventos
         setupEvents();
+        
+        // Passo 4: Carregar dados iniciais
         carregarUsuarios();
     }
 
+    /**
+     * Inicializa componentes básicos da janela
+     * 
+     * Configurações realizadas:
+     * - Título da janela
+     * - Comportamento ao fechar (EXIT_ON_CLOSE)
+     * - Tamanho da janela (1200x750)
+     * - Centralização na tela
+     * - Inicialização de listas de dados
+     */
     private void initComponents() {
         setTitle("Finanza Admin - Painel de Administração Completo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1200, 750);
-        setLocationRelativeTo(null);
+        setSize(1200, 750); // Tamanho adequado para exibir tabelas
+        setLocationRelativeTo(null); // Centraliza na tela
+        
+        // Inicializa listas vazias que serão preenchidas ao carregar dados
         todosUsuarios = new java.util.ArrayList<>();
         todasContas = new java.util.ArrayList<>();
         todasCategorias = new java.util.ArrayList<>();
         todasMovimentacoes = new java.util.ArrayList<>();
     }
 
+    /**
+     * Configura o layout principal da interface
+     * 
+     * Cria e organiza todos os componentes visuais da janela:
+     * - Header (topo): Título, contador de usuários, info do admin
+     * - Centro: JTabbedPane com 4 abas de gerenciamento
+     * - Footer (rodapé): Botões de editar perfil e sair
+     * 
+     * Layout utilizado: BorderLayout
+     * - NORTH: Header
+     * - CENTER: Abas
+     * - SOUTH: Footer
+     */
     private void setupUI() {
         setLayout(new BorderLayout());
 
-        // Header
+        // ========== CRIAÇÃO DO HEADER (TOPO) ==========
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        headerPanel.setBackground(new Color(240, 248, 255));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Margem interna
+        headerPanel.setBackground(new Color(240, 248, 255)); // Azul claro suave
 
+        // Lado esquerdo do header: Título e contador
         JPanel headerLeft = new JPanel(new GridLayout(2, 1));
-        headerLeft.setOpaque(false);
+        headerLeft.setOpaque(false); // Transparente para mostrar cor do pai
+        
         JLabel titleLabel = new JLabel("Painel de Administração Completo");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        
         totalUsersLabel = new JLabel("Total de usuários: 0");
         totalUsersLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        
         headerLeft.add(titleLabel);
         headerLeft.add(totalUsersLabel);
         headerPanel.add(headerLeft, BorderLayout.WEST);
 
+        // Lado direito do header: Informações do admin logado
         JLabel userLabel = new JLabel("Admin: " + adminUsuario.getNome() + " (" + adminUsuario.getEmail() + ")");
         userLabel.setFont(new Font("Arial", Font.PLAIN, 12));
         headerPanel.add(userLabel, BorderLayout.EAST);
 
         add(headerPanel, BorderLayout.NORTH);
 
-        // Criar abas
+        // ========== CRIAÇÃO DAS ABAS (CENTRO) ==========
         tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Usuários", createUsuariosPanel());
-        tabbedPane.addTab("Contas", createContasPanel());
-        tabbedPane.addTab("Categorias", createCategoriasPanel());
-        tabbedPane.addTab("Movimentações", createMovimentacoesPanel());
+        tabbedPane.addTab("Usuários", createUsuariosPanel());           // Aba 1: Gerenciar usuários
+        tabbedPane.addTab("Contas", createContasPanel());               // Aba 2: Visualizar contas
+        tabbedPane.addTab("Categorias", createCategoriasPanel());       // Aba 3: Visualizar categorias
+        tabbedPane.addTab("Movimentações", createMovimentacoesPanel()); // Aba 4: Visualizar movimentações
 
         add(tabbedPane, BorderLayout.CENTER);
 
-        // Footer com botões de ações
+        // ========== CRIAÇÃO DO FOOTER (RODAPÉ) ==========
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         footerPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 10, 10));
 
+        // Botão para editar perfil do próprio administrador
         editProfileButton = new JButton("Editar Meu Perfil");
+        
+        // Botão para fazer logout
         logoutButton = new JButton("Sair");
 
         footerPanel.add(editProfileButton);
@@ -128,24 +314,41 @@ public class AdminDashboardView extends JFrame {
         add(footerPanel, BorderLayout.SOUTH);
     }
 
+    /**
+     * Cria o painel da aba de Usuários
+     * 
+     * Componentes do painel:
+     * - Barra de busca (topo): Campo de texto + botões Filtrar e Limpar
+     * - Tabela (centro): Lista de usuários com colunas: ID, Nome, Email, Data Criação
+     * - Barra de ações (rodapé): Botões Atualizar, Editar e Excluir
+     * 
+     * @return JPanel configurado com todos os componentes da aba de usuários
+     */
     private JPanel createUsuariosPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Margem interna
 
-        // Painel de busca
+        // ========== PAINEL DE BUSCA (TOPO) ==========
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.add(new JLabel("Buscar:"));
+        
+        // Campo de texto para buscar por nome ou email
         searchUsersField = new JTextField(30);
         searchPanel.add(searchUsersField);
+        
+        // Botão para aplicar filtro de busca
         JButton searchButton = new JButton("Filtrar");
         searchButton.addActionListener(e -> filtrarUsuarios());
         searchPanel.add(searchButton);
+        
+        // Botão para limpar busca e mostrar todos novamente
         JButton clearButton = new JButton("Limpar");
         clearButton.addActionListener(e -> {
             searchUsersField.setText("");
             filtrarUsuarios();
         });
         searchPanel.add(clearButton);
+        
         panel.add(searchPanel, BorderLayout.NORTH);
 
         // Tabela de usuários

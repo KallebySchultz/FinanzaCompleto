@@ -4,6 +4,20 @@
 
 ---
 
+## 📖 Documentações Relacionadas
+
+Para uma visão completa do sistema, consulte também:
+
+- **[📡 Arquitetura de Comunicação do Sistema](ARQUITETURA_COMUNICACAO_SISTEMA.md)** - Documentação detalhada sobre:
+  - Comunicação Cliente Desktop ↔ Servidor
+  - Comunicação Mobile ↔ Servidor
+  - Onde o servidor escuta e como recebe requisições
+  - Banco de dados (MySQL e Room/SQLite)
+  - Protocolo de comunicação completo
+  - Diagramas de arquitetura
+
+---
+
 ## 📋 Índice
 
 1. [Criptografia (Senha)](#1-criptografia-senha)

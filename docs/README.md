@@ -4,6 +4,18 @@
 
 Esta documentação contém **fluxogramas, diagramas e especificações técnicas completas** do Sistema Finanza. Todos os diagramas foram criados para permitir que **qualquer pessoa entenda o funcionamento completo do software sem necessidade de acessar o código-fonte**.
 
+---
+
+## 📚 Documentos de Referência
+
+| Documento | Descrição |
+|-----------|-----------|
+| **[📚 Documentação Técnica Detalhada](DOCUMENTACAO_TECNICA_DETALHADA.md)** | Criptografia, Login/Cadastro, Listas, Conexão e DAOs |
+| **[🏗️ Arquitetura de Comunicação](ARQUITETURA_COMUNICACAO_SISTEMA.md)** | **NOVO!** Comunicação completa Cliente↔Servidor, Mobile↔Servidor, Banco de Dados, Protocolo |
+| **[📋 Mapeamento do Software](../MAPEAMENTO-SOFTWARE.md)** | Guia completo de todos os componentes do projeto |
+
+---
+
 ## 📁 Estrutura da Documentação
 
 ### 📄 Documento PDF Principal
